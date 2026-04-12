@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const links = {
@@ -17,13 +18,19 @@ export default function Home() {
       <header className="sticky top-0 z-20 border-b border-[color:var(--border)] bg-[color:var(--surface)]/80 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-6 py-4">
           <Link href="/" className="flex items-center gap-3">
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[color:var(--brand)] text-sm font-semibold text-[color:var(--brand-foreground)] shadow-sm">
-              V2
-            </span>
             <div className="leading-tight">
-              <p className="text-sm font-semibold tracking-tight">Verifika2</p>
-              <p className="text-xs text-zinc-600">
-                Plataforma modular + portal verificado
+              <span className="block">
+                <Image
+                  src="/brand/verifika2_wordmark_traced.svg"
+                  alt="Verifika2"
+                  width={180}
+                  height={38}
+                  priority
+                  className="h-7 w-auto"
+                />
+              </span>
+              <p className="pt-1 text-xs text-slate-600">
+                Plataforma modular · Portal inmobiliario verificado
               </p>
             </div>
           </Link>
@@ -49,13 +56,13 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <a
               href={links.app}
-              className="inline-flex h-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm font-medium hover:bg-[color:var(--surface-2)]"
+              className="inline-flex h-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm font-medium text-[color:var(--foreground)] hover:bg-[color:var(--surface-2)]"
             >
               Entrar
             </a>
             <Link
               href={links.portal}
-              className="inline-flex h-10 items-center justify-center rounded-full bg-zinc-950 px-4 text-sm font-medium text-white shadow-sm hover:bg-zinc-800"
+              className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-medium text-white shadow-sm hover:bg-[#0F2742]"
             >
               Ver inmuebles
             </Link>
@@ -94,7 +101,7 @@ export default function Home() {
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link
                   href={links.portal}
-                  className="inline-flex h-12 items-center justify-center rounded-full bg-zinc-950 px-6 text-sm font-medium text-white shadow-sm hover:bg-zinc-800"
+                  className="inline-flex h-12 items-center justify-center rounded-full bg-[#0B1D33] px-6 text-sm font-medium text-white shadow-sm hover:bg-[#0F2742]"
                 >
                   Explorar el portal
                 </Link>
@@ -209,7 +216,7 @@ export default function Home() {
                 <div className="flex gap-2">
                   <Link
                     href={links.portal}
-                    className="inline-flex h-11 items-center justify-center rounded-full bg-zinc-950 px-5 text-sm font-medium text-white hover:bg-zinc-800"
+                    className="inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-medium text-white hover:bg-[#0F2742]"
                   >
                     Abrir portal
                   </Link>
@@ -301,7 +308,7 @@ export default function Home() {
                 <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                   <a
                     href={links.crm}
-                    className="inline-flex h-11 items-center justify-center rounded-full bg-zinc-950 px-5 text-sm font-medium text-white hover:bg-zinc-800"
+                    className="inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-medium text-white hover:bg-[#0F2742]"
                   >
                     Abrir CRM
                   </a>
@@ -380,7 +387,7 @@ export default function Home() {
                 <div className="flex gap-2">
                   <Link
                     href={links.portal}
-                    className="inline-flex h-11 items-center justify-center rounded-full bg-zinc-950 px-5 text-sm font-medium text-white hover:bg-zinc-800"
+                    className="inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-medium text-white hover:bg-[#0F2742]"
                   >
                     Ver inmuebles
                   </Link>
@@ -400,14 +407,17 @@ export default function Home() {
       <footer className="border-t border-[color:var(--border)] bg-[color:var(--surface)]">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-10 text-sm text-zinc-600 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-[color:var(--brand)] text-sm font-semibold text-[color:var(--brand-foreground)]">
-              V2
-            </span>
             <div className="leading-tight">
-              <p className="text-sm font-semibold tracking-tight text-zinc-900">
-                Verifika2
+              <Image
+                src="/brand/verifika2_wordmark_traced.svg"
+                alt="Verifika2"
+                width={160}
+                height={34}
+                className="h-6 w-auto"
+              />
+              <p className="pt-1 text-xs text-slate-600">
+                Portal inmobiliario verificado
               </p>
-              <p className="text-xs">Portal inmobiliario verificado</p>
             </div>
           </div>
           <div className="flex flex-wrap gap-4">
@@ -479,7 +489,7 @@ function Callout({
 }) {
   const isInternal = ctaHref.startsWith("/");
   const common =
-    "inline-flex h-10 items-center justify-center rounded-full bg-zinc-950 px-4 text-sm font-medium text-white hover:bg-zinc-800";
+    "inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-medium text-white hover:bg-[#0F2742]";
 
   return (
     <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6">
