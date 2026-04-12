@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { mockListingsById } from "@/lib/listings";
+import ChatWidget from "@/components/chat/ChatWidget";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -191,6 +192,18 @@ export default async function ListingDetailPage({ params }: PageProps) {
           </aside>
         </div>
       </main>
+      <ChatWidget
+        scope="listing"
+        defaultPersona="comprador"
+        listing={{
+          id: listing.id,
+          title: listing.title,
+          city: listing.city,
+          operation: listing.operation,
+          verifiedAt: listing.verifiedAt,
+          certified: listing.certified,
+        }}
+      />
     </div>
   );
 }

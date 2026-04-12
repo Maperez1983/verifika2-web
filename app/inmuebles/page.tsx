@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { mockListings, type Listing } from "@/lib/listings";
+import ChatWidget from "@/components/chat/ChatWidget";
 
 export const metadata: Metadata = {
   title: "Inmuebles",
@@ -218,6 +219,7 @@ export default async function ListingsPage({ searchParams }: PageProps) {
           </div>
         </div>
       </main>
+      <ChatWidget scope="portal" defaultPersona="comprador" />
     </div>
   );
 }

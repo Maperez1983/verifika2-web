@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import ChatWidget from "@/components/chat/ChatWidget";
 
 export const metadata: Metadata = {
   title: "Portal del propietario",
@@ -130,6 +131,7 @@ export default function OwnersPage() {
           </aside>
         </div>
       </main>
+      <ChatWidget scope="owners" defaultPersona="propietario" />
     </div>
   );
 }
@@ -142,4 +144,3 @@ function Card({ title, desc }: { title: string; desc: string }) {
     </div>
   );
 }
-

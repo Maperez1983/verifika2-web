@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import ChatWidget from "@/components/chat/ChatWidget";
 
 const links = {
   portal: "/inmuebles",
@@ -535,6 +536,7 @@ export default function Home() {
           <p>© {new Date().getFullYear()} Verifika2</p>
         </div>
       </footer>
+      <ChatWidget scope="landing" defaultPersona="comprador" />
     </div>
   );
 }
