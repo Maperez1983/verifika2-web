@@ -5,8 +5,8 @@ const links = {
   portal: "/inmuebles",
   owners: "/propietarios",
   pros: "/profesionales",
+  publish: "/publicar",
   app: "https://app.verifika2.com",
-  appInmo: "https://app.verifika2.com/?crm=inmo",
   crm: "https://crm.verifika2.com",
 };
 
@@ -57,12 +57,12 @@ export default function Home() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <a
-              href={links.appInmo}
+            <Link
+              href={links.publish}
               className="inline-flex h-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm font-medium text-[color:var(--foreground)] hover:bg-[color:var(--surface-2)]"
             >
               Publicar
-            </a>
+            </Link>
             <Link
               href={links.portal}
               className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-medium text-white shadow-sm hover:bg-[#0F2742]"
@@ -100,20 +100,70 @@ export default function Home() {
                 fraude, dudas y visitas inútiles.
               </p>
 
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href={links.portal}
-                  className="inline-flex h-12 items-center justify-center rounded-full bg-[#0B1D33] px-6 text-sm font-medium text-white shadow-sm hover:bg-[#0F2742]"
-                >
-                  Buscar inmuebles
-                </Link>
-                <Link
-                  href={links.pros}
-                  className="inline-flex h-12 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-6 text-sm font-medium hover:bg-[color:var(--surface-2)]"
-                >
-                  Acceso profesionales
-                </Link>
-              </div>
+              <form
+                method="get"
+                action={links.portal}
+                className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4 shadow-sm"
+              >
+                <div className="grid gap-3 md:grid-cols-12 md:items-end">
+                  <div className="md:col-span-5">
+                    <label className="text-xs font-medium text-slate-600" htmlFor="home-q">
+                      Buscar
+                    </label>
+                    <input
+                      id="home-q"
+                      name="q"
+                      placeholder="Ciudad, barrio, tipo…"
+                      className="mt-2 w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
+                    />
+                  </div>
+                  <div className="md:col-span-3">
+                    <label
+                      className="text-xs font-medium text-slate-600"
+                      htmlFor="home-operacion"
+                    >
+                      Operación
+                    </label>
+                    <select
+                      id="home-operacion"
+                      name="operacion"
+                      defaultValue="venta"
+                      className="mt-2 w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-3 text-sm outline-none focus:border-slate-400"
+                    >
+                      <option value="venta">Venta</option>
+                      <option value="alquiler">Alquiler</option>
+                    </select>
+                  </div>
+                  <div className="md:col-span-4">
+                    <button
+                      type="submit"
+                      className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-medium text-white hover:bg-[#0F2742]"
+                    >
+                      Buscar inmuebles
+                    </button>
+                  </div>
+                </div>
+                <div className="pt-3 flex flex-wrap items-center justify-between gap-3">
+                  <label className="flex items-center gap-2 text-sm text-slate-700">
+                    <input type="checkbox" name="certificado" value="1" />
+                    Solo certificados (premium)
+                  </label>
+                  <div className="flex items-center gap-4 text-sm">
+                    <Link
+                      href={links.publish}
+                      className="font-medium text-slate-600 hover:text-[color:var(--foreground)]"
+                    >
+                      Publicar
+                    </Link>
+                    <Link
+                      href={links.pros}
+                      className="font-medium text-slate-600 hover:text-[color:var(--foreground)]"
+                    >
+                      Profesionales
+                    </Link>
+                  </div>
+                </div>
+              </form>
 
               <div className="grid gap-4 pt-2 sm:grid-cols-3">
                 <Kpi
