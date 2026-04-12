@@ -12,6 +12,7 @@ const links = {
   portal: "/inmuebles",
   owners: "/propietarios",
   app: "https://app.verifika2.com",
+  appInmo: "https://app.verifika2.com/?crm=inmo",
   crm: "https://crm.verifika2.com",
 };
 
@@ -38,10 +39,10 @@ export default function ProfessionalsPage() {
           </div>
           <div className="flex items-center gap-2">
             <a
-              href={links.app}
+              href={links.appInmo}
               className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-medium text-white hover:bg-[#0F2742]"
             >
-              Entrar
+              Publicar
             </a>
             <Link
               href={links.portal}
@@ -102,10 +103,10 @@ export default function ProfessionalsPage() {
             </p>
             <div className="pt-4 flex flex-col gap-2">
               <a
-                href={links.app}
+                href={links.appInmo}
                 className="inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-medium text-white hover:bg-[#0F2742]"
               >
-                Entrar (Acceso)
+                Publicar (Inmobiliaria)
               </a>
               <a
                 href={links.crm}
@@ -145,4 +146,3 @@ function Card({ title, desc }: { title: string; desc: string }) {
     </div>
   );
 }
-

@@ -6,6 +6,7 @@ const links = {
   owners: "/propietarios",
   pros: "/profesionales",
   app: "https://app.verifika2.com",
+  appInmo: "https://app.verifika2.com/?crm=inmo",
   crm: "https://crm.verifika2.com",
 };
 
@@ -57,10 +58,10 @@ export default function Home() {
 
           <div className="flex items-center gap-2">
             <a
-              href={links.app}
+              href={links.appInmo}
               className="inline-flex h-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm font-medium text-[color:var(--foreground)] hover:bg-[color:var(--surface-2)]"
             >
-              Entrar
+              Publicar
             </a>
             <Link
               href={links.portal}
