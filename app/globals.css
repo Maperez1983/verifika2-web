@@ -3,6 +3,11 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --brand: #f2c14e;
+  --brand-foreground: #1a1a1a;
+  --surface: #ffffff;
+  --surface-2: #f7f7f8;
+  --border: rgba(24, 24, 27, 0.12);
 }
 
 @theme inline {
@@ -19,11 +24,23 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --surface: #0f0f10;
+    --surface-2: #141416;
+    --border: rgba(244, 244, 245, 0.14);
   }
+}
+
+html,
+body {
+  height: 100%;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+}
+
+a {
+  color: inherit;
 }
