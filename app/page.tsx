@@ -3,6 +3,8 @@ import Link from "next/link";
 
 const links = {
   portal: "/inmuebles",
+  owners: "/propietarios",
+  pros: "/profesionales",
   app: "https://app.verifika2.com",
   crm: "https://crm.verifika2.com",
 };
@@ -30,24 +32,24 @@ export default function Home() {
                 />
               </span>
               <p className="pt-1 text-xs text-slate-600">
-                Plataforma modular · Portal inmobiliario verificado
+                Portal inmobiliario verificado
               </p>
             </div>
           </Link>
 
           <nav className="hidden items-center gap-6 text-sm text-zinc-700 md:flex">
-            <a className="hover:text-zinc-950" href="#plataforma">
-              Plataforma
-            </a>
-            <a className="hover:text-zinc-950" href="#portal">
-              Portal
-            </a>
+            <Link className="hover:text-zinc-950" href={links.portal}>
+              Inmuebles
+            </Link>
             <a className="hover:text-zinc-950" href="#verificacion">
               Verificación
             </a>
-            <a className="hover:text-zinc-950" href="#crm">
-              CRM
-            </a>
+            <Link className="hover:text-zinc-950" href={links.owners}>
+              Propietarios
+            </Link>
+            <Link className="hover:text-zinc-950" href={links.pros}>
+              Profesionales
+            </Link>
             <a className="hover:text-zinc-950" href="#faq">
               FAQ
             </a>
@@ -64,7 +66,7 @@ export default function Home() {
               href={links.portal}
               className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-medium text-white shadow-sm hover:bg-[#0F2742]"
             >
-              Ver inmuebles
+              Abrir portal
             </Link>
           </div>
         </div>
@@ -75,27 +77,26 @@ export default function Home() {
           <div className="grid items-center gap-10 lg:grid-cols-2">
             <div className="flex flex-col gap-7">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
-                  Beta privada
-                </span>
                 <span className="inline-flex items-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-1 text-xs font-medium text-zinc-700">
-                  Sistema integral · Módulos a medida · Sello verificable
+                  Anuncios reales · Evidencias · Trazabilidad
+                </span>
+                <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
+                  Verificación documental
                 </span>
               </div>
 
               <h1 className="text-4xl font-semibold leading-[1.05] tracking-tight md:text-6xl">
-                Controla tu empresa.
-                <span className="block pt-2">Publica inmuebles con confianza.</span>
-                <span className="block pt-2 text-zinc-600">
-                  Plataforma modular + verificación documental en el portal.
-                </span>
+                Un portal inmobiliario donde{" "}
+                <span className="text-zinc-600">la seguridad jurídica se ve.</span>
               </h1>
 
               <p className="max-w-xl text-base leading-7 text-zinc-600 md:text-lg">
-                Verifika2 es un sistema integral para gestionar empresas con
-                módulos personalizados. Su vertical inmobiliaria nace para
-                reducir la inseguridad jurídica: anuncios verificables, evidencias
-                visibles y menos riesgo de fraude.
+                Cuando alguien ve un anuncio, quiere una respuesta simple:{" "}
+                <span className="font-medium text-[color:var(--foreground)]">
+                  ¿es real?
+                </span>{" "}
+                Verifika2 muestra evidencias y estado documental para reducir
+                fraude, dudas y visitas inútiles.
               </p>
 
               <div className="flex flex-col gap-3 sm:flex-row">
@@ -103,49 +104,83 @@ export default function Home() {
                   href={links.portal}
                   className="inline-flex h-12 items-center justify-center rounded-full bg-[#0B1D33] px-6 text-sm font-medium text-white shadow-sm hover:bg-[#0F2742]"
                 >
-                  Explorar el portal
+                  Buscar inmuebles
                 </Link>
-                <a
-                  href={links.crm}
+                <Link
+                  href={links.pros}
                   className="inline-flex h-12 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-6 text-sm font-medium hover:bg-[color:var(--surface-2)]"
                 >
-                  Ver el CRM
-                </a>
+                  Acceso profesionales
+                </Link>
               </div>
 
               <div className="grid gap-4 pt-2 sm:grid-cols-3">
-                <Kpi title="Sello por anuncio" value="Verificado" hint="Checklist documental y trazabilidad." />
-                <Kpi title="Publicación controlada" value="CRM → Portal" hint="Visible solo cuando tú decidas." />
-                <Kpi title="Confianza para el usuario" value="Transparencia" hint="Estado documental claro y auditable." />
+                <Kpi
+                  title="Evidencias visibles"
+                  value="Verificable"
+                  hint="Qué se revisó y cuándo. Sin promesas vacías."
+                />
+                <Kpi
+                  title="Menos riesgo de fraude"
+                  value="Claridad"
+                  hint="El usuario entiende el estado del anuncio."
+                />
+                <Kpi
+                  title="Publicación controlada"
+                  value="CRM → Portal"
+                  hint="Lo interno se gestiona; lo público se publica."
+                />
               </div>
             </div>
 
             <div className="relative">
               <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-[0_12px_40px_rgba(0,0,0,0.08)]">
                 <div className="flex items-center justify-between gap-4">
-                    <p className="text-sm font-semibold tracking-tight">Portal</p>
-                    <span className="rounded-full bg-[color:var(--brand)] px-2 py-1 text-xs font-medium text-[color:var(--brand-foreground)]">
-                      Demo
-                    </span>
-                  </div>
+                  <p className="text-sm font-semibold tracking-tight">
+                    Búsqueda (demo)
+                  </p>
+                  <span className="rounded-full bg-[color:var(--brand)] px-2 py-1 text-xs font-medium text-[color:var(--brand-foreground)]">
+                    Portal
+                  </span>
+                </div>
                 <div className="mt-5 grid gap-4">
                   <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-5">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-sm font-semibold">
-                          Piso reformado · 112 m²
-                        </p>
-                        <p className="pt-1 text-sm text-zinc-600">
-                          3 hab · 2 baños · Terraza · Garaje
-                        </p>
+                    <div className="grid gap-3">
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        <div className="rounded-2xl bg-[color:var(--surface-2)] px-4 py-3">
+                          <p className="text-xs font-medium text-slate-600">
+                            Ciudad
+                          </p>
+                          <p className="pt-1 text-sm font-semibold">Madrid</p>
+                        </div>
+                        <div className="rounded-2xl bg-[color:var(--surface-2)] px-4 py-3">
+                          <p className="text-xs font-medium text-slate-600">
+                            Operación
+                          </p>
+                          <p className="pt-1 text-sm font-semibold">Venta</p>
+                        </div>
+                        <div className="rounded-2xl bg-[color:var(--surface-2)] px-4 py-3">
+                          <p className="text-xs font-medium text-slate-600">
+                            Precio máx.
+                          </p>
+                          <p className="pt-1 text-sm font-semibold">300.000 €</p>
+                        </div>
+                        <div className="rounded-2xl bg-[color:var(--surface-2)] px-4 py-3">
+                          <p className="text-xs font-medium text-slate-600">
+                            Verificación
+                          </p>
+                          <p className="pt-1 text-sm font-semibold">
+                            Solo verificados
+                          </p>
+                        </div>
                       </div>
-                      <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800">
-                        Verificado
-                      </span>
+                      <Link
+                        href={links.portal}
+                        className="inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-medium text-white hover:bg-[#0F2742]"
+                      >
+                        Ver resultados
+                      </Link>
                     </div>
-                    <p className="pt-3 text-2xl font-semibold tracking-tight">
-                      285.000 €
-                    </p>
                   </div>
 
                   <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-5">
@@ -167,87 +202,10 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="plataforma" className="scroll-mt-24 border-t border-[color:var(--border)] bg-[color:var(--surface-2)]">
-          <div className="mx-auto w-full max-w-6xl px-6 py-14 md:py-18">
-            <div className="flex flex-col gap-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-600">
-                Plataforma
-              </p>
-              <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-                Un sistema integral para controlar tu empresa, con módulos a medida.
-              </h2>
-              <p className="max-w-3xl text-sm leading-6 text-zinc-600 md:text-base">
-                Verifika2 se adapta a cada operativa: módulos, roles, flujos y
-                automatizaciones. En inmobiliaria, esto se extiende al portal
-                público con verificación documental por anuncio.
-              </p>
-            </div>
-
-            <div className="mt-10 grid gap-6 md:grid-cols-3">
-              <Feature
-                title="Módulos personalizados"
-                desc="Activables por cliente: verticales, transversales y automatizaciones."
-              />
-              <Feature
-                title="Control y trazabilidad"
-                desc="Permisos por workspace, auditoría y documentación vinculada a procesos."
-              />
-              <Feature
-                title="Operativa unificada"
-                desc="Desde el CRM salen clientes, inmuebles y publicación, sin duplicidades."
-              />
-            </div>
-
-            <div id="portal" className="mt-10 scroll-mt-24 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 md:p-8">
-              <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-600">
-                    Portal inmobiliario
-                  </p>
-                  <p className="pt-2 text-xl font-semibold tracking-tight md:text-2xl">
-                    Un portal como los de siempre, pero con anuncios verificables.
-                  </p>
-                  <p className="pt-2 max-w-2xl text-sm leading-6 text-zinc-600 md:text-base">
-                    La ficha pública muestra el estado documental del anuncio,
-                    evidencias y última revisión. El objetivo: que el consumidor
-                    final entienda si el anuncio es real y en qué situación está.
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Link
-                    href={links.portal}
-                    className="inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-medium text-white hover:bg-[#0F2742]"
-                  >
-                    Abrir portal
-                  </Link>
-                  <a
-                    href={links.crm}
-                    className="inline-flex h-11 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-5 text-sm font-medium hover:bg-[color:var(--surface-2)]"
-                  >
-                    Gestionar en CRM
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-10 grid gap-6 lg:grid-cols-2">
-              <Callout
-                title="Para el público"
-                desc="Un portal que reduce sorpresas: datos verificables y fichas limpias."
-                ctaLabel="Ver el portal"
-                ctaHref={links.portal}
-              />
-              <Callout
-                title="Para inmobiliarias"
-                desc="Desde el CRM, publica y gestiona operaciones, equipo y documentación."
-                ctaLabel="Entrar al CRM"
-                ctaHref={links.crm}
-              />
-            </div>
-          </div>
-        </section>
-
-        <section id="verificacion" className="scroll-mt-24 border-t border-[color:var(--border)] bg-[color:var(--surface)]">
+        <section
+          id="verificacion"
+          className="scroll-mt-24 border-t border-[color:var(--border)] bg-[color:var(--surface)]"
+        >
           <div className="mx-auto w-full max-w-6xl px-6 py-14 md:py-18">
             <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
               <div className="flex flex-col gap-4">
@@ -255,14 +213,27 @@ export default function Home() {
                   Verificación
                 </p>
                 <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-                  Un sello que se explica, no que se promete.
+                  Seguridad jurídica, explicada en la ficha del inmueble.
                 </h2>
                 <p className="text-sm leading-6 text-zinc-600 md:text-base">
-                  El sello Verifika2 no es un “check” genérico: muestra qué se ha
-                  revisado, cuándo y con qué evidencia. Así disminuye la
-                  inseguridad jurídica del consumidor final y la incertidumbre de
-                  la operación.
+                  Verifika2 reduce la incertidumbre del consumidor final: el
+                  anuncio puede mostrar evidencias y estado documental, con
+                  trazabilidad. Es un sello que se entiende.
                 </p>
+                <div className="mt-2 grid gap-3">
+                  <Bullet
+                    title="Evidencia"
+                    desc="Qué documentos respaldan el anuncio (según el caso)."
+                  />
+                  <Bullet
+                    title="Estado"
+                    desc="Verificado, en revisión o pendiente, con explicación clara."
+                  />
+                  <Bullet
+                    title="Trazabilidad"
+                    desc="Fecha de revisión y control de cambios en la publicación."
+                  />
+                </div>
               </div>
 
               <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface-2)] p-6">
@@ -290,17 +261,81 @@ export default function Home() {
           </div>
         </section>
 
+        <section className="border-t border-[color:var(--border)] bg-[color:var(--surface-2)]">
+          <div className="mx-auto w-full max-w-6xl px-6 py-14 md:py-18">
+            <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
+              <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-[0_12px_40px_rgba(0,0,0,0.06)]">
+                <p className="text-sm font-semibold tracking-tight">
+                  Portal del propietario (área privada)
+                </p>
+                <p className="pt-2 text-sm leading-6 text-zinc-600">
+                  Seguimiento “al minuto” del estado de la operación: hitos,
+                  documentación, mensajes y próximos pasos.
+                </p>
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  <MiniCard title="Hitos" desc="Reserva, arras, notaría, entrega" />
+                  <MiniCard title="Documentos" desc="Subidos, validados, pendientes" />
+                  <MiniCard title="Comunicación" desc="Mensajes con trazabilidad" />
+                  <MiniCard title="Estado" desc="Siempre visible, sin llamadas" />
+                </div>
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                  <Link
+                    href={links.owners}
+                    className="inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-medium text-white hover:bg-[#0F2742]"
+                  >
+                    Ver cómo funciona
+                  </Link>
+                  <a
+                    href={links.app}
+                    className="inline-flex h-11 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-5 text-sm font-medium hover:bg-[color:var(--surface-2)]"
+                  >
+                    Acceso
+                  </a>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-600">
+                  Propietarios
+                </p>
+                <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
+                  Transparencia durante toda la operación.
+                </h2>
+                <p className="text-sm leading-6 text-zinc-600 md:text-base">
+                  El portal del propietario es el puente entre lo interno y lo
+                  privado: el estado siempre actualizado, documentación en orden
+                  y menos fricción.
+                </p>
+                <div className="mt-2 grid gap-3">
+                  <Bullet
+                    title="Estado visible"
+                    desc="Qué está hecho, qué falta y quién está asignado."
+                  />
+                  <Bullet
+                    title="Documentación centralizada"
+                    desc="Sin WhatsApps con PDFs sueltos."
+                  />
+                  <Bullet
+                    title="Registro"
+                    desc="Trazabilidad para reducir conflictos y dudas."
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section id="crm" className="scroll-mt-24 border-t border-[color:var(--border)] bg-[color:var(--surface-2)]">
           <div className="mx-auto w-full max-w-6xl px-6 py-14 md:py-18">
             <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
               <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-[0_12px_40px_rgba(0,0,0,0.06)]">
                 <p className="text-sm font-semibold tracking-tight">CRM 360</p>
                 <p className="pt-2 text-sm leading-6 text-zinc-600">
-                  Donde vive la operativa: clientes, oportunidades, inmuebles,
-                  documentación, automatizaciones y RRHH.
+                  La parte interna que hace posible el portal: operativa,
+                  documentación, equipo, permisos y automatizaciones.
                 </p>
                 <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                  <MiniCard title="Inmuebles" desc="Pipeline, visitas y publicación" />
+                  <MiniCard title="Clientes" desc="Relación y operaciones" />
                   <MiniCard title="Documentación" desc="Evidencias, plantillas y trazabilidad" />
                   <MiniCard title="Equipo" desc="Usuarios, roles y accesos" />
                   <MiniCard title="Automatizaciones" desc="Flujos para reducir tareas repetitivas" />
@@ -326,17 +361,26 @@ export default function Home() {
                   Operativa
                 </p>
                 <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-                  Diseñado para publicar sin perder el control.
+                  El portal es la cara pública. El control vive aquí.
                 </h2>
                 <p className="text-sm leading-6 text-zinc-600 md:text-base">
-                  Separación por workspaces, roles por cliente y permisos claros:
-                  cada inmobiliaria opera con sus datos, sin herencias
-                  indeseadas.
+                  Verifika2 es más que un CRM inmobiliario: es un sistema modular.
+                  Para inmobiliarias habilita publicación y verificación; para
+                  otros sectores, activa solo lo que necesiten. La entrada es la
+                  misma: acceso profesional y módulos por cliente.
                 </p>
                 <div className="mt-2 grid gap-3">
                   <Bullet title="Permisos por workspace" desc="Admins locales sin visibilidad global." />
                   <Bullet title="Publicación controlada" desc="Borrador, revisión, publicado, archivado." />
                   <Bullet title="Evidencias vinculadas" desc="Documentación del anuncio en un solo sitio." />
+                </div>
+                <div className="pt-4">
+                  <Link
+                    href={links.pros}
+                    className="inline-flex h-11 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-5 text-sm font-medium hover:bg-[color:var(--surface-2)]"
+                  >
+                    Cómo funciona el acceso profesional
+                  </Link>
                 </div>
               </div>
             </div>
@@ -365,7 +409,7 @@ export default function Home() {
               />
               <Faq
                 q="¿Puedo acceder al CRM desde la web?"
-                a="Sí: la landing enlaza al acceso. Más adelante podemos integrar un “login” unificado."
+                a="Sí. La entrada es “Acceso profesionales” y desde ahí eliges tu workspace y los módulos activos."
               />
               <Faq
                 q="¿Cómo empiezo con mi inmobiliaria?"
@@ -391,12 +435,12 @@ export default function Home() {
                   >
                     Ver inmuebles
                   </Link>
-                  <a
-                    href={links.app}
+                  <Link
+                    href={links.pros}
                     className="inline-flex h-11 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-5 text-sm font-medium hover:bg-[color:var(--surface-2)]"
                   >
-                    Entrar
-                  </a>
+                    Acceso profesionales
+                  </Link>
                 </div>
               </div>
             </div>
@@ -422,7 +466,7 @@ export default function Home() {
           </div>
           <div className="flex flex-wrap gap-4">
             <Link className="hover:text-zinc-950" href={links.portal}>
-              Portal
+              Inmuebles
             </Link>
             <a className="hover:text-zinc-950" href={links.crm}>
               CRM
@@ -430,6 +474,12 @@ export default function Home() {
             <a className="hover:text-zinc-950" href={links.app}>
               Acceso
             </a>
+            <Link className="hover:text-zinc-950" href={links.owners}>
+              Propietarios
+            </Link>
+            <Link className="hover:text-zinc-950" href={links.pros}>
+              Profesionales
+            </Link>
           </div>
           <p>© {new Date().getFullYear()} Verifika2</p>
         </div>
@@ -463,49 +513,6 @@ function Check({ children }: { children: React.ReactNode }) {
         <span className="h-2 w-2 rounded-full bg-emerald-600" />
       </span>
       <span>{children}</span>
-    </div>
-  );
-}
-
-function Feature({ title, desc }: { title: string; desc: string }) {
-  return (
-    <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
-      <p className="text-sm font-semibold tracking-tight">{title}</p>
-      <p className="pt-2 text-sm leading-6 text-zinc-600">{desc}</p>
-    </div>
-  );
-}
-
-function Callout({
-  title,
-  desc,
-  ctaLabel,
-  ctaHref,
-}: {
-  title: string;
-  desc: string;
-  ctaLabel: string;
-  ctaHref: string;
-}) {
-  const isInternal = ctaHref.startsWith("/");
-  const common =
-    "inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-medium text-white hover:bg-[#0F2742]";
-
-  return (
-    <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6">
-      <p className="text-sm font-semibold tracking-tight">{title}</p>
-      <p className="pt-2 text-sm leading-6 text-zinc-600">{desc}</p>
-      <div className="pt-5">
-        {isInternal ? (
-          <Link href={ctaHref} className={common}>
-            {ctaLabel}
-          </Link>
-        ) : (
-          <a href={ctaHref} className={common}>
-            {ctaLabel}
-          </a>
-        )}
-      </div>
     </div>
   );
 }
