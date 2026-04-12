@@ -93,6 +93,7 @@ export default function ChatWidget({ listing, defaultPersona, scope }: Props) {
   const [leadName, setLeadName] = useState("");
   const [leadContact, setLeadContact] = useState("");
   const [leadNote, setLeadNote] = useState("");
+  const [sendingLead, setSendingLead] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -228,7 +229,8 @@ export default function ChatWidget({ listing, defaultPersona, scope }: Props) {
     }
   };
 
-  const submitLead = () => {
+  const submitLead = async () => {
+    if (sendingLead) return;
     const type = showLeadForm || "contacto";
     const safeName = leadName.trim();
     const safeContact = leadContact.trim();
@@ -237,6 +239,44 @@ export default function ChatWidget({ listing, defaultPersona, scope }: Props) {
       push("bot", "Necesito al menos un contacto (email o teléfono).");
       return;
     }
+
+    setSendingLead(true);
+    const source =
+      typeof window === "undefined"
+        ? undefined
+        : { path: window.location.pathname, href: window.location.href };
+    const payload = {
+      persona,
+      intent: type,
+      name: safeName || undefined,
+      contact: safeContact,
+      note: safeNote || undefined,
+      listing,
+      source,
+    };
+    try {
+      const res = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        push(
+          "bot",
+          "Ahora mismo no he podido registrar la solicitud. Inténtalo de nuevo en unos minutos.",
+        );
+        return;
+      }
+    } catch {
+      push(
+        "bot",
+        "Ahora mismo no he podido registrar la solicitud. Inténtalo de nuevo en unos minutos.",
+      );
+      return;
+    } finally {
+      setSendingLead(false);
+    }
+
     push(
       "user",
       `${type === "visita" ? "Solicitud de visita" : "Solicitud de info"} · ${safeName || "Sin nombre"} · ${safeContact}`,
@@ -244,7 +284,7 @@ export default function ChatWidget({ listing, defaultPersona, scope }: Props) {
     if (safeNote) push("user", safeNote);
     push(
       "bot",
-      "Listo. Hemos registrado tu interés. En producción esto se crea como lead en el CRM con trazabilidad y te contactarán lo antes posible.",
+      "Listo. Hemos registrado tu interés. Te contactarán lo antes posible.",
     );
     setShowLeadForm(null);
     setLeadName("");
@@ -427,13 +467,14 @@ export default function ChatWidget({ listing, defaultPersona, scope }: Props) {
                     <button
                       type="button"
                       onClick={submitLead}
+                      disabled={sendingLead}
                       className="inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-medium text-white hover:bg-[#0F2742]"
                     >
-                      Enviar
+                      {sendingLead ? "Enviando…" : "Enviar"}
                     </button>
                     <p className="text-xs leading-5 text-slate-600">
-                      Demo: no se envía a CRM todavía. En producción registrará
-                      el lead con trazabilidad.
+                      Esto registra tu solicitud. En la siguiente fase, se
+                      conectará con trazabilidad completa en el CRM.
                     </p>
                   </div>
                 </div>
