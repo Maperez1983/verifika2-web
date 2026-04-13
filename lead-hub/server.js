@@ -11,7 +11,7 @@ app.use(express.json({ limit: "512kb" }));
 const PORT = Number(process.env.PORT || 10000);
 const DATABASE_URL = process.env.DATABASE_URL || "";
 const HUB_TOKEN = process.env.HUB_TOKEN || "";
-const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL || "";
+const SLACK_WEBHOOK_URL = (process.env.SLACK_WEBHOOK_URL || process.env.SLACK_WEBHOOK || "").trim();
 const CRM_LEADS_ENDPOINT = process.env.CRM_LEADS_ENDPOINT || "";
 const CRM_TOKEN = process.env.CRM_TOKEN || "";
 
@@ -188,10 +188,26 @@ app.get("/v1/config", async (req, res) => {
     return;
   }
 
+  let slackHost = null;
+  if (SLACK_WEBHOOK_URL) {
+    try {
+      slackHost = new URL(SLACK_WEBHOOK_URL).host;
+    } catch {
+      slackHost = "invalid_url";
+    }
+  }
+
+  const slackEnvKeys = Object.keys(process.env).filter((key) =>
+    key.toLowerCase().includes("slack"),
+  );
+
   res.status(200).json({
     ok: true,
     hubConfigured: Boolean(HUB_TOKEN),
     slackConfigured: Boolean(SLACK_WEBHOOK_URL),
+    slackWebhookHost: slackHost,
+    slackWebhookLength: SLACK_WEBHOOK_URL.length,
+    slackEnvKeys,
     databaseConfigured: Boolean(DATABASE_URL),
     crmConfigured: Boolean(CRM_LEADS_ENDPOINT),
   });
