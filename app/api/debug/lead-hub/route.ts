@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { getLeadHubConfig, leadHubFetch } from "@/lib/leadHub";
 
 export async function GET() {
+  const debugEnabled =
+    process.env.DEBUG_ENDPOINTS === "1" || process.env.NODE_ENV !== "production";
+  if (!debugEnabled) {
+    return new NextResponse(null, { status: 404 });
+  }
+
   const cfg = getLeadHubConfig();
   const env = {
     LEAD_HUB_URL: Boolean(process.env.LEAD_HUB_URL),
@@ -40,4 +46,3 @@ export async function GET() {
     leadHubConfigError: configError,
   });
 }
-
