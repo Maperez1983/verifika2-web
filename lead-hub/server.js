@@ -176,6 +176,27 @@ app.get("/v1/leads/recent", async (req, res) => {
   res.status(200).json({ ok: true, leads: query.rows });
 });
 
+app.get("/v1/config", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  res.status(200).json({
+    ok: true,
+    hubConfigured: Boolean(HUB_TOKEN),
+    slackConfigured: Boolean(SLACK_WEBHOOK_URL),
+    databaseConfigured: Boolean(DATABASE_URL),
+    crmConfigured: Boolean(CRM_LEADS_ENDPOINT),
+  });
+});
+
 app.post("/v1/slack/test", async (req, res) => {
   if (!HUB_TOKEN) {
     res.status(500).json({ ok: false, error: "hub_not_configured" });
