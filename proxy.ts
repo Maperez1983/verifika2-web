@@ -38,6 +38,7 @@ function isPublicPath(pathname: string) {
   if (pathname.startsWith("/_next")) return true;
   if (pathname.startsWith("/brand")) return true;
   if (pathname === "/favicon.ico") return true;
+  if (pathname.startsWith("/api/admin")) return false;
   if (pathname.startsWith("/api")) return true;
   if (pathname.startsWith("/acceso")) return true;
   if (pathname.startsWith("/verificacion")) return true;
@@ -51,7 +52,9 @@ function isProtectedPortalPath(pathname: string) {
   return (
     pathname.startsWith("/inmuebles") ||
     pathname.startsWith("/publicar") ||
-    pathname.startsWith("/interes")
+    pathname.startsWith("/interes") ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/api/admin")
   );
 }
 

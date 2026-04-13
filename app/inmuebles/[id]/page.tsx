@@ -14,7 +14,7 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const listing = mockListingsById[id];
+  const listing = (await fetchPortalListing(id).catch(() => null)) || mockListingsById[id];
   if (!listing) return { title: "Inmueble" };
   return {
     title: listing.title,

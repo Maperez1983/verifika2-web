@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { mockListingsById } from "@/lib/listings";
+import { fetchPortalListing } from "@/lib/crmPortal";
 import { leadHubFetch } from "@/lib/leadHub";
 import { getOwnerSession } from "@/lib/ownerSessionServer";
 import { redirect } from "next/navigation";
@@ -153,7 +153,7 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
   const sp = (await searchParams) || {};
   const tab = normalize(sp.tab) || "resumen";
 
-  const listing = mockListingsById[id];
+  const listing = await fetchPortalListing(id).catch(() => null);
   if (!listing) notFound();
   if (!session.listingIds.includes(listing.id)) notFound();
 

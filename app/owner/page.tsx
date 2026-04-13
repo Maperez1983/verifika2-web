@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { mockListings } from "@/lib/listings";
+import { fetchPortalListing } from "@/lib/crmPortal";
 import { leadHubFetch } from "@/lib/leadHub";
 import { getOwnerSession } from "@/lib/ownerSessionServer";
 import { redirect } from "next/navigation";
@@ -51,7 +51,9 @@ export default async function OwnerDashboard() {
   const session = await getOwnerSession();
   if (!session) redirect("/owner/acceso");
 
-  const listings = mockListings.filter((l) => session.listingIds.includes(l.id));
+  const listings = (
+    await Promise.all(session.listingIds.map((id) => fetchPortalListing(id).catch(() => null)))
+  ).filter(Boolean) as Array<NonNullable<Awaited<ReturnType<typeof fetchPortalListing>>>>;
   const hubConfig = await getHubConfig();
   const summaries = await Promise.all(listings.map((l) => getSummary(l.id)));
   const anySummaryOk = summaries.some(Boolean);

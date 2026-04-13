@@ -169,6 +169,17 @@ function hashOwnerCode(code) {
   return sha256(`${OWNER_CODE_SALT || "v2"}:${normalized}`);
 }
 
+function generateOwnerCode() {
+  const letters = "ABCDEFGHJKLMNPQRSTUVWXYZ"; // avoid I/O ambiguity
+  const digits = "23456789"; // avoid 0/1 ambiguity
+  const pick = (chars, n) => {
+    const out = [];
+    for (let i = 0; i < n; i += 1) out.push(chars[Math.floor(Math.random() * chars.length)]);
+    return out.join("");
+  };
+  return `V2-${pick(letters, 4)}-${pick(digits, 4)}`;
+}
+
 async function postToSlack(text) {
   if (!SLACK_WEBHOOK_URL) return;
   const res = await fetch(SLACK_WEBHOOK_URL, {
@@ -271,6 +282,60 @@ app.post("/v1/owners", async (req, res) => {
   );
 
   res.status(200).json({ ok: true, owner: insert.rows[0] });
+});
+
+app.post("/v1/owners/create_code", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  if (!OWNER_CODE_SALT) {
+    res.status(500).json({ ok: false, error: "owner_code_salt_missing" });
+    return;
+  }
+
+  const name = normalize(req.body?.name);
+  const contact = normalize(req.body?.contact);
+  const listingIds = Array.isArray(req.body?.listing_ids) ? req.body.listing_ids : [];
+  if (listingIds.length === 0) {
+    res.status(400).json({ ok: false, error: "missing_listing_ids" });
+    return;
+  }
+
+  let code = "";
+  let lastError = null;
+  for (let i = 0; i < 6; i += 1) {
+    code = generateOwnerCode();
+    const codeHash = hashOwnerCode(code);
+    try {
+      const insert = await pool.query(
+        `
+          insert into public.owners(name, contact, code_hash, listing_ids)
+          values (nullif($1,''), nullif($2,''), $3, $4::jsonb)
+          on conflict (code_hash) do update set
+            name=excluded.name,
+            contact=excluded.contact,
+            listing_ids=excluded.listing_ids,
+            status='active'
+          returning id, created_at, name, contact, listing_ids, status;
+        `,
+        [name, contact, codeHash, JSON.stringify(listingIds)],
+      );
+      res.status(200).json({ ok: true, code, owner: insert.rows[0] });
+      return;
+    } catch (err) {
+      lastError = err;
+    }
+  }
+
+  res.status(500).json({ ok: false, error: "code_generation_failed", details: String(lastError || "") });
 });
 
 app.post("/v1/owners/verify", async (req, res) => {
