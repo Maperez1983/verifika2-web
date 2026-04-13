@@ -81,6 +81,19 @@ function normalize(value) {
   return String(value ?? "").trim();
 }
 
+async function postToSlack(text) {
+  if (!SLACK_WEBHOOK_URL) return;
+  const res = await fetch(SLACK_WEBHOOK_URL, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`slack_failed:${res.status}:${body.slice(0, 200)}`);
+  }
+}
+
 async function notifySlack(leadRow) {
   if (!SLACK_WEBHOOK_URL) return;
   const title = leadRow.listing_title
@@ -95,15 +108,7 @@ async function notifySlack(leadRow) {
     .filter(Boolean)
     .join("\n");
 
-  const res = await fetch(SLACK_WEBHOOK_URL, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ text }),
-  });
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`slack_failed:${res.status}:${body.slice(0, 200)}`);
-  }
+  await postToSlack(text);
 }
 
 async function pushToCrm(leadRow) {
@@ -169,6 +174,32 @@ app.get("/v1/leads/recent", async (req, res) => {
   );
 
   res.status(200).json({ ok: true, leads: query.rows });
+});
+
+app.post("/v1/slack/test", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  if (!SLACK_WEBHOOK_URL) {
+    res.status(500).json({ ok: false, error: "slack_not_configured" });
+    return;
+  }
+
+  const text = normalize(req.body?.text) || "Test lead-hub → Slack (Verifika2)";
+  try {
+    await postToSlack(text);
+    res.status(200).json({ ok: true });
+  } catch (error) {
+    res.status(502).json({ ok: false, error: String(error) });
+  }
 });
 
 app.post("/v1/leads", async (req, res) => {
