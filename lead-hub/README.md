@@ -6,6 +6,7 @@ Servicio “ingestor” para captar leads del portal sin acoplarlo al CRM.
 
 - `GET /healthz` – healthcheck (incluye ping a Postgres)
 - `POST /v1/leads` – ingesta de lead (requiere `Authorization: Bearer <HUB_TOKEN>`)
+- `GET /v1/leads/recent` – últimos leads (requiere `Authorization: Bearer <HUB_TOKEN>`)
 
 ## Variables de entorno (Render)
 
@@ -23,4 +24,3 @@ En el servicio del portal (Next.js), configurar:
 - `LEADS_WEBHOOK_TOKEN` = el mismo valor que `HUB_TOKEN`
 
 Si `LEADS_WEBHOOK_URL` no está configurada, el portal deja el lead en logs del propio servicio.
-

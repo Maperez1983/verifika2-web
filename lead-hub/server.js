@@ -95,11 +95,15 @@ async function notifySlack(leadRow) {
     .filter(Boolean)
     .join("\n");
 
-  await fetch(SLACK_WEBHOOK_URL, {
+  const res = await fetch(SLACK_WEBHOOK_URL, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ text }),
   });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`slack_failed:${res.status}:${body.slice(0, 200)}`);
+  }
 }
 
 async function pushToCrm(leadRow) {
@@ -126,6 +130,45 @@ app.get("/healthz", async (_req, res) => {
   } catch (error) {
     res.status(500).json({ ok: false, error: String(error) });
   }
+});
+
+app.get("/v1/leads/recent", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  const limitRaw = Number(req.query.limit || 20);
+  const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(50, limitRaw)) : 20;
+
+  const query = await pool.query(
+    `
+      select
+        id,
+        created_at,
+        persona,
+        intent,
+        contact,
+        name,
+        listing_id,
+        listing_title,
+        listing_city,
+        crm_status,
+        crm_error
+      from public.leads
+      order by id desc
+      limit $1
+    `,
+    [limit],
+  );
+
+  res.status(200).json({ ok: true, leads: query.rows });
 });
 
 app.post("/v1/leads", async (req, res) => {
@@ -155,6 +198,11 @@ app.post("/v1/leads", async (req, res) => {
     res.status(400).json({ ok: false, error: "missing_contact" });
     return;
   }
+
+  // eslint-disable-next-line no-console
+  console.log(
+    `[lead-hub] lead received intent=${intent} persona=${persona} contact=${contact}`,
+  );
 
   const listing = isRecord(payload.listing) ? payload.listing : null;
   const listingId = listing ? normalize(listing.id) : "";
@@ -223,6 +271,9 @@ app.post("/v1/leads", async (req, res) => {
       [leadRow.id, String(error).slice(0, 500)],
     );
   }
+
+  // eslint-disable-next-line no-console
+  console.log(`[lead-hub] lead saved id=${leadRow.id}`);
 });
 
 ensureSchema()
@@ -237,4 +288,3 @@ ensureSchema()
     console.error("[lead-hub] failed to start:", error);
     process.exit(1);
   });
-
