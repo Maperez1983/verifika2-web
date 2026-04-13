@@ -492,6 +492,29 @@ function DocumentsSection({
         almacenará el archivo y se habilitará firma digital.
       </p>
 
+      {documents.length === 0 ? (
+        <div className="pt-6 rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-5">
+          <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+            <div>
+              <p className="text-sm font-semibold">Checklist recomendada</p>
+              <p className="pt-2 text-sm leading-6 text-slate-600">
+                Crea una lista base de documentos para empezar (puedes editarla después).
+              </p>
+            </div>
+            <form method="post" action="/api/owner/documents/seed">
+              <input type="hidden" name="listing_id" value={listingId} />
+              <input type="hidden" name="return_to" value={returnTo} />
+              <button
+                type="submit"
+                className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-medium text-white hover:bg-[#0F2742]"
+              >
+                Crear checklist
+              </button>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
       <div className="pt-6 rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-5">
         <p className="text-sm font-semibold">Solicitar documento</p>
         <form method="post" action="/api/owner/documents/create" className="pt-4 grid gap-2 sm:grid-cols-12">
@@ -754,6 +777,29 @@ function MilestonesSection({
       <p className="pt-2 text-sm leading-6 text-slate-600">
         Timeline de la operación (beta): reserva, arras, notaría, entrega de llaves… con estado y trazabilidad.
       </p>
+
+      {milestones.length === 0 ? (
+        <div className="pt-6 rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-5">
+          <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+            <div>
+              <p className="text-sm font-semibold">Timeline estándar</p>
+              <p className="pt-2 text-sm leading-6 text-slate-600">
+                Crea los hitos típicos (reserva, arras, notaría, llaves…) y edítalos según la operación.
+              </p>
+            </div>
+            <form method="post" action="/api/owner/milestones/seed">
+              <input type="hidden" name="listing_id" value={listingId} />
+              <input type="hidden" name="return_to" value={returnTo} />
+              <button
+                type="submit"
+                className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-medium text-white hover:bg-[#0F2742]"
+              >
+                Crear hitos
+              </button>
+            </form>
+          </div>
+        </div>
+      ) : null}
 
       <div className="pt-6 rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-5">
         <p className="text-sm font-semibold">Añadir hito</p>

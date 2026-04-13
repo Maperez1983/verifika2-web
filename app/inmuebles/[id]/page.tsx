@@ -110,13 +110,13 @@ export default async function ListingDetailPage({ params }: PageProps) {
                   </p>
                   <div className="pt-4 flex flex-col gap-2 sm:flex-row">
                     <Link
-                      href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=info`}
+                      href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=info&next=${encodeURIComponent(`/inmuebles/${listing.id}`)}`}
                       className="inline-flex h-11 flex-1 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-medium text-white hover:bg-[#0F2742]"
                     >
                       Solicitar info
                     </Link>
                     <Link
-                      href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=visita`}
+                      href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=visita&next=${encodeURIComponent(`/inmuebles/${listing.id}`)}`}
                       className="inline-flex h-11 flex-1 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-5 text-sm font-medium hover:bg-[color:var(--surface-2)]"
                     >
                       Pedir visita
@@ -162,7 +162,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
               <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
                 <p className="text-sm font-semibold">Contacto</p>
                 <p className="pt-2 text-sm leading-6 text-slate-600">
-                  En producción, esto crea un lead con trazabilidad en el CRM.
+                  En esta fase, te llevamos al formulario para registrar la solicitud con trazabilidad.
                 </p>
                 <form
                   method="get"
@@ -171,6 +171,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
                 >
                   <input type="hidden" name="listing" value={listing.id} />
                   <input type="hidden" name="tipo" value="contacto" />
+                  <input type="hidden" name="next" value={`/inmuebles/${listing.id}`} />
                   <input
                     name="nombre"
                     placeholder="Nombre"
