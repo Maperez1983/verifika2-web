@@ -5,6 +5,15 @@ const AUTH_COOKIE = "v2_portal_auth";
 const DEFAULT_TTL_SECONDS = 60 * 60 * 24 * 7;
 const DEFAULT_NEXT = "/inmuebles";
 
+function publicOrigin(request: Request) {
+  const url = new URL(request.url);
+  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const host = forwardedHost || request.headers.get("host") || url.host;
+  const proto = forwardedProto || url.protocol.replace(":", "") || "https";
+  return `${proto}://${host}`;
+}
+
 function sanitizeNextPath(value: unknown, fallback: string) {
   const next = String(value ?? "").trim();
   if (!next) return fallback;
@@ -44,18 +53,23 @@ function safeEqual(a: string, b: string) {
 export async function POST(request: Request) {
   const password = process.env.PORTAL_PASSWORD ?? "";
   const secret = process.env.PORTAL_AUTH_SECRET ?? "";
+  const origin = publicOrigin(request);
 
   const form = await request.formData();
   const submitted = String(form.get("password") ?? "");
   const next = sanitizeNextPath(form.get("next"), DEFAULT_NEXT);
 
   if (!password || !secret) {
-    const url = `/acceso?${new URLSearchParams({ error: "1", next }).toString()}`;
+    const url = new URL("/acceso", origin);
+    url.searchParams.set("error", "1");
+    url.searchParams.set("next", next);
     return NextResponse.redirect(url, 302);
   }
 
   if (!safeEqual(submitted, password)) {
-    const url = `/acceso?${new URLSearchParams({ error: "1", next }).toString()}`;
+    const url = new URL("/acceso", origin);
+    url.searchParams.set("error", "1");
+    url.searchParams.set("next", next);
     return NextResponse.redirect(url, 302);
   }
 
@@ -63,7 +77,8 @@ export async function POST(request: Request) {
   const token = signToken(expires, secret);
   const secure = process.env.NODE_ENV === "production";
 
-  const response = NextResponse.redirect(next, 302);
+  const redirectTo = new URL(next, origin);
+  const response = NextResponse.redirect(redirectTo, 302);
   response.cookies.set({
     name: AUTH_COOKIE,
     value: token,
@@ -76,9 +91,10 @@ export async function POST(request: Request) {
   return response;
 }
 
-export async function DELETE() {
+export async function DELETE(request: Request) {
   const secure = process.env.NODE_ENV === "production";
-  const response = NextResponse.redirect("/", 302);
+  const origin = publicOrigin(request);
+  const response = NextResponse.redirect(new URL("/", origin), 302);
   response.cookies.set({
     name: AUTH_COOKIE,
     value: "",
