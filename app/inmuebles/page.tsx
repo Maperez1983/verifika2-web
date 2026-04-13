@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { mockListings, type Listing } from "@/lib/listings";
+import { fetchPortalListings } from "@/lib/crmPortal";
 import ChatWidget from "@/components/chat/ChatWidget";
 
 export const metadata: Metadata = {
@@ -22,7 +23,21 @@ export default async function ListingsPage({ searchParams }: PageProps) {
   const city = normalize(params.ciudad).toLowerCase();
   const certifiedOnly = normalize(params.certificado) === "1";
 
-  const filtered = mockListings.filter((listing) => {
+  let sourceListings: Listing[] = [];
+  try {
+    sourceListings = await fetchPortalListings({
+      q: normalize(params.q) || undefined,
+      operacion: operation || undefined,
+      ciudad: normalize(params.ciudad) || undefined,
+      certificado: certifiedOnly,
+      limit: 120,
+    });
+  } catch {
+    sourceListings = [];
+  }
+  if (sourceListings.length === 0) sourceListings = mockListings;
+
+  const filtered = sourceListings.filter((listing) => {
     if (certifiedOnly && !listing.certified) return false;
     if (operation && listing.operation !== operation) return false;
     if (city && !listing.city.toLowerCase().includes(city)) return false;

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { mockListingsById } from "@/lib/listings";
+import { fetchPortalListing } from "@/lib/crmPortal";
 
 export const metadata: Metadata = {
   title: "Solicitar información o visita",
@@ -30,7 +31,9 @@ export default async function InterestPage({ searchParams }: PageProps) {
   const error = normalize(params.error);
   const detail = normalize(params.detail);
   const next = sanitizeNextPath(params.next, "/inmuebles");
-  const listing = listingId ? mockListingsById[listingId] : undefined;
+  const listing = listingId
+    ? (await fetchPortalListing(listingId).catch(() => null)) || mockListingsById[listingId]
+    : undefined;
 
   const title =
     tipo === "visita"

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { mockListingsById } from "@/lib/listings";
+import { fetchPortalListing } from "@/lib/crmPortal";
 import ChatWidget from "@/components/chat/ChatWidget";
 import ViewTracker from "@/components/track/ViewTracker";
 
@@ -23,7 +24,7 @@ export async function generateMetadata({
 
 export default async function ListingDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const listing = mockListingsById[id];
+  const listing = (await fetchPortalListing(id)) || mockListingsById[id];
   if (!listing) notFound();
 
   return (

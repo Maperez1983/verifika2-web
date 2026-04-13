@@ -201,13 +201,16 @@ async function notifySlack(leadRow) {
 
 async function pushToCrm(leadRow) {
   if (!CRM_LEADS_ENDPOINT) return;
+  const payload = isRecord(leadRow?.payload)
+    ? { hub_lead_id: String(leadRow.id), ...leadRow.payload }
+    : { hub_lead_id: String(leadRow.id), payload: leadRow?.payload ?? null };
   const res = await fetch(CRM_LEADS_ENDPOINT, {
     method: "POST",
     headers: {
       "content-type": "application/json",
       ...(CRM_TOKEN ? { authorization: `Bearer ${CRM_TOKEN}` } : {}),
     },
-    body: JSON.stringify(leadRow.payload),
+    body: JSON.stringify(payload),
   });
 
   if (!res.ok) {

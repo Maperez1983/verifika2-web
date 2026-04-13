@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { leadHubFetch } from "@/lib/leadHub";
 import { publicOrigin, sanitizeRelativePath } from "@/lib/http";
-import { mockListingsById } from "@/lib/listings";
+import { fetchPortalListing } from "@/lib/crmPortal";
 
 function normalize(value: unknown) {
   return String(value ?? "").trim();
@@ -60,7 +60,12 @@ export async function POST(request: Request) {
     return NextResponse.redirect(url, 302);
   }
 
-  const listing = listingId ? mockListingsById[listingId] : undefined;
+  let listing: Awaited<ReturnType<typeof fetchPortalListing>> | null = null;
+  try {
+    if (listingId) listing = await fetchPortalListing(listingId);
+  } catch {
+    listing = null;
+  }
   const note = buildNote([
     phone ? `Teléfono: ${phone}` : null,
     message ? `Mensaje: ${message}` : null,
@@ -82,8 +87,8 @@ export async function POST(request: Request) {
           certified: listing.certified,
         }
       : listingId
-        ? { id: listingId }
-        : undefined,
+          ? { id: listingId }
+          : undefined,
     source: {
       path: new URL(request.url).pathname,
       href: request.headers.get("referer") ?? "",
@@ -121,4 +126,3 @@ export async function POST(request: Request) {
   okUrl.searchParams.set("next", next);
   return NextResponse.redirect(okUrl, 302);
 }
-
