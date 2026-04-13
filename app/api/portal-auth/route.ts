@@ -3,6 +3,18 @@ import { NextResponse } from "next/server";
 
 const AUTH_COOKIE = "v2_portal_auth";
 const DEFAULT_TTL_SECONDS = 60 * 60 * 24 * 7;
+const DEFAULT_NEXT = "/inmuebles";
+
+function sanitizeNextPath(value: unknown, fallback: string) {
+  const next = String(value ?? "").trim();
+  if (!next) return fallback;
+  if (!next.startsWith("/")) return fallback;
+  // Prevent scheme-relative redirects like //localhost:3000/...
+  if (next.startsWith("//")) return fallback;
+  // Avoid weird backslash paths.
+  if (next.includes("\\")) return fallback;
+  return next;
+}
 
 function base64url(input: string) {
   return Buffer.from(input, "utf8")
@@ -35,7 +47,7 @@ export async function POST(request: Request) {
 
   const form = await request.formData();
   const submitted = String(form.get("password") ?? "");
-  const next = String(form.get("next") ?? "/inmuebles") || "/inmuebles";
+  const next = sanitizeNextPath(form.get("next"), DEFAULT_NEXT);
 
   if (!password || !secret) {
     const url = new URL("/acceso", request.url);
@@ -55,7 +67,7 @@ export async function POST(request: Request) {
   const token = signToken(expires, secret);
   const secure = process.env.NODE_ENV === "production";
 
-  const redirectTo = new URL(next.startsWith("/") ? next : "/inmuebles", request.url);
+  const redirectTo = new URL(next, request.url);
   const response = NextResponse.redirect(redirectTo, 302);
   response.cookies.set({
     name: AUTH_COOKIE,

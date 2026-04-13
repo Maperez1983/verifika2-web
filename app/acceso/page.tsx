@@ -12,10 +12,18 @@ type PageProps = {
 };
 
 const normalize = (value: unknown) => String(value ?? "").trim();
+const sanitizeNextPath = (value: unknown, fallback: string) => {
+  const next = normalize(value);
+  if (!next) return fallback;
+  if (!next.startsWith("/")) return fallback;
+  if (next.startsWith("//")) return fallback;
+  if (next.includes("\\")) return fallback;
+  return next;
+};
 
 export default async function AccessPage({ searchParams }: PageProps) {
   const params = (await searchParams) || {};
-  const next = normalize(params.next) || "/inmuebles";
+  const next = sanitizeNextPath(params.next, "/inmuebles");
   const error = normalize(params.error) === "1";
 
   return (
@@ -94,4 +102,3 @@ export default async function AccessPage({ searchParams }: PageProps) {
     </div>
   );
 }
-

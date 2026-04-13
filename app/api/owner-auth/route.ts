@@ -4,13 +4,24 @@ import { signSession } from "@/lib/sessionToken";
 import { OWNER_SESSION_COOKIE } from "@/lib/ownerAuth";
 
 const DEFAULT_TTL_SECONDS = 60 * 60 * 24 * 7;
+const DEFAULT_NEXT = "/owner";
+
+function sanitizeNextPath(value: unknown, fallback: string) {
+  const next = String(value ?? "").trim();
+  if (!next) return fallback;
+  if (!next.startsWith("/")) return fallback;
+  // Prevent scheme-relative redirects like //localhost:3000/...
+  if (next.startsWith("//")) return fallback;
+  if (next.includes("\\")) return fallback;
+  return next;
+}
 
 export async function POST(request: Request) {
   const sessionSecret = process.env.OWNER_SESSION_SECRET ?? "";
 
   const form = await request.formData();
   const code = String(form.get("code") ?? "").trim();
-  const next = String(form.get("next") ?? "/owner") || "/owner";
+  const next = sanitizeNextPath(form.get("next"), DEFAULT_NEXT);
 
   if (!sessionSecret) {
     const url = new URL("/owner/acceso", request.url);
@@ -64,7 +75,7 @@ export async function POST(request: Request) {
   );
   const secure = process.env.NODE_ENV === "production";
 
-  const redirectTo = new URL(next.startsWith("/") ? next : "/owner", request.url);
+  const redirectTo = new URL(next, request.url);
   const response = NextResponse.redirect(redirectTo, 302);
   response.cookies.set({
     name: OWNER_SESSION_COOKIE,
