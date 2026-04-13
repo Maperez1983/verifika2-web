@@ -5,6 +5,9 @@ import { mockListingsById } from "@/lib/listings";
 import { fetchPortalListing } from "@/lib/crmPortal";
 import ChatWidget from "@/components/chat/ChatWidget";
 import ViewTracker from "@/components/track/ViewTracker";
+import PublicHeader from "@/components/site/PublicHeader";
+import PublicFooter from "@/components/site/PublicFooter";
+import ListingCover from "@/components/listings/ListingCover";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -29,50 +32,41 @@ export default async function ListingDetailPage({ params }: PageProps) {
 
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
-      <header className="border-b border-[color:var(--border)] bg-[color:var(--surface)]">
-        <div className="mx-auto flex w-full max-w-6xl items-start justify-between gap-6 px-6 py-6">
-          <div className="flex flex-col gap-2">
-            <Link
-              href="/inmuebles"
-              className="w-fit text-sm font-medium text-slate-600 hover:text-[color:var(--foreground)]"
-            >
-              ← Volver a inmuebles
-            </Link>
-            <h1 className="text-2xl font-semibold tracking-tight">
-              {listing.title}
-            </h1>
-            <p className="text-sm text-slate-600">{listing.city}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            {listing.certified ? (
-              <span className="rounded-full bg-[color:var(--brand)] px-3 py-1 text-xs font-medium text-[color:var(--brand-foreground)]">
-                Certificado
-              </span>
-            ) : null}
-            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
-              Verificado
-            </span>
-          </div>
-        </div>
-      </header>
+      <PublicHeader current="portal" showBack backHref="/inmuebles" backLabel="Inmuebles" />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
+        <div className="mb-6 grid gap-4 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm lg:grid-cols-12 lg:items-center">
+          <div className="lg:col-span-8">
+            <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
+              {listing.title}
+            </h1>
+            <p className="pt-2 text-sm text-slate-600">{listing.city}</p>
+            <div className="pt-4 flex flex-wrap items-center gap-2">
+              {listing.certified ? (
+                <span className="rounded-full bg-[color:var(--brand)] px-3 py-1 text-xs font-medium text-[color:var(--brand-foreground)]">
+                  Certificado (premium)
+                </span>
+              ) : null}
+              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
+                Verificado
+              </span>
+              <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-1 text-xs font-medium text-slate-700">
+                Revisado: {listing.verifiedAt}
+              </span>
+            </div>
+          </div>
+
+          <div className="lg:col-span-4">
+            <ListingCover id={listing.id} tone="dark" label={listing.certified ? "Certificado" : "Verificado"} />
+          </div>
+        </div>
+
         <div className="grid gap-6 lg:grid-cols-12">
           <section className="lg:col-span-8">
             <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="md:col-span-2">
-                  <div className="aspect-[16/10] w-full overflow-hidden rounded-3xl border border-[color:var(--border)] bg-[linear-gradient(135deg,rgba(11,29,51,0.08),rgba(242,193,78,0.22))]">
-                    <div className="flex h-full items-end justify-between p-5">
-                      <div className="rounded-2xl bg-[color:var(--surface)]/85 px-3 py-2 text-xs font-medium text-slate-700 backdrop-blur">
-                        Galería (demo)
-                      </div>
-                      <div className="rounded-2xl bg-[color:var(--surface)]/85 px-3 py-2 text-xs font-medium text-slate-700 backdrop-blur">
-                        {listing.propertyType.toUpperCase()} ·{" "}
-                        {listing.operation.toUpperCase()}
-                      </div>
-                    </div>
-                  </div>
+                  <ListingCover id={listing.id} label="Galería (demo)" />
                 </div>
 
                 <div className="md:col-span-1">
@@ -208,6 +202,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
         }}
       />
       <ViewTracker listingId={listing.id} />
+      <PublicFooter />
     </div>
   );
 }

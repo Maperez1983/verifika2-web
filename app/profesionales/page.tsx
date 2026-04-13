@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import PublicHeader from "@/components/site/PublicHeader";
+import PublicFooter from "@/components/site/PublicFooter";
 
 export const metadata: Metadata = {
   title: "Acceso profesionales",
@@ -19,42 +21,35 @@ const links = {
 export default function ProfessionalsPage() {
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
-      <header className="border-b border-[color:var(--border)] bg-[color:var(--surface)]">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-6 py-6">
-          <div>
-            <Link
-              href={links.home}
-              className="text-sm font-medium text-slate-600 hover:text-[color:var(--foreground)]"
-            >
-              ← Volver
-            </Link>
-            <h1 className="pt-2 text-2xl font-semibold tracking-tight">
-              Acceso profesionales
-            </h1>
-            <p className="pt-2 max-w-2xl text-sm leading-6 text-slate-600">
-              Verifika2 es un sistema modular. El portal es la parte pública; el
-              CRM es donde vive la operativa y la documentación que hace posible
-              la verificación.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <a
-              href={links.appInmo}
-              className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-medium text-white hover:bg-[#0F2742]"
-            >
-              Publicar
-            </a>
-            <Link
-              href={links.portal}
-              className="inline-flex h-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm font-medium hover:bg-[color:var(--surface-2)]"
-            >
-              Ver portal
-            </Link>
-          </div>
-        </div>
-      </header>
+      <PublicHeader current="pros" showBack backHref={links.home} backLabel="Landing" />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-12">
+        <div className="mb-6 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight">Acceso profesionales</h1>
+              <p className="pt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                Verifika2 es un sistema modular. El portal es la parte pública; el CRM es donde vive la operativa y la documentación
+                que hace posible la verificación.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <a
+                href={links.appInmo}
+                className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-medium text-white hover:bg-[#0F2742]"
+              >
+                Publicar
+              </a>
+              <Link
+                href={links.portal}
+                className="inline-flex h-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm font-medium hover:bg-[color:var(--surface-2)]"
+              >
+                Ver portal
+              </Link>
+            </div>
+          </div>
+        </div>
+
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm lg:col-span-2">
             <p className="text-sm font-semibold tracking-tight">
@@ -134,6 +129,7 @@ export default function ProfessionalsPage() {
           </aside>
         </div>
       </main>
+      <PublicFooter />
     </div>
   );
 }

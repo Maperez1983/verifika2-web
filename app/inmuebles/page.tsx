@@ -3,6 +3,10 @@ import Link from "next/link";
 import { mockListings, type Listing } from "@/lib/listings";
 import { fetchPortalListings } from "@/lib/crmPortal";
 import ChatWidget from "@/components/chat/ChatWidget";
+import PublicHeader from "@/components/site/PublicHeader";
+import PublicFooter from "@/components/site/PublicFooter";
+import ListingCover from "@/components/listings/ListingCover";
+import HeroIllustration from "@/components/site/HeroIllustration";
 
 export const metadata: Metadata = {
   title: "Inmuebles",
@@ -50,34 +54,35 @@ export default async function ListingsPage({ searchParams }: PageProps) {
 
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
-      <header className="border-b border-[color:var(--border)] bg-[color:var(--surface)]">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-6 py-6">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Inmuebles</h1>
-            <p className="pt-1 text-sm text-slate-600">
-              Todos los anuncios del portal están{" "}
-              <span className="font-medium">verificados</span>. Puedes filtrar
-              por <span className="font-medium">certificados</span> (premium).
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/"
-              className="inline-flex h-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm font-medium hover:bg-[color:var(--surface-2)]"
-            >
-              Volver
-            </Link>
-            <a
-              href="https://app.verifika2.com"
-              className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-medium text-white hover:bg-[#0F2742]"
-            >
-              Acceso
-            </a>
-          </div>
-        </div>
-      </header>
+      <PublicHeader current="portal" showBack backHref="/" backLabel="Landing" />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
+        <div className="relative mb-6 overflow-hidden rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+          <div className="pointer-events-none absolute -right-24 -top-24 h-[340px] w-[520px] opacity-60">
+            <HeroIllustration className="h-full w-full" />
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight">Inmuebles verificados</h1>
+              <p className="pt-2 text-sm leading-6 text-slate-600">
+                Evidencias visibles, estado documental y trazabilidad en cada anuncio.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="rounded-full bg-emerald-50 px-3 py-1 font-medium text-emerald-800">Verificados</span>
+              <span className="rounded-full bg-[color:var(--brand)] px-3 py-1 font-medium text-[color:var(--brand-foreground)]">
+                Certificados (premium)
+              </span>
+              <Link
+                href="/verificacion"
+                className="font-medium text-slate-600 hover:text-[color:var(--foreground)] hover:underline"
+              >
+                ¿Qué significa?
+              </Link>
+            </div>
+          </div>
+        </div>
+
         <div className="grid gap-4 md:grid-cols-3">
           <form
             method="get"
@@ -162,26 +167,6 @@ export default async function ListingsPage({ searchParams }: PageProps) {
           </form>
 
           <div className="md:col-span-2">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] px-5 py-4 shadow-sm">
-              <p className="text-sm text-slate-600">
-                Mostrando{" "}
-                <span className="font-semibold text-[color:var(--foreground)]">
-                  {filtered.length}
-                </span>{" "}
-                resultados verificados
-              </p>
-              <div className="flex items-center gap-2">
-                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
-                  Verificados
-                </span>
-                <Link
-                  href="/verificacion"
-                  className="text-xs font-medium text-slate-600 hover:text-[color:var(--foreground)]"
-                >
-                  ¿Qué significa?
-                </Link>
-              </div>
-            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               {filtered.map((listing) => (
                 <Link
@@ -189,15 +174,11 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                   href={`/inmuebles/${listing.id}`}
                   className="group rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-sm hover:border-slate-300"
                 >
-                  <div className="mb-4 aspect-[16/10] w-full overflow-hidden rounded-3xl border border-[color:var(--border)] bg-[linear-gradient(135deg,rgba(11,29,51,0.08),rgba(242,193,78,0.22))]">
-                    <div className="flex h-full items-end justify-between p-4">
-                      <span className="rounded-full bg-[color:var(--surface)]/85 px-3 py-1 text-xs font-medium text-slate-700 backdrop-blur">
-                        {listing.propertyType.toUpperCase()}
-                      </span>
-                      <span className="rounded-full bg-[color:var(--surface)]/85 px-3 py-1 text-xs font-medium text-slate-700 backdrop-blur">
-                        {listing.operation === "venta" ? "VENTA" : "ALQUILER"}
-                      </span>
-                    </div>
+                  <div className="mb-4">
+                    <ListingCover
+                      id={listing.id}
+                      label={listing.certified ? "Certificado" : "Verificado"}
+                    />
                   </div>
                   <div className="flex items-start justify-between gap-3">
                     <p className="text-sm font-semibold tracking-tight">
@@ -234,6 +215,7 @@ export default async function ListingsPage({ searchParams }: PageProps) {
           </div>
         </div>
       </main>
+      <PublicFooter />
       <ChatWidget scope="portal" defaultPersona="comprador" />
     </div>
   );

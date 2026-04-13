@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import ChatWidget from "@/components/chat/ChatWidget";
+import HeroIllustration from "@/components/site/HeroIllustration";
+import PublicFooter from "@/components/site/PublicFooter";
 
 const links = {
   portal: "/inmuebles",
@@ -186,6 +188,9 @@ export default function Home() {
             </div>
 
             <div className="relative">
+              <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-[42px]">
+                <HeroIllustration className="h-full w-full opacity-70" />
+              </div>
               <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-[0_12px_40px_rgba(0,0,0,0.08)]">
                 <div className="flex items-center justify-between gap-4">
                   <p className="text-sm font-semibold tracking-tight">
@@ -500,42 +505,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="border-t border-[color:var(--border)] bg-[color:var(--surface)]">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-10 text-sm text-zinc-600 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="leading-tight">
-              <Image
-                src="/brand/verifika2_wordmark_traced.svg"
-                alt="Verifika2"
-                width={160}
-                height={34}
-                className="h-6 w-auto"
-              />
-              <p className="pt-1 text-xs text-slate-600">
-                Portal inmobiliario verificado
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-4">
-            <Link className="hover:text-zinc-950" href={links.portal}>
-              Inmuebles
-            </Link>
-            <a className="hover:text-zinc-950" href={links.crm}>
-              CRM
-            </a>
-            <a className="hover:text-zinc-950" href={links.app}>
-              Acceso
-            </a>
-            <Link className="hover:text-zinc-950" href={links.owners}>
-              Propietarios
-            </Link>
-            <Link className="hover:text-zinc-950" href={links.pros}>
-              Profesionales
-            </Link>
-          </div>
-          <p>© {new Date().getFullYear()} Verifika2</p>
-        </div>
-      </footer>
+      <PublicFooter />
       <ChatWidget scope="landing" defaultPersona="comprador" />
     </div>
   );
