@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { mockListings } from "@/lib/listings";
 import { leadHubFetch } from "@/lib/leadHub";
+import { getOwnerSession } from "@/lib/ownerSessionServer";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Owner Portal (beta)",
@@ -46,7 +48,10 @@ async function getHubConfig(): Promise<HubConfig | null> {
 }
 
 export default async function OwnerDashboard() {
-  const listings = mockListings.slice(0, 6);
+  const session = await getOwnerSession();
+  if (!session) redirect("/owner/acceso");
+
+  const listings = mockListings.filter((l) => session.listingIds.includes(l.id));
   const hubConfig = await getHubConfig();
   const summaries = await Promise.all(listings.map((l) => getSummary(l.id)));
   const anySummaryOk = summaries.some(Boolean);

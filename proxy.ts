@@ -1,9 +1,10 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
+import { verifySession } from "@/lib/sessionToken";
 
 const AUTH_COOKIE = "v2_portal_auth";
-const OWNER_AUTH_COOKIE = "v2_owner_auth";
+const OWNER_SESSION_COOKIE = "v2_owner_session";
 
 function fromBase64url(input: string) {
   const padded = input.replaceAll("-", "+").replaceAll("_", "/");
@@ -70,8 +71,7 @@ export function proxy(request: NextRequest) {
 
   const portalPassword = process.env.PORTAL_PASSWORD;
   const portalSecret = process.env.PORTAL_AUTH_SECRET;
-  const ownerPassword = process.env.OWNER_PORTAL_PASSWORD;
-  const ownerSecret = process.env.OWNER_PORTAL_AUTH_SECRET;
+  const ownerSessionSecret = process.env.OWNER_SESSION_SECRET;
 
   const pathname = request.nextUrl.pathname;
 
@@ -85,14 +85,10 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  if (
-    ownerPassword &&
-    ownerSecret &&
-    isProtectedOwnerPath(pathname) &&
-    !pathname.startsWith("/owner/acceso")
-  ) {
-    const token = request.cookies.get(OWNER_AUTH_COOKIE)?.value;
-    if (!token || !verifyToken(token, ownerSecret)) {
+  if (ownerSessionSecret && isProtectedOwnerPath(pathname) && !pathname.startsWith("/owner/acceso")) {
+    const token = request.cookies.get(OWNER_SESSION_COOKIE)?.value ?? "";
+    const session = token ? verifySession(token, ownerSessionSecret) : null;
+    if (!session) {
       const url = request.nextUrl.clone();
       url.pathname = "/owner/acceso";
       url.searchParams.set("next", pathname + request.nextUrl.search);

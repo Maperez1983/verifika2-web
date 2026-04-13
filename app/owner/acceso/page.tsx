@@ -40,24 +40,24 @@ export default async function OwnerAccessPage({ searchParams }: PageProps) {
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
         <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
-          <p className="text-sm font-semibold tracking-tight">Contraseña</p>
+          <p className="text-sm font-semibold tracking-tight">Código de acceso</p>
           <p className="pt-2 text-sm leading-6 text-slate-600">
-            Introduce la contraseña para entrar al Owner Portal.
+            Introduce el código de acceso que te facilitó tu inmobiliaria (o
+            Verifika2) para ver el seguimiento del inmueble.
           </p>
 
           <form method="post" action="/api/owner-auth" className="pt-6 grid gap-3">
             <input type="hidden" name="next" value={next} />
             <input
-              type="password"
-              name="password"
-              placeholder="Contraseña"
+              name="code"
+              placeholder="Ej: V2-ABCD-1234"
               className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
-              autoComplete="current-password"
+              autoComplete="one-time-code"
               required
             />
             {error ? (
               <p className="text-sm text-amber-800">
-                Contraseña incorrecta. Revisa e inténtalo de nuevo.
+                Código incorrecto o sin permisos. Revisa e inténtalo de nuevo.
               </p>
             ) : null}
             <button
@@ -72,4 +72,3 @@ export default async function OwnerAccessPage({ searchParams }: PageProps) {
     </div>
   );
 }
-

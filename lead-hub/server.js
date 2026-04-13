@@ -14,6 +14,7 @@ const HUB_TOKEN = process.env.HUB_TOKEN || "";
 const SLACK_WEBHOOK_URL = (process.env.SLACK_WEBHOOK_URL || process.env.SLACK_WEBHOOK || "").trim();
 const CRM_LEADS_ENDPOINT = process.env.CRM_LEADS_ENDPOINT || "";
 const CRM_TOKEN = process.env.CRM_TOKEN || "";
+const OWNER_CODE_SALT = process.env.OWNER_CODE_SALT || "";
 
 if (!DATABASE_URL) {
   // eslint-disable-next-line no-console
@@ -83,6 +84,53 @@ async function ensureSchema() {
   await pool.query(
     "create index if not exists documents_listing_id_idx on public.documents(listing_id);",
   );
+
+  await pool.query(`
+    create table if not exists public.owners (
+      id bigserial primary key,
+      created_at timestamptz not null default now(),
+      name text,
+      contact text,
+      code_hash text not null unique,
+      listing_ids jsonb not null default '[]'::jsonb,
+      status text not null default 'active'
+    );
+  `);
+
+  await pool.query(`
+    create table if not exists public.milestones (
+      id bigserial primary key,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now(),
+      listing_id text not null,
+      key text not null,
+      title text not null,
+      status text not null default 'pending',
+      due_at timestamptz,
+      completed_at timestamptz,
+      note text
+    );
+  `);
+  await pool.query(
+    "create index if not exists milestones_listing_id_idx on public.milestones(listing_id);",
+  );
+
+  await pool.query(`
+    create table if not exists public.signature_requests (
+      id bigserial primary key,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now(),
+      listing_id text not null,
+      title text not null,
+      status text not null default 'draft',
+      provider text,
+      external_url text,
+      note text
+    );
+  `);
+  await pool.query(
+    "create index if not exists signatures_listing_id_idx on public.signature_requests(listing_id);",
+  );
 }
 
 function bearerToken(req) {
@@ -109,6 +157,16 @@ function isRecord(value) {
 
 function normalize(value) {
   return String(value ?? "").trim();
+}
+
+function sha256(text) {
+  return crypto.createHash("sha256").update(text).digest("hex");
+}
+
+function hashOwnerCode(code) {
+  const normalized = normalize(code).toLowerCase();
+  if (!normalized) return "";
+  return sha256(`${OWNER_CODE_SALT || "v2"}:${normalized}`);
 }
 
 async function postToSlack(text) {
@@ -165,6 +223,88 @@ app.get("/healthz", async (_req, res) => {
   } catch (error) {
     res.status(500).json({ ok: false, error: String(error) });
   }
+});
+
+app.post("/v1/owners", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  if (!OWNER_CODE_SALT) {
+    res.status(500).json({ ok: false, error: "owner_code_salt_missing" });
+    return;
+  }
+
+  const name = normalize(req.body?.name);
+  const contact = normalize(req.body?.contact);
+  const code = normalize(req.body?.code);
+  const listingIds = Array.isArray(req.body?.listing_ids) ? req.body.listing_ids : [];
+
+  if (!code || listingIds.length === 0) {
+    res.status(400).json({ ok: false, error: "missing_fields" });
+    return;
+  }
+
+  const codeHash = hashOwnerCode(code);
+  const insert = await pool.query(
+    `
+      insert into public.owners(name, contact, code_hash, listing_ids)
+      values (nullif($1,''), nullif($2,''), $3, $4::jsonb)
+      on conflict (code_hash) do update set
+        name=excluded.name,
+        contact=excluded.contact,
+        listing_ids=excluded.listing_ids,
+        status='active'
+      returning id, created_at, name, contact, listing_ids, status;
+    `,
+    [name, contact, codeHash, JSON.stringify(listingIds)],
+  );
+
+  res.status(200).json({ ok: true, owner: insert.rows[0] });
+});
+
+app.post("/v1/owners/verify", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  if (!OWNER_CODE_SALT) {
+    res.status(500).json({ ok: false, error: "owner_code_salt_missing" });
+    return;
+  }
+
+  const code = normalize(req.body?.code);
+  const codeHash = hashOwnerCode(code);
+  if (!codeHash) {
+    res.status(400).json({ ok: false, error: "missing_code" });
+    return;
+  }
+
+  const owner = await pool.query(
+    "select id, name, contact, listing_ids, status from public.owners where code_hash=$1 limit 1;",
+    [codeHash],
+  );
+  const row = owner.rows[0];
+  if (!row || row.status !== "active") {
+    res.status(401).json({ ok: false, error: "invalid_code" });
+    return;
+  }
+
+  res.status(200).json({ ok: true, owner: row });
 });
 
 app.get("/v1/metrics", async (req, res) => {
@@ -314,6 +454,7 @@ app.get("/v1/config", async (req, res) => {
     slackWebhookHost: slackHost,
     slackWebhookLength: SLACK_WEBHOOK_URL.length,
     slackEnvKeys,
+    ownerCodeConfigured: Boolean(OWNER_CODE_SALT),
     databaseConfigured: Boolean(DATABASE_URL),
     crmConfigured: Boolean(CRM_LEADS_ENDPOINT),
   });
@@ -525,6 +666,231 @@ app.patch("/v1/documents/:id", async (req, res) => {
   }
 
   res.status(200).json({ ok: true, document: updated.rows[0] });
+});
+
+app.get("/v1/milestones", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  const listingId = normalize(req.query.listing_id);
+  if (!listingId) {
+    res.status(400).json({ ok: false, error: "missing_listing_id" });
+    return;
+  }
+
+  const milestones = await pool.query(
+    `
+      select id, created_at, updated_at, listing_id, key, title, status, due_at, completed_at, note
+      from public.milestones
+      where listing_id=$1
+      order by id asc;
+    `,
+    [listingId],
+  );
+  res.status(200).json({ ok: true, milestones: milestones.rows });
+});
+
+app.post("/v1/milestones", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  const listingId = normalize(req.body?.listing_id);
+  const key = normalize(req.body?.key);
+  const title = normalize(req.body?.title);
+  const dueAt = normalize(req.body?.due_at);
+  const note = normalize(req.body?.note);
+
+  if (!listingId || !key || !title) {
+    res.status(400).json({ ok: false, error: "missing_fields" });
+    return;
+  }
+
+  const inserted = await pool.query(
+    `
+      insert into public.milestones(listing_id, key, title, status, due_at, note)
+      values ($1,$2,$3,'pending', nullif($4,'')::timestamptz, nullif($5,''))
+      returning id, created_at, updated_at, listing_id, key, title, status, due_at, completed_at, note;
+    `,
+    [listingId, key, title, dueAt, note],
+  );
+  res.status(200).json({ ok: true, milestone: inserted.rows[0] });
+});
+
+app.patch("/v1/milestones/:id", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  const id = normalize(req.params.id);
+  const status = normalize(req.body?.status);
+  const note = normalize(req.body?.note);
+
+  const allowedStatus = new Set(["pending", "in_progress", "done"]);
+  if (!allowedStatus.has(status)) {
+    res.status(400).json({ ok: false, error: "invalid_status" });
+    return;
+  }
+
+  const updated = await pool.query(
+    `
+      update public.milestones
+      set
+        status=$2,
+        note=nullif($3,''),
+        updated_at=now(),
+        completed_at = case when $2='done' then now() else null end
+      where id=$1
+      returning id, created_at, updated_at, listing_id, key, title, status, due_at, completed_at, note;
+    `,
+    [id, status, note],
+  );
+
+  if (!updated.rows[0]) {
+    res.status(404).json({ ok: false, error: "not_found" });
+    return;
+  }
+
+  res.status(200).json({ ok: true, milestone: updated.rows[0] });
+});
+
+app.get("/v1/signatures", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  const listingId = normalize(req.query.listing_id);
+  if (!listingId) {
+    res.status(400).json({ ok: false, error: "missing_listing_id" });
+    return;
+  }
+
+  const signatures = await pool.query(
+    `
+      select id, created_at, updated_at, listing_id, title, status, provider, external_url, note
+      from public.signature_requests
+      where listing_id=$1
+      order by id desc;
+    `,
+    [listingId],
+  );
+  res.status(200).json({ ok: true, signatures: signatures.rows });
+});
+
+app.post("/v1/signatures", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  const listingId = normalize(req.body?.listing_id);
+  const title = normalize(req.body?.title);
+  const note = normalize(req.body?.note);
+  const provider = normalize(req.body?.provider) || "pending";
+
+  if (!listingId || !title) {
+    res.status(400).json({ ok: false, error: "missing_fields" });
+    return;
+  }
+
+  const inserted = await pool.query(
+    `
+      insert into public.signature_requests(listing_id, title, status, provider, note)
+      values ($1,$2,'draft',$3,nullif($4,''))
+      returning id, created_at, updated_at, listing_id, title, status, provider, external_url, note;
+    `,
+    [listingId, title, provider, note],
+  );
+
+  try {
+    await postToSlack(
+      `Nueva solicitud de firma (beta)\nInmueble: ${listingId}\nDocumento: ${title}`,
+    );
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.warn("[lead-hub] Slack notify failed:", error);
+  }
+
+  res.status(200).json({ ok: true, signature: inserted.rows[0] });
+});
+
+app.patch("/v1/signatures/:id", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  const id = normalize(req.params.id);
+  const status = normalize(req.body?.status);
+  const externalUrl = normalize(req.body?.external_url);
+  const note = normalize(req.body?.note);
+
+  const allowedStatus = new Set(["draft", "sent", "signed", "failed"]);
+  if (!allowedStatus.has(status)) {
+    res.status(400).json({ ok: false, error: "invalid_status" });
+    return;
+  }
+
+  const updated = await pool.query(
+    `
+      update public.signature_requests
+      set
+        status=$2,
+        external_url=nullif($3,''),
+        note=nullif($4,''),
+        updated_at=now()
+      where id=$1
+      returning id, created_at, updated_at, listing_id, title, status, provider, external_url, note;
+    `,
+    [id, status, externalUrl, note],
+  );
+
+  if (!updated.rows[0]) {
+    res.status(404).json({ ok: false, error: "not_found" });
+    return;
+  }
+  res.status(200).json({ ok: true, signature: updated.rows[0] });
 });
 
 app.post("/v1/slack/test", async (req, res) => {

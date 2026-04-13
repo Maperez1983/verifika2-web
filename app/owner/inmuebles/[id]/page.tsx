@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { mockListingsById } from "@/lib/listings";
 import { leadHubFetch } from "@/lib/leadHub";
+import { getOwnerSession } from "@/lib/ownerSessionServer";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Seguimiento del inmueble",
@@ -36,6 +38,31 @@ type HubDoc = {
   listing_id: string;
   title: string;
   status: string;
+  note: string | null;
+};
+
+type HubMilestone = {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  listing_id: string;
+  key: string;
+  title: string;
+  status: string;
+  due_at: string | null;
+  completed_at: string | null;
+  note: string | null;
+};
+
+type HubSignature = {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  listing_id: string;
+  title: string;
+  status: string;
+  provider: string | null;
+  external_url: string | null;
   note: string | null;
 };
 
@@ -88,18 +115,54 @@ async function getDocuments(listingId: string): Promise<HubDoc[]> {
   }
 }
 
+async function getMilestones(listingId: string): Promise<HubMilestone[]> {
+  try {
+    const res = await leadHubFetch(
+      `/v1/milestones?listing_id=${encodeURIComponent(listingId)}`,
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data.milestones)
+      ? (data.milestones as HubMilestone[])
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+async function getSignatures(listingId: string): Promise<HubSignature[]> {
+  try {
+    const res = await leadHubFetch(
+      `/v1/signatures?listing_id=${encodeURIComponent(listingId)}`,
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data.signatures)
+      ? (data.signatures as HubSignature[])
+      : [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function OwnerListingPage({ params, searchParams }: PageProps) {
+  const session = await getOwnerSession();
+  if (!session) redirect("/owner/acceso");
+
   const { id } = await params;
   const sp = (await searchParams) || {};
   const tab = normalize(sp.tab) || "resumen";
 
   const listing = mockListingsById[id];
   if (!listing) notFound();
+  if (!session.listingIds.includes(listing.id)) notFound();
 
   const summary = await getSummary(listing.id);
   const leads = tab === "leads" ? await getLeads(listing.id) : [];
   const visits = tab === "visitas" ? await getLeads(listing.id, "visita") : [];
   const documents = tab === "docs" ? await getDocuments(listing.id) : [];
+  const milestones = tab === "hitos" ? await getMilestones(listing.id) : [];
+  const signatures = tab === "firma" ? await getSignatures(listing.id) : [];
 
   const views = summary?.metrics?.views ?? 0;
   const leadsTotal = summary?.counts?.leads_total ?? 0;
@@ -143,6 +206,9 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
             </Tab>
             <Tab href={`/owner/inmuebles/${listing.id}?tab=docs`} active={tab === "docs"}>
               Documentos
+            </Tab>
+            <Tab href={`/owner/inmuebles/${listing.id}?tab=hitos`} active={tab === "hitos"}>
+              Hitos
             </Tab>
             <Tab href={`/owner/inmuebles/${listing.id}?tab=firma`} active={tab === "firma"}>
               Firma
@@ -226,23 +292,20 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
           />
         ) : null}
 
+        {tab === "hitos" ? (
+          <MilestonesSection
+            listingId={listing.id}
+            milestones={milestones}
+            returnTo={`/owner/inmuebles/${listing.id}?tab=hitos`}
+          />
+        ) : null}
+
         {tab === "firma" ? (
-          <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
-            <p className="text-sm font-semibold tracking-tight">Firma digital</p>
-            <p className="pt-3 text-sm leading-6 text-slate-600">
-              Integración prevista con firma electrónica (DocuSign/Dropbox Sign)
-              para reservar, arras y anexos. En esta beta, dejamos preparado el
-              flujo y la trazabilidad, pero no se firma todavía.
-            </p>
-            <div className="pt-5 rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-5">
-              <p className="text-sm font-semibold">Siguiente fase</p>
-              <ul className="pt-3 space-y-2 text-sm text-slate-700">
-                <li>1) Plantillas por tipo de operación (venta/alquiler).</li>
-                <li>2) Envío para firma + auditoría (IP, fecha, hash).</li>
-                <li>3) Guardado automático en repositorio documental.</li>
-              </ul>
-            </div>
-          </div>
+          <SignaturesSection
+            listingId={listing.id}
+            signatures={signatures}
+            returnTo={`/owner/inmuebles/${listing.id}?tab=firma`}
+          />
         ) : null}
       </main>
     </div>
@@ -560,6 +623,187 @@ function DocCard({ doc, returnTo }: { doc: HubDoc; returnTo: string }) {
             Guardar
           </button>
         </form>
+      </div>
+    </div>
+  );
+}
+
+function milestonePill(status: string) {
+  if (status === "done") return "bg-emerald-50 text-emerald-800";
+  if (status === "in_progress") return "bg-amber-50 text-amber-800";
+  return "bg-slate-100 text-slate-800";
+}
+
+function MilestonesSection({
+  listingId,
+  milestones,
+  returnTo,
+}: {
+  listingId: string;
+  milestones: HubMilestone[];
+  returnTo: string;
+}) {
+  return (
+    <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+      <p className="text-sm font-semibold tracking-tight">Hitos</p>
+      <p className="pt-2 text-sm leading-6 text-slate-600">
+        Timeline de la operación (beta): reserva, arras, notaría, entrega de llaves… con estado y trazabilidad.
+      </p>
+
+      <div className="pt-6 rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-5">
+        <p className="text-sm font-semibold">Añadir hito</p>
+        <form method="post" action="/api/owner/milestones/create" className="pt-4 grid gap-2 sm:grid-cols-12">
+          <input type="hidden" name="listing_id" value={listingId} />
+          <input type="hidden" name="return_to" value={returnTo} />
+          <input
+            name="title"
+            placeholder="Ej: Firma de arras"
+            className="sm:col-span-8 w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
+            required
+          />
+          <button
+            type="submit"
+            className="sm:col-span-4 inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-medium text-white hover:bg-[#0F2742]"
+          >
+            Añadir
+          </button>
+        </form>
+      </div>
+
+      <div className="pt-6 grid gap-3">
+        {milestones.length === 0 ? (
+          <Empty text="Aún no hay hitos para este inmueble." />
+        ) : (
+          milestones.map((m) => (
+            <div key={m.id} className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <span className={`rounded-full px-3 py-1 text-xs font-medium ${milestonePill(m.status)}`}>
+                    {m.status}
+                  </span>
+                  <p className="pt-3 text-sm font-semibold tracking-tight">{m.title}</p>
+                  {m.due_at ? (
+                    <p className="pt-2 text-sm text-slate-600">
+                      Fecha prevista: {new Date(m.due_at).toLocaleString("es-ES")}
+                    </p>
+                  ) : null}
+                </div>
+                <form method="post" action={`/api/owner/milestones/${encodeURIComponent(m.id)}`} className="grid gap-2 sm:w-[280px]">
+                  <input type="hidden" name="return_to" value={returnTo} />
+                  <label className="text-xs font-medium text-slate-600" htmlFor={`m_${m.id}`}>
+                    Estado
+                  </label>
+                  <select
+                    id={`m_${m.id}`}
+                    name="status"
+                    defaultValue={m.status}
+                    className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-3 text-sm outline-none focus:border-slate-400"
+                  >
+                    <option value="pending">Pendiente</option>
+                    <option value="in_progress">En curso</option>
+                    <option value="done">Hecho</option>
+                  </select>
+                  <button type="submit" className="mt-1 inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-medium text-white hover:bg-[#0F2742]">
+                    Guardar
+                  </button>
+                </form>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function signaturePill(status: string) {
+  if (status === "signed") return "bg-emerald-50 text-emerald-800";
+  if (status === "sent") return "bg-amber-50 text-amber-800";
+  if (status === "failed") return "bg-amber-50 text-amber-800";
+  return "bg-slate-100 text-slate-800";
+}
+
+function SignaturesSection({
+  listingId,
+  signatures,
+  returnTo,
+}: {
+  listingId: string;
+  signatures: HubSignature[];
+  returnTo: string;
+}) {
+  return (
+    <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+      <p className="text-sm font-semibold tracking-tight">Firma digital</p>
+      <p className="pt-2 text-sm leading-6 text-slate-600">
+        Beta: registra solicitudes de firma (arras, anexos, autorización…) y su estado. En la siguiente fase se integrará el proveedor de firma.
+      </p>
+
+      <div className="pt-6 rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-5">
+        <p className="text-sm font-semibold">Solicitar firma</p>
+        <form method="post" action="/api/owner/signatures/create" className="pt-4 grid gap-2 sm:grid-cols-12">
+          <input type="hidden" name="listing_id" value={listingId} />
+          <input type="hidden" name="return_to" value={returnTo} />
+          <input
+            name="title"
+            placeholder="Ej: Contrato de arras"
+            className="sm:col-span-8 w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
+            required
+          />
+          <button
+            type="submit"
+            className="sm:col-span-4 inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-medium text-white hover:bg-[#0F2742]"
+          >
+            Crear
+          </button>
+        </form>
+      </div>
+
+      <div className="pt-6 grid gap-3">
+        {signatures.length === 0 ? (
+          <Empty text="Aún no hay solicitudes de firma para este inmueble." />
+        ) : (
+          signatures.map((s) => (
+            <div key={s.id} className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <span className={`rounded-full px-3 py-1 text-xs font-medium ${signaturePill(s.status)}`}>
+                    {s.status}
+                  </span>
+                  <p className="pt-3 text-sm font-semibold tracking-tight">{s.title}</p>
+                  <p className="pt-2 text-sm text-slate-600">
+                    Actualizado: {new Date(s.updated_at).toLocaleString("es-ES")}
+                  </p>
+                  {s.external_url ? (
+                    <a className="pt-2 block text-sm font-medium text-[color:var(--foreground)] hover:underline" href={s.external_url}>
+                      Abrir enlace
+                    </a>
+                  ) : null}
+                </div>
+                <form method="post" action={`/api/owner/signatures/${encodeURIComponent(s.id)}`} className="grid gap-2 sm:w-[280px]">
+                  <input type="hidden" name="return_to" value={returnTo} />
+                  <label className="text-xs font-medium text-slate-600" htmlFor={`s_${s.id}`}>
+                    Estado
+                  </label>
+                  <select
+                    id={`s_${s.id}`}
+                    name="status"
+                    defaultValue={s.status}
+                    className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-3 text-sm outline-none focus:border-slate-400"
+                  >
+                    <option value="draft">Borrador</option>
+                    <option value="sent">Enviado</option>
+                    <option value="signed">Firmado</option>
+                    <option value="failed">Fallido</option>
+                  </select>
+                  <button type="submit" className="mt-1 inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-medium text-white hover:bg-[#0F2742]">
+                    Guardar
+                  </button>
+                </form>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

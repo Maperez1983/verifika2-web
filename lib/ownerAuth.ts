@@ -1,43 +1,33 @@
-import { createHmac, timingSafeEqual } from "crypto";
 import type { NextRequest } from "next/server";
+import { verifySession, type SessionPayload } from "@/lib/sessionToken";
 
-const OWNER_AUTH_COOKIE = "v2_owner_auth";
+export const OWNER_SESSION_COOKIE = "v2_owner_session";
 
-function fromBase64url(input: string) {
-  const padded = input.replaceAll("-", "+").replaceAll("_", "/");
-  const pad = padded.length % 4 === 0 ? "" : "=".repeat(4 - (padded.length % 4));
-  return Buffer.from(padded + pad, "base64").toString("utf8");
+export type OwnerSession = {
+  ownerId: string;
+  listingIds: string[];
+};
+
+function payloadToOwnerSession(payload: SessionPayload | null): OwnerSession | null {
+  if (!payload) return null;
+  const ownerId = String(payload.ownerId ?? "").trim();
+  const listingIds = Array.isArray(payload.listingIds)
+    ? payload.listingIds.map((v) => String(v)).filter(Boolean)
+    : [];
+  if (!ownerId || listingIds.length === 0) return null;
+  return { ownerId, listingIds };
 }
 
-function verifyToken(token: string, secret: string) {
-  const [payload, signature] = token.split(".");
-  if (!payload || !signature) return false;
-
-  const expected = createHmac("sha256", secret).update(payload).digest("hex");
-  try {
-    const a = Buffer.from(signature);
-    const b = Buffer.from(expected);
-    if (a.length !== b.length) return false;
-    if (!timingSafeEqual(a, b)) return false;
-  } catch {
-    return false;
-  }
-
-  const expiresRaw = fromBase64url(payload);
-  const expires = Number(expiresRaw);
-  if (!Number.isFinite(expires)) return false;
-  const now = Math.floor(Date.now() / 1000);
-  return expires > now;
+export function getOwnerSessionFromRequest(request: NextRequest): OwnerSession | null {
+  const secret = process.env.OWNER_SESSION_SECRET ?? "";
+  if (!secret) return null;
+  const token = request.cookies.get(OWNER_SESSION_COOKIE)?.value ?? "";
+  if (!token) return null;
+  return payloadToOwnerSession(verifySession(token, secret));
 }
 
-export function assertOwnerAuth(request: NextRequest) {
-  const password = process.env.OWNER_PORTAL_PASSWORD ?? "";
-  const secret = process.env.OWNER_PORTAL_AUTH_SECRET ?? "";
-  if (!password || !secret) return;
-
-  const token = request.cookies.get(OWNER_AUTH_COOKIE)?.value ?? "";
-  if (!token || !verifyToken(token, secret)) {
-    throw new Error("owner_unauthorized");
-  }
+export function assertOwnerAuth(request: NextRequest): OwnerSession {
+  const session = getOwnerSessionFromRequest(request);
+  if (!session) throw new Error("owner_unauthorized");
+  return session;
 }
-
