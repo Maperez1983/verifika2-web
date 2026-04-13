@@ -67,8 +67,13 @@ async function getSignatures(listingId: string): Promise<HubSignature[]> {
   }
 }
 
-export default async function AdminListingPage({ params }: PageProps) {
+const normalize = (value: unknown) => String(value ?? "").trim();
+
+export default async function AdminListingPage({ params, searchParams }: PageProps) {
   const { id } = await params;
+  const sp = (await searchParams) || {};
+  const ok = normalize(sp.ok) === "1";
+  const error = normalize(sp.error);
   const listing = await fetchPortalListing(id).catch(() => null);
   if (!listing) notFound();
   const published = Boolean((listing as { published?: boolean }).published);
@@ -112,6 +117,18 @@ export default async function AdminListingPage({ params }: PageProps) {
       </header>
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
+        {ok ? (
+          <div className="mb-6 rounded-[28px] border border-emerald-200 bg-emerald-50 px-6 py-5 text-sm text-emerald-900">
+            <p className="font-semibold">Guardado</p>
+            <p className="pt-2 leading-6">Cambios aplicados correctamente.</p>
+          </div>
+        ) : null}
+        {error ? (
+          <div className="mb-6 rounded-[28px] border border-amber-200 bg-amber-50 px-6 py-5 text-sm text-amber-900">
+            <p className="font-semibold">No se pudo aplicar</p>
+            <p className="pt-2 leading-6">{error}</p>
+          </div>
+        ) : null}
         <div className="grid gap-6 lg:grid-cols-12">
           <section className="lg:col-span-6">
             <Panel title="Publicación" subtitle="Controla si este inmueble aparece en el portal público.">
