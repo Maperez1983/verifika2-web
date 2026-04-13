@@ -8,6 +8,8 @@ export const metadata: Metadata = {
   title: "Seguimiento del inmueble",
 };
 
+export const dynamic = "force-dynamic";
+
 type PageProps = {
   params: Promise<{ id: string }>;
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -150,6 +152,14 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
       </header>
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
+        {!summary ? (
+          <div className="mb-6 rounded-[28px] border border-amber-200 bg-amber-50 px-6 py-5 text-sm text-amber-900">
+            <p className="font-semibold">No se pueden cargar métricas.</p>
+            <p className="pt-2 leading-6">
+              El Owner Portal no está pudiendo leer el Lead Hub (`/v1/metrics`). Revisa variables del servicio `verifika2-web`.
+            </p>
+          </div>
+        ) : null}
         {tab === "resumen" ? (
           <div className="grid gap-6 lg:grid-cols-12">
             <section className="lg:col-span-8">
@@ -554,4 +564,3 @@ function DocCard({ doc, returnTo }: { doc: HubDoc; returnTo: string }) {
     </div>
   );
 }
-

@@ -17,6 +17,14 @@ type ListingSummary = {
   counts: { leads_total: number; leads_info: number; leads_visita: number };
 };
 
+type HubConfig = {
+  ok: boolean;
+  hubConfigured: boolean;
+  slackConfigured: boolean;
+  databaseConfigured: boolean;
+  crmConfigured: boolean;
+};
+
 async function getSummary(listingId: string): Promise<ListingSummary | null> {
   try {
     const res = await leadHubFetch(`/v1/metrics?listing_id=${encodeURIComponent(listingId)}`);
@@ -27,9 +35,21 @@ async function getSummary(listingId: string): Promise<ListingSummary | null> {
   }
 }
 
+async function getHubConfig(): Promise<HubConfig | null> {
+  try {
+    const res = await leadHubFetch("/v1/config");
+    if (!res.ok) return null;
+    return (await res.json()) as HubConfig;
+  } catch {
+    return null;
+  }
+}
+
 export default async function OwnerDashboard() {
   const listings = mockListings.slice(0, 6);
+  const hubConfig = await getHubConfig();
   const summaries = await Promise.all(listings.map((l) => getSummary(l.id)));
+  const anySummaryOk = summaries.some(Boolean);
 
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
@@ -66,6 +86,26 @@ export default async function OwnerDashboard() {
       </header>
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
+        {!anySummaryOk ? (
+          <div className="mb-6 rounded-[28px] border border-amber-200 bg-amber-50 px-6 py-5 text-sm text-amber-900">
+            <p className="font-semibold">No se pueden cargar las métricas.</p>
+            <p className="pt-2 leading-6">
+              Revisa que `verifika2-web` tenga configurado el acceso al Lead Hub
+              (variables `LEADS_WEBHOOK_URL`/`LEADS_WEBHOOK_TOKEN` o `LEAD_HUB_URL`/`LEAD_HUB_TOKEN`).
+            </p>
+            {hubConfig ? (
+              <p className="pt-2 text-xs text-amber-900/80">
+                Hub: {hubConfig.hubConfigured ? "OK" : "KO"} · DB:{" "}
+                {hubConfig.databaseConfigured ? "OK" : "KO"} · Slack:{" "}
+                {hubConfig.slackConfigured ? "OK" : "KO"}
+              </p>
+            ) : (
+              <p className="pt-2 text-xs text-amber-900/80">
+                No se puede leer `/v1/config` desde este servicio.
+              </p>
+            )}
+          </div>
+        ) : null}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {listings.map((listing, index) => {
             const summary = summaries[index];
