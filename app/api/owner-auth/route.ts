@@ -24,16 +24,12 @@ export async function POST(request: Request) {
   const next = sanitizeNextPath(form.get("next"), DEFAULT_NEXT);
 
   if (!sessionSecret) {
-    const url = new URL("/owner/acceso", request.url);
-    url.searchParams.set("error", "1");
-    url.searchParams.set("next", next);
+    const url = `/owner/acceso?${new URLSearchParams({ error: "1", next }).toString()}`;
     return NextResponse.redirect(url, 302);
   }
 
   if (!code) {
-    const url = new URL("/owner/acceso", request.url);
-    url.searchParams.set("error", "1");
-    url.searchParams.set("next", next);
+    const url = `/owner/acceso?${new URLSearchParams({ error: "1", next }).toString()}`;
     return NextResponse.redirect(url, 302);
   }
 
@@ -59,9 +55,7 @@ export async function POST(request: Request) {
     : [];
 
   if (!ownerId || listingIds.length === 0) {
-    const url = new URL("/owner/acceso", request.url);
-    url.searchParams.set("error", "1");
-    url.searchParams.set("next", next);
+    const url = `/owner/acceso?${new URLSearchParams({ error: "1", next }).toString()}`;
     return NextResponse.redirect(url, 302);
   }
 
@@ -75,8 +69,7 @@ export async function POST(request: Request) {
   );
   const secure = process.env.NODE_ENV === "production";
 
-  const redirectTo = new URL(next, request.url);
-  const response = NextResponse.redirect(redirectTo, 302);
+  const response = NextResponse.redirect(next, 302);
   response.cookies.set({
     name: OWNER_SESSION_COOKIE,
     value: token,
@@ -89,10 +82,9 @@ export async function POST(request: Request) {
   return response;
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE() {
   const secure = process.env.NODE_ENV === "production";
-  const redirectTo = new URL("/propietarios", request.url);
-  const response = NextResponse.redirect(redirectTo, 302);
+  const response = NextResponse.redirect("/propietarios", 302);
   response.cookies.set({
     name: OWNER_SESSION_COOKIE,
     value: "",

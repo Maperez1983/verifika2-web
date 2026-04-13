@@ -50,16 +50,12 @@ export async function POST(request: Request) {
   const next = sanitizeNextPath(form.get("next"), DEFAULT_NEXT);
 
   if (!password || !secret) {
-    const url = new URL("/acceso", request.url);
-    url.searchParams.set("error", "1");
-    url.searchParams.set("next", next);
+    const url = `/acceso?${new URLSearchParams({ error: "1", next }).toString()}`;
     return NextResponse.redirect(url, 302);
   }
 
   if (!safeEqual(submitted, password)) {
-    const url = new URL("/acceso", request.url);
-    url.searchParams.set("error", "1");
-    url.searchParams.set("next", next);
+    const url = `/acceso?${new URLSearchParams({ error: "1", next }).toString()}`;
     return NextResponse.redirect(url, 302);
   }
 
@@ -67,8 +63,7 @@ export async function POST(request: Request) {
   const token = signToken(expires, secret);
   const secure = process.env.NODE_ENV === "production";
 
-  const redirectTo = new URL(next, request.url);
-  const response = NextResponse.redirect(redirectTo, 302);
+  const response = NextResponse.redirect(next, 302);
   response.cookies.set({
     name: AUTH_COOKIE,
     value: token,
@@ -81,10 +76,9 @@ export async function POST(request: Request) {
   return response;
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE() {
   const secure = process.env.NODE_ENV === "production";
-  const redirectTo = new URL("/", request.url);
-  const response = NextResponse.redirect(redirectTo, 302);
+  const response = NextResponse.redirect("/", 302);
   response.cookies.set({
     name: AUTH_COOKIE,
     value: "",
