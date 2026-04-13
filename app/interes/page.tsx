@@ -157,16 +157,15 @@ export default async function InterestPage({ searchParams }: PageProps) {
                   <input
                     name="telefono"
                     defaultValue={normalize(params.telefono)}
-                    placeholder="Teléfono (opcional)"
+                    placeholder="Teléfono"
                     className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
                   />
                 </div>
                 <input
                   name="email"
                   defaultValue={normalize(params.email)}
-                  placeholder="Email"
+                  placeholder="Email (si prefieres que te respondamos por email)"
                   className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
-                  required
                 />
                 <textarea
                   name="mensaje"
@@ -174,6 +173,9 @@ export default async function InterestPage({ searchParams }: PageProps) {
                   placeholder={tipo === "visita" ? "Disponibilidad / mensaje" : "Mensaje (opcional)"}
                   className="min-h-[112px] w-full resize-y rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
                 />
+                <p className="text-xs text-slate-600">
+                  Necesitamos al menos <span className="font-medium">teléfono o email</span> para poder contactarte.
+                </p>
 
                 <label className="flex items-start gap-3 rounded-2xl bg-[color:var(--surface-2)] px-4 py-3 text-sm text-slate-700">
                   <input type="checkbox" name="consent" value="1" className="mt-1" />
