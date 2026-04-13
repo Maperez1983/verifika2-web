@@ -11,6 +11,7 @@ export type Listing = {
   description: string;
   verifiedAt: string;
   certified: boolean;
+  published?: boolean;
 };
 
 export const mockListings: Listing[] = [
@@ -28,6 +29,7 @@ export const mockListings: Listing[] = [
       "Vivienda luminosa a pocos minutos de todo. Publicación con evidencias y trazabilidad.",
     verifiedAt: "2026-04-08",
     certified: true,
+    published: true,
   },
   {
     id: "atico-luminoso-78m2",
@@ -43,6 +45,7 @@ export const mockListings: Listing[] = [
       "Ático listo para entrar a vivir. Operación clara con documentación revisada.",
     verifiedAt: "2026-04-10",
     certified: false,
+    published: true,
   },
   {
     id: "casa-jardin-190m2",
@@ -58,6 +61,7 @@ export const mockListings: Listing[] = [
       "Casa amplia y cómoda. Ejemplo de publicación certificada para máxima confianza.",
     verifiedAt: "2026-04-06",
     certified: true,
+    published: true,
   },
   {
     id: "piso-obra-nueva-95m2",
@@ -73,6 +77,7 @@ export const mockListings: Listing[] = [
       "Obra nueva con alta demanda. Publicación verificada con estado documental visible.",
     verifiedAt: "2026-04-07",
     certified: false,
+    published: true,
   },
   {
     id: "local-comercial-140m2",
@@ -88,6 +93,7 @@ export const mockListings: Listing[] = [
       "Local en zona de paso. Información estructurada y evidencias para reducir sorpresas.",
     verifiedAt: "2026-04-09",
     certified: false,
+    published: true,
   },
   {
     id: "atico-terraza-120m2",
@@ -103,10 +109,10 @@ export const mockListings: Listing[] = [
       "Ático con terraza y luz. Publicación certificada para compradores exigentes.",
     verifiedAt: "2026-04-05",
     certified: true,
+    published: true,
   },
 ];
 
 export const mockListingsById = Object.fromEntries(
   mockListings.map((listing) => [listing.id, listing]),
 ) as Record<string, Listing>;
-

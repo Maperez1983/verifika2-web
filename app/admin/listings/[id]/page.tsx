@@ -13,6 +13,7 @@ export const dynamic = "force-dynamic";
 
 type PageProps = {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
 type HubMetrics = { views: number; last_view_at: string | null };
@@ -70,6 +71,7 @@ export default async function AdminListingPage({ params }: PageProps) {
   const { id } = await params;
   const listing = await fetchPortalListing(id).catch(() => null);
   if (!listing) notFound();
+  const published = Boolean((listing as { published?: boolean }).published);
 
   const metrics = await getMetrics(listing.id);
   const [documents, milestones, signatures] = await Promise.all([
@@ -112,6 +114,35 @@ export default async function AdminListingPage({ params }: PageProps) {
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
         <div className="grid gap-6 lg:grid-cols-12">
           <section className="lg:col-span-6">
+            <Panel title="Publicación" subtitle="Controla si este inmueble aparece en el portal público.">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="text-sm text-slate-700">
+                  Estado:{" "}
+                  <span className={published ? "font-semibold text-emerald-800" : "font-semibold text-amber-900"}>
+                    {published ? "Publicado" : "Oculto"}
+                  </span>
+                </div>
+                <form method="post" action="/api/admin/crm/publish">
+                  <input type="hidden" name="listing_id" value={listing.id} />
+                  <input type="hidden" name="published" value={published ? "0" : "1"} />
+                  <input
+                    type="hidden"
+                    name="return_to"
+                    value={`/admin/listings/${encodeURIComponent(listing.id)}`}
+                  />
+                  <button
+                    type="submit"
+                    className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-medium text-white hover:bg-[#0F2742]"
+                  >
+                    {published ? "Ocultar en portal" : "Publicar en portal"}
+                  </button>
+                </form>
+              </div>
+              <p className="pt-3 text-xs text-slate-500">
+                Requiere `CRM_PORTAL_ADMIN_TOKEN` configurado en `verifika2-web`.
+              </p>
+            </Panel>
+
             <Panel title="Documentos" subtitle="Checklist (títulos/estado) para owner portal.">
               <form method="post" action="/api/admin/documents/seed" className="flex gap-2">
                 <input type="hidden" name="listing_id" value={listing.id} />

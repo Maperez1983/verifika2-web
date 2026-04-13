@@ -7,6 +7,12 @@ export const metadata: Metadata = {
     "Publica inmuebles en Verifika2 con verificación documental obligatoria. Para particulares e inmobiliarias.",
 };
 
+type PageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+const normalize = (value: unknown) => String(value ?? "").trim();
+
 const links = {
   home: "/",
   portal: "/inmuebles",
@@ -16,7 +22,11 @@ const links = {
   crmInmo: "https://crm.verifika2.com/?crm=inmo",
 };
 
-export default function PublishPage() {
+export default async function PublishPage({ searchParams }: PageProps) {
+  const params = (await searchParams) || {};
+  const sent = normalize(params.sent) === "1";
+  const error = normalize(params.error);
+
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
       <header className="border-b border-[color:var(--border)] bg-[color:var(--surface)]">
@@ -126,6 +136,89 @@ export default function PublishPage() {
             </p>
           </aside>
         </div>
+
+        <div className="pt-10">
+          <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+            <p className="text-sm font-semibold tracking-tight">
+              Solicitar publicación (particular / propietario)
+            </p>
+            <p className="pt-2 max-w-3xl text-sm leading-6 text-slate-600">
+              Deja tus datos y te contactamos para iniciar la verificación documental del anuncio.
+            </p>
+
+            {sent ? (
+              <div className="mt-4 rounded-3xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-900">
+                <p className="font-semibold">Solicitud enviada</p>
+                <p className="pt-2 leading-6">
+                  Hemos registrado tu solicitud. Te pediremos la documentación necesaria para verificar el anuncio.
+                </p>
+              </div>
+            ) : null}
+
+            {error && !sent ? (
+              <div className="mt-4 rounded-3xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
+                <p className="font-semibold">No se pudo enviar</p>
+                <p className="pt-2 leading-6">Error: {error}</p>
+              </div>
+            ) : null}
+
+            <form method="post" action="/api/publicar" className="pt-6 grid gap-3">
+              <div className="grid gap-2 sm:grid-cols-2">
+                <input
+                  name="nombre"
+                  placeholder="Nombre"
+                  className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
+                />
+                <input
+                  name="telefono"
+                  placeholder="Teléfono"
+                  className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
+                />
+              </div>
+              <input
+                name="email"
+                placeholder="Email"
+                className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
+              />
+              <div className="grid gap-2 sm:grid-cols-2">
+                <input
+                  name="ciudad"
+                  placeholder="Ciudad"
+                  className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
+                />
+                <select
+                  name="operacion"
+                  className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
+                  defaultValue=""
+                >
+                  <option value="">Operación (opcional)</option>
+                  <option value="venta">Venta</option>
+                  <option value="alquiler">Alquiler</option>
+                </select>
+              </div>
+              <textarea
+                name="mensaje"
+                placeholder="Mensaje (tipo de inmueble, zona, etc.)"
+                className="min-h-[112px] w-full resize-y rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
+              />
+              <p className="text-xs text-slate-600">
+                Necesitamos al menos <span className="font-medium">teléfono o email</span>.
+              </p>
+              <label className="flex items-start gap-3 rounded-2xl bg-[color:var(--surface-2)] px-4 py-3 text-sm text-slate-700">
+                <input type="checkbox" name="consent" value="1" className="mt-1" />
+                <span>
+                  Acepto que se registren mis datos para gestionar esta solicitud y contactarme sobre la publicación.
+                </span>
+              </label>
+              <button
+                type="submit"
+                className="mt-1 inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-medium text-white hover:bg-[#0F2742]"
+              >
+                Enviar solicitud
+              </button>
+            </form>
+          </div>
+        </div>
       </main>
     </div>
   );
@@ -170,4 +263,3 @@ function Card({
     </div>
   );
 }
-
