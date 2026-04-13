@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Verifika2 Web (portal + owner portal)
 
-## Getting Started
+Portal público (listados/landing) + “Owner Portal” para propietarios (seguimiento, documentación, hitos, firmas y métricas), conectado al servicio `lead-hub/`.
 
-First, run the development server:
+### Rutas principales
+
+- Landing/portal: `/`
+- Inmuebles: `/inmuebles`
+- Interés/contacto: `/interes`
+- Publicar (demo): `/publicar`
+- Acceso portal (si está protegido): `/acceso`
+- Owner Portal (requiere código): `/owner/acceso`
+- Healthcheck: `/healthz`
+- Debug Lead Hub: `/api/debug/lead-hub`
+
+### Desarrollo local
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abrir `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Variables de entorno (Render)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Conexión con Lead Hub (recomendado)**
 
-## Learn More
+- `LEADS_WEBHOOK_URL` = `https://lead-hub.onrender.com/v1/leads` (o `LEAD_HUB_URL`)
+- `LEADS_WEBHOOK_TOKEN` = mismo valor que `HUB_TOKEN` (o `LEAD_HUB_TOKEN`)
 
-To learn more about Next.js, take a look at the following resources:
+**Protección por contraseña del portal (opcional, recomendable en beta)**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `PORTAL_PASSWORD` = contraseña
+- `PORTAL_AUTH_SECRET` = secreto largo aleatorio (HMAC)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Sesiones Owner Portal (obligatorio si usas `/owner/*`)**
 
-## Deploy on Vercel
+- `OWNER_SESSION_SECRET` = secreto largo aleatorio
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Lead Hub
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Ver `lead-hub/README.md` para endpoints, variables y cómo crear códigos de propietario.

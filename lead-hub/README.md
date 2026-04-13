@@ -41,3 +41,35 @@ En el servicio del portal (Next.js), configurar:
 - `LEADS_WEBHOOK_TOKEN` = el mismo valor que `HUB_TOKEN`
 
 Si `LEADS_WEBHOOK_URL` no está configurada, el portal deja el lead en logs del propio servicio.
+
+## Ejemplos (curl)
+
+> Todos los endpoints `/v1/*` requieren `Authorization: Bearer <HUB_TOKEN>`.
+
+```bash
+export HUB_TOKEN="...tu token..."
+```
+
+**Ver configuración**
+
+```bash
+curl -sS -H "Authorization: Bearer $HUB_TOKEN" https://lead-hub.onrender.com/v1/config
+```
+
+**Crear/actualizar un propietario (código + inmuebles)**
+
+```bash
+curl -sS -H "Authorization: Bearer $HUB_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Propietario Demo","contact":"owner@demo.com","code":"V2-ABCD-1234","listing_ids":["piso-centro-112m2"]}' \
+  https://lead-hub.onrender.com/v1/owners
+```
+
+**Validar código de propietario**
+
+```bash
+curl -sS -H "Authorization: Bearer $HUB_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"code":"V2-ABCD-1234"}' \
+  https://lead-hub.onrender.com/v1/owners/verify
+```
