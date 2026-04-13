@@ -19,9 +19,8 @@ type HubLead = {
   listing_id: string | null;
   listing_title: string | null;
   listing_city: string | null;
-  status: string;
-  scheduled_at: string | null;
-  outcome: string | null;
+  crm_status?: string | null;
+  crm_error?: string | null;
 };
 
 async function getLeads(): Promise<HubLead[]> {
@@ -82,51 +81,7 @@ export default async function LeadsAdminPage() {
               <p className="text-sm text-slate-600">No hay leads todavía.</p>
             ) : (
               leads.map((lead) => (
-                <Link
-                  key={lead.id}
-                  href={lead.listing_id ? `/admin/listings/${encodeURIComponent(lead.listing_id)}` : "/admin"}
-                  className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] px-4 py-3 text-sm hover:bg-[color:var(--surface)]"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-semibold">
-                      {lead.intent.toUpperCase()} · {lead.persona}
-                    </span>
-                    <span className="text-xs text-slate-500">
-                      {new Date(lead.created_at).toLocaleString("es-ES")}
-                    </span>
-                  </div>
-                  <div className="pt-1 text-slate-700">
-                    {lead.contact}
-                    {lead.name ? <span className="text-slate-500"> · {lead.name}</span> : null}
-                  </div>
-                  <div className="pt-1 text-xs text-slate-600">
-                    {lead.listing_title ? (
-                      <>
-                        {lead.listing_title}
-                        {lead.listing_city ? ` · ${lead.listing_city}` : ""}
-                      </>
-                    ) : (
-                      "Sin inmueble"
-                    )}
-                    {" · "}
-                    Estado: <span className="font-medium">{lead.status}</span>
-                    {lead.scheduled_at ? (
-                      <>
-                        {" · "}
-                        Cita:{" "}
-                        <span className="font-medium">
-                          {new Date(lead.scheduled_at).toLocaleString("es-ES")}
-                        </span>
-                      </>
-                    ) : null}
-                    {lead.outcome ? (
-                      <>
-                        {" · "}
-                        Resultado: <span className="font-medium">{lead.outcome}</span>
-                      </>
-                    ) : null}
-                  </div>
-                </Link>
+                <LeadRow key={lead.id} lead={lead} />
               ))
             )}
           </div>
@@ -136,3 +91,56 @@ export default async function LeadsAdminPage() {
   );
 }
 
+function LeadRow({ lead }: { lead: HubLead }) {
+  const href = lead.listing_id ? `/admin/listings/${encodeURIComponent(lead.listing_id)}` : "/admin";
+  const crmStatus = String(lead.crm_status ?? "").trim() || "—";
+  const crmError = String(lead.crm_error ?? "").trim();
+  const isCrmError = crmStatus === "error";
+
+  return (
+    <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] px-4 py-3 text-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Link href={href} className="font-semibold hover:underline">
+          {lead.intent.toUpperCase()} · {lead.persona}
+        </Link>
+        <span className="text-xs text-slate-500">
+          {new Date(lead.created_at).toLocaleString("es-ES")}
+        </span>
+      </div>
+      <div className="pt-1 text-slate-700">
+        {lead.contact}
+        {lead.name ? <span className="text-slate-500"> · {lead.name}</span> : null}
+      </div>
+      <div className="pt-1 text-xs text-slate-600">
+        {lead.listing_title ? (
+          <>
+            {lead.listing_title}
+            {lead.listing_city ? ` · ${lead.listing_city}` : ""}
+          </>
+        ) : (
+          "Sin inmueble"
+        )}
+        {" · "}
+        CRM:{" "}
+        <span className={isCrmError ? "font-semibold text-amber-900" : "font-medium"}>
+          {crmStatus}
+        </span>
+        {crmError ? <span className="text-slate-500"> · {crmError}</span> : null}
+      </div>
+      {isCrmError ? (
+        <div className="pt-3">
+          <form method="post" action="/api/admin/leads/retry" className="flex items-center gap-2">
+            <input type="hidden" name="lead_id" value={lead.id} />
+            <input type="hidden" name="return_to" value="/admin/leads" />
+            <button
+              type="submit"
+              className="inline-flex h-9 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-xs font-medium text-white hover:bg-[#0F2742]"
+            >
+              Reintentar envío a CRM
+            </button>
+          </form>
+        </div>
+      ) : null}
+    </div>
+  );
+}

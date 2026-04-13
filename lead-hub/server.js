@@ -628,6 +628,49 @@ app.post("/v1/leads/:id/status", async (req, res) => {
   res.status(200).json({ ok: true, lead: updated.rows[0] });
 });
 
+app.post("/v1/leads/:id/retry_crm", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  if (!CRM_LEADS_ENDPOINT) {
+    res.status(500).json({ ok: false, error: "crm_not_configured" });
+    return;
+  }
+
+  const id = normalize(req.params.id);
+  if (!id) {
+    res.status(400).json({ ok: false, error: "missing_id" });
+    return;
+  }
+
+  const lead = await pool.query("select * from public.leads where id=$1 limit 1;", [id]);
+  const row = lead.rows[0];
+  if (!row) {
+    res.status(404).json({ ok: false, error: "not_found" });
+    return;
+  }
+
+  try {
+    await pushToCrm(row);
+    await pool.query("update public.leads set crm_status='sent', crm_error=null where id=$1;", [row.id]);
+    res.status(200).json({ ok: true });
+  } catch (error) {
+    await pool.query("update public.leads set crm_status='error', crm_error=$2 where id=$1;", [
+      row.id,
+      String(error).slice(0, 500),
+    ]);
+    res.status(502).json({ ok: false, error: String(error) });
+  }
+});
+
 app.get("/v1/documents", async (req, res) => {
   if (!HUB_TOKEN) {
     res.status(500).json({ ok: false, error: "hub_not_configured" });
