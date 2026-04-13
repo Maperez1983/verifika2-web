@@ -52,6 +52,10 @@ export default async function AccessPage({ searchParams }: PageProps) {
           <p className="pt-2 text-sm leading-6 text-slate-600">
             Introduce la contraseña para abrir el portal de inmuebles.
           </p>
+          <p className="pt-2 text-xs leading-5 text-slate-500">
+            Si copias/pegas desde WhatsApp/Slack, asegúrate de no incluir espacios o
+            saltos de línea al final.
+          </p>
 
           <form method="post" action="/api/portal-auth" className="pt-6 grid gap-3">
             <input type="hidden" name="next" value={next} />

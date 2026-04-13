@@ -31,13 +31,22 @@ function safeEqual(a: string, b: string) {
   }
 }
 
+function normalizePasswordInput(value: unknown) {
+  return String(value ?? "")
+    .normalize("NFKC")
+    // Common invisible characters when copy/pasting from chat apps.
+    .replace(/[\u200B\u200C\u200D\uFEFF]/g, "")
+    .trim();
+}
+
 export async function POST(request: Request) {
   const password = process.env.PORTAL_PASSWORD ?? "";
   const secret = process.env.PORTAL_AUTH_SECRET ?? "";
   const origin = publicOrigin(request);
 
   const form = await request.formData();
-  const submitted = String(form.get("password") ?? "");
+  const submitted = normalizePasswordInput(form.get("password"));
+  const expected = normalizePasswordInput(password);
   const next = sanitizeRelativePath(form.get("next"), DEFAULT_NEXT);
 
   if (!password || !secret) {
@@ -47,7 +56,7 @@ export async function POST(request: Request) {
     return NextResponse.redirect(url, 302);
   }
 
-  if (!safeEqual(submitted, password)) {
+  if (!safeEqual(submitted, expected)) {
     const url = new URL("/acceso", origin);
     url.searchParams.set("error", "1");
     url.searchParams.set("next", next);
