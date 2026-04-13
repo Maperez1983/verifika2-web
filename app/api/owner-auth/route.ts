@@ -2,27 +2,12 @@ import { NextResponse } from "next/server";
 import { leadHubFetch } from "@/lib/leadHub";
 import { signSession } from "@/lib/sessionToken";
 import { OWNER_SESSION_COOKIE } from "@/lib/ownerAuth";
+import { publicOrigin, sanitizeRelativePath } from "@/lib/http";
 
 const DEFAULT_TTL_SECONDS = 60 * 60 * 24 * 7;
 const DEFAULT_NEXT = "/owner";
-
-function publicOrigin(request: Request) {
-  const url = new URL(request.url);
-  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
-  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
-  const host = forwardedHost || request.headers.get("host") || url.host;
-  const proto = forwardedProto || url.protocol.replace(":", "") || "https";
-  return `${proto}://${host}`;
-}
-
 function sanitizeNextPath(value: unknown, fallback: string) {
-  const next = String(value ?? "").trim();
-  if (!next) return fallback;
-  if (!next.startsWith("/")) return fallback;
-  // Prevent scheme-relative redirects like //localhost:3000/...
-  if (next.startsWith("//")) return fallback;
-  if (next.includes("\\")) return fallback;
-  return next;
+  return sanitizeRelativePath(value, fallback);
 }
 
 export async function POST(request: Request) {

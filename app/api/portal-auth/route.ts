@@ -1,29 +1,10 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
+import { publicOrigin, sanitizeRelativePath } from "@/lib/http";
 
 const AUTH_COOKIE = "v2_portal_auth";
 const DEFAULT_TTL_SECONDS = 60 * 60 * 24 * 7;
 const DEFAULT_NEXT = "/inmuebles";
-
-function publicOrigin(request: Request) {
-  const url = new URL(request.url);
-  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
-  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
-  const host = forwardedHost || request.headers.get("host") || url.host;
-  const proto = forwardedProto || url.protocol.replace(":", "") || "https";
-  return `${proto}://${host}`;
-}
-
-function sanitizeNextPath(value: unknown, fallback: string) {
-  const next = String(value ?? "").trim();
-  if (!next) return fallback;
-  if (!next.startsWith("/")) return fallback;
-  // Prevent scheme-relative redirects like //localhost:3000/...
-  if (next.startsWith("//")) return fallback;
-  // Avoid weird backslash paths.
-  if (next.includes("\\")) return fallback;
-  return next;
-}
 
 function base64url(input: string) {
   return Buffer.from(input, "utf8")
@@ -57,7 +38,7 @@ export async function POST(request: Request) {
 
   const form = await request.formData();
   const submitted = String(form.get("password") ?? "");
-  const next = sanitizeNextPath(form.get("next"), DEFAULT_NEXT);
+  const next = sanitizeRelativePath(form.get("next"), DEFAULT_NEXT);
 
   if (!password || !secret) {
     const url = new URL("/acceso", origin);

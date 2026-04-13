@@ -58,6 +58,10 @@ export default async function OwnerDashboard() {
 
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[420px] overflow-hidden">
+        <div className="absolute left-1/2 top-[-260px] h-[640px] w-[640px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle_at_center,rgba(242,193,78,0.34),rgba(242,193,78,0)_60%)] blur-2xl" />
+        <div className="absolute right-[-200px] top-[-220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,rgba(24,24,27,0.12),rgba(24,24,27,0)_60%)] blur-2xl" />
+      </div>
       <header className="border-b border-[color:var(--border)] bg-[color:var(--surface)]">
         <div className="mx-auto flex w-full max-w-6xl items-start justify-between gap-6 px-6 py-10">
           <div>

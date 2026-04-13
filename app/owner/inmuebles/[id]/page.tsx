@@ -160,6 +160,7 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
   const summary = await getSummary(listing.id);
   const leads = tab === "leads" ? await getLeads(listing.id) : [];
   const visits = tab === "visitas" ? await getLeads(listing.id, "visita") : [];
+  const agenda = tab === "agenda" ? await getLeads(listing.id, "visita") : [];
   const documents = tab === "docs" ? await getDocuments(listing.id) : [];
   const milestones = tab === "hitos" ? await getMilestones(listing.id) : [];
   const signatures = tab === "firma" ? await getSignatures(listing.id) : [];
@@ -171,6 +172,10 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
 
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[420px] overflow-hidden">
+        <div className="absolute left-1/2 top-[-260px] h-[640px] w-[640px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle_at_center,rgba(242,193,78,0.32),rgba(242,193,78,0)_60%)] blur-2xl" />
+        <div className="absolute right-[-200px] top-[-220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,rgba(24,24,27,0.12),rgba(24,24,27,0)_60%)] blur-2xl" />
+      </div>
       <header className="border-b border-[color:var(--border)] bg-[color:var(--surface)]">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8 md:flex-row md:items-start md:justify-between">
           <div>
@@ -203,6 +208,9 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
             </Tab>
             <Tab href={`/owner/inmuebles/${listing.id}?tab=visitas`} active={tab === "visitas"}>
               Visitas
+            </Tab>
+            <Tab href={`/owner/inmuebles/${listing.id}?tab=agenda`} active={tab === "agenda"}>
+              Agenda
             </Tab>
             <Tab href={`/owner/inmuebles/${listing.id}?tab=docs`} active={tab === "docs"}>
               Documentos
@@ -281,6 +289,14 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
             listingId={listing.id}
             leads={visits}
             returnTo={`/owner/inmuebles/${listing.id}?tab=visitas`}
+          />
+        ) : null}
+
+        {tab === "agenda" ? (
+          <AgendaSection
+            listingId={listing.id}
+            leads={agenda}
+            returnTo={`/owner/inmuebles/${listing.id}?tab=agenda`}
           />
         ) : null}
 
@@ -412,6 +428,53 @@ function VisitsSection({
   );
 }
 
+function AgendaSection({
+  listingId,
+  leads,
+  returnTo,
+}: {
+  listingId: string;
+  leads: HubLead[];
+  returnTo: string;
+}) {
+  const scheduled = leads
+    .filter((lead) => Boolean(lead.scheduled_at))
+    .sort((a, b) => {
+      const da = a.scheduled_at ? new Date(a.scheduled_at).getTime() : 0;
+      const db = b.scheduled_at ? new Date(b.scheduled_at).getTime() : 0;
+      return da - db;
+    });
+
+  return (
+    <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+      <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+        <div>
+          <p className="text-sm font-semibold tracking-tight">Agenda</p>
+          <p className="pt-2 text-sm leading-6 text-slate-600">
+            Citas programadas para este inmueble. Puedes editar estado/fecha/resultado desde cada tarjeta.
+          </p>
+        </div>
+        <Link
+          href={`/inmuebles/${encodeURIComponent(listingId)}`}
+          className="inline-flex h-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm font-medium hover:bg-[color:var(--surface-2)]"
+        >
+          Ver anuncio
+        </Link>
+      </div>
+
+      <div className="pt-6 grid gap-3">
+        {scheduled.length === 0 ? (
+          <Empty text="Aún no hay citas programadas (usa la pestaña Visitas para registrar fecha/hora)." />
+        ) : (
+          scheduled.map((lead) => (
+            <LeadCard key={lead.id} lead={lead} returnTo={returnTo} showVisitFields />
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
 function DocumentsSection({
   listingId,
   documents,
@@ -478,6 +541,14 @@ function pill(status: string) {
   return "bg-slate-100 text-slate-800";
 }
 
+function toDateTimeLocal(value: string | null) {
+  if (!value) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 function LeadCard({
   lead,
   returnTo,
@@ -511,6 +582,23 @@ function LeadCard({
           {lead.note ? (
             <p className="pt-2 text-sm leading-6 text-slate-700">{lead.note}</p>
           ) : null}
+          {lead.scheduled_at ? (
+            <p className="pt-2 text-sm text-slate-600">
+              Cita:{" "}
+              <span className="font-medium text-[color:var(--foreground)]">
+                {new Date(lead.scheduled_at).toLocaleString("es-ES")}
+              </span>
+            </p>
+          ) : null}
+          {lead.outcome || lead.outcome_note ? (
+            <p className="pt-2 text-sm text-slate-600">
+              Resultado:{" "}
+              <span className="font-medium text-[color:var(--foreground)]">
+                {lead.outcome || "—"}
+              </span>
+              {lead.outcome_note ? ` · ${lead.outcome_note}` : ""}
+            </p>
+          ) : null}
         </div>
 
         <form
@@ -535,28 +623,45 @@ function LeadCard({
             <option value="rejected">Descartado</option>
           </select>
 
-          {showVisitFields ? (
-            <>
+	          {showVisitFields ? (
+	            <>
               <label className="text-xs font-medium text-slate-600" htmlFor={`scheduled_${lead.id}`}>
                 Fecha/hora (opcional)
               </label>
-              <input
-                id={`scheduled_${lead.id}`}
-                name="scheduled_at"
-                type="datetime-local"
-                className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-3 text-sm outline-none focus:border-slate-400"
-              />
-              <label className="text-xs font-medium text-slate-600" htmlFor={`note_${lead.id}`}>
-                Nota (opcional)
-              </label>
-              <input
-                id={`note_${lead.id}`}
-                name="outcome_note"
-                placeholder="Ej: Confirma asistencia, feedback…"
-                className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-3 text-sm outline-none focus:border-slate-400"
-              />
-            </>
-          ) : null}
+	              <input
+	                id={`scheduled_${lead.id}`}
+	                name="scheduled_at"
+	                type="datetime-local"
+	                defaultValue={toDateTimeLocal(lead.scheduled_at)}
+	                className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-3 text-sm outline-none focus:border-slate-400"
+	              />
+	              <label className="text-xs font-medium text-slate-600" htmlFor={`outcome_${lead.id}`}>
+	                Resultado (opcional)
+	              </label>
+	              <select
+	                id={`outcome_${lead.id}`}
+	                name="outcome"
+	                defaultValue={lead.outcome ?? ""}
+	                className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-3 text-sm outline-none focus:border-slate-400"
+	              >
+	                <option value="">Sin registrar</option>
+	                <option value="interesado">Interesado</option>
+	                <option value="no_interesado">No interesado</option>
+	                <option value="oferta">Oferta / negociación</option>
+	                <option value="pendiente">Pendiente</option>
+	              </select>
+	              <label className="text-xs font-medium text-slate-600" htmlFor={`note_${lead.id}`}>
+	                Nota (opcional)
+	              </label>
+	              <input
+	                id={`note_${lead.id}`}
+	                name="outcome_note"
+	                placeholder="Ej: Confirma asistencia, feedback…"
+	                defaultValue={lead.outcome_note ?? ""}
+	                className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-3 text-sm outline-none focus:border-slate-400"
+	              />
+	            </>
+	          ) : null}
 
           <button
             type="submit"

@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { leadHubFetch } from "@/lib/leadHub";
 import { assertOwnerAuth } from "@/lib/ownerAuth";
+import { publicOrigin, sanitizeRelativePath } from "@/lib/http";
 
 function normalize(value: unknown) {
   return String(value ?? "").trim();
@@ -21,7 +22,8 @@ export async function POST(
   const status = normalize(form.get("status"));
   const externalUrl = normalize(form.get("external_url"));
   const note = normalize(form.get("note"));
-  const returnTo = normalize(form.get("return_to")) || "/owner";
+  const returnTo = sanitizeRelativePath(form.get("return_to"), "/owner");
+  const origin = publicOrigin(request);
 
   const res = await leadHubFetch(`/v1/signatures/${encodeURIComponent(signatureId)}`, {
     method: "PATCH",
@@ -34,6 +36,5 @@ export async function POST(
     return NextResponse.json({ ok: false, error: "hub_failed", details: data }, { status: 502 });
   }
 
-  return NextResponse.redirect(new URL(returnTo, request.url), 303);
+  return NextResponse.redirect(new URL(returnTo, origin), 303);
 }
-
