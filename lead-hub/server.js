@@ -70,6 +70,17 @@ async function ensureSchema() {
   `);
 
   await pool.query(`
+    create table if not exists public.view_events (
+      id bigserial primary key,
+      created_at timestamptz not null default now(),
+      listing_id text not null
+    );
+  `);
+  await pool.query(
+    "create index if not exists view_events_listing_created_idx on public.view_events(listing_id, created_at desc);",
+  );
+
+  await pool.query(`
     create table if not exists public.documents (
       id bigserial primary key,
       created_at timestamptz not null default now(),
@@ -414,6 +425,72 @@ app.get("/v1/metrics", async (req, res) => {
   res.status(200).json({ ok: true, metrics: row, counts: counts.rows[0] });
 });
 
+app.get("/v1/metrics/timeseries", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  const listingId = normalize(req.query.listing_id);
+  if (!listingId) {
+    res.status(400).json({ ok: false, error: "missing_listing_id" });
+    return;
+  }
+
+  const daysRaw = normalize(req.query.days);
+  const days = Math.min(90, Math.max(7, Number(daysRaw || "14") || 14));
+
+  const rows = await pool.query(
+    `
+      with series as (
+        select
+          (current_date - (n * interval '1 day'))::date as day
+        from generate_series(0, $2::int - 1) as n
+      ),
+      v as (
+        select date_trunc('day', created_at)::date as day, count(*)::int as views
+        from public.view_events
+        where listing_id=$1 and created_at >= (current_date - (($2::int - 1) * interval '1 day'))
+        group by 1
+      ),
+      l as (
+        select
+          date_trunc('day', created_at)::date as day,
+          count(*)::int as leads,
+          count(*) filter (where intent='visita')::int as visits,
+          count(*) filter (where intent='info')::int as info
+        from public.leads
+        where listing_id=$1 and created_at >= (current_date - (($2::int - 1) * interval '1 day'))
+        group by 1
+      )
+      select
+        series.day::text as day,
+        coalesce(v.views, 0)::int as views,
+        coalesce(l.leads, 0)::int as leads,
+        coalesce(l.visits, 0)::int as visits,
+        coalesce(l.info, 0)::int as info
+      from series
+      left join v on v.day=series.day
+      left join l on l.day=series.day
+      order by series.day asc;
+    `,
+    [listingId, days],
+  );
+
+  res.status(200).json({
+    ok: true,
+    listing_id: listingId,
+    days,
+    points: rows.rows,
+  });
+});
+
 app.post("/v1/events/view", async (req, res) => {
   if (!HUB_TOKEN) {
     res.status(500).json({ ok: false, error: "hub_not_configured" });
@@ -445,6 +522,11 @@ app.post("/v1/events/view", async (req, res) => {
       do update set views=public.listing_metrics.views + 1, last_view_at=now()
       returning listing_id, views, last_view_at;
     `,
+    [listingId],
+  );
+
+  await pool.query(
+    "insert into public.view_events(listing_id) values ($1);",
     [listingId],
   );
 

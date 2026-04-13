@@ -5,6 +5,9 @@ import { fetchPortalListing } from "@/lib/crmPortal";
 import { leadHubFetch } from "@/lib/leadHub";
 import { getOwnerSession } from "@/lib/ownerSessionServer";
 import { redirect } from "next/navigation";
+import Sparkline from "@/components/charts/Sparkline";
+import DeltaPill from "@/components/charts/DeltaPill";
+import MiniFunnel from "@/components/charts/MiniFunnel";
 
 export const metadata: Metadata = {
   title: "Seguimiento del inmueble",
@@ -71,6 +74,14 @@ type ListingSummary = {
   counts: { leads_total: number; leads_info: number; leads_visita: number };
 };
 
+type TimeseriesPoint = {
+  day: string;
+  views: number;
+  leads: number;
+  visits: number;
+  info: number;
+};
+
 const normalize = (value: unknown) => String(value ?? "").trim();
 
 async function getSummary(listingId: string): Promise<ListingSummary | null> {
@@ -83,6 +94,19 @@ async function getSummary(listingId: string): Promise<ListingSummary | null> {
     return { metrics: data.metrics, counts: data.counts } as ListingSummary;
   } catch {
     return null;
+  }
+}
+
+async function getTimeseries(listingId: string, days = 14): Promise<TimeseriesPoint[]> {
+  try {
+    const res = await leadHubFetch(
+      `/v1/metrics/timeseries?listing_id=${encodeURIComponent(listingId)}&days=${days}`,
+    );
+    if (!res.ok) return [];
+    const data = (await res.json()) as { points?: TimeseriesPoint[] };
+    return Array.isArray(data?.points) ? data.points : [];
+  } catch {
+    return [];
   }
 }
 
@@ -158,6 +182,7 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
   if (!session.listingIds.includes(listing.id)) notFound();
 
   const summary = await getSummary(listing.id);
+  const timeseries = tab === "resumen" ? await getTimeseries(listing.id, 14) : [];
   const leads = tab === "leads" ? await getLeads(listing.id) : [];
   const visits = tab === "visitas" ? await getLeads(listing.id, "visita") : [];
   const agenda = tab === "agenda" ? await getLeads(listing.id, "visita") : [];
@@ -169,6 +194,14 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
   const leadsTotal = summary?.counts?.leads_total ?? 0;
   const leadsInfo = summary?.counts?.leads_info ?? 0;
   const leadsVisits = summary?.counts?.leads_visita ?? 0;
+  const viewSeries = timeseries.map((p) => Number(p.views) || 0);
+  const leadsSeries = timeseries.map((p) => Number(p.leads) || 0);
+  const visitsSeries = timeseries.map((p) => Number(p.visits) || 0);
+  const last7Views = viewSeries.slice(-7).reduce((a, b) => a + b, 0);
+  const prev7Views = viewSeries.slice(-14, -7).reduce((a, b) => a + b, 0);
+  const total14Views = viewSeries.reduce((a, b) => a + b, 0);
+  const total14Leads = leadsSeries.reduce((a, b) => a + b, 0);
+  const total14Visits = visitsSeries.reduce((a, b) => a + b, 0);
 
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
@@ -246,6 +279,57 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
                   <Card title="Visitas" desc="Solicitudes y resultado de cada visita." />
                   <Card title="Documentación" desc="Checklist y estado por documento." />
                   <Card title="Trazabilidad" desc="Quién pidió qué y cuándo, sin perder contexto." />
+                </div>
+              </div>
+
+              <div className="mt-6 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+                <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+                  <div>
+                    <p className="text-sm font-semibold tracking-tight">Evolución (14 días)</p>
+                    <p className="pt-2 text-sm leading-6 text-slate-600">
+                      Tendencia simple para entender si el anuncio “mueve” interés. (Beta: las vistas diarias se empiezan a registrar desde que activamos el tracking.)
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] px-4 py-2">
+                    <p className="text-xs font-medium text-slate-600">Últimos 7 días</p>
+                    <p className="pt-1 text-lg font-semibold tracking-tight">{last7Views}</p>
+                    <div className="pt-2">
+                      <DeltaPill current={last7Views} previous={prev7Views} label="vistas" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-6 grid gap-4 md:grid-cols-2">
+                  <div className="rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-5">
+                    <div className="flex items-center justify-between gap-4">
+                      <p className="text-sm font-semibold">Vistas (día)</p>
+                      <span className="text-xs text-slate-600">
+                        Total 14 días: <span className="font-semibold text-[color:var(--foreground)]">{total14Views}</span>
+                      </span>
+                    </div>
+                    <div className="pt-4">
+                      <Sparkline values={viewSeries.length ? viewSeries : [0]} width={320} height={72} />
+                    </div>
+                    <p className="pt-3 text-xs text-slate-600">
+                      Última vista:{" "}
+                      <span className="font-medium text-[color:var(--foreground)]">
+                        {summary?.metrics?.last_view_at ? new Date(summary.metrics.last_view_at).toLocaleString("es-ES") : "—"}
+                      </span>
+                    </p>
+                  </div>
+
+                  <div className="rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-5">
+                    <p className="text-sm font-semibold">Funnel (14 días)</p>
+                    <p className="pt-2 text-xs leading-5 text-slate-600">
+                      Conversión rápida: vistas → solicitudes → visitas.
+                    </p>
+                    <div className="pt-4">
+                      <MiniFunnel views={Math.max(0, total14Views)} leads={Math.max(0, total14Leads)} visits={Math.max(0, total14Visits)} />
+                    </div>
+                    <p className="pt-3 text-xs text-slate-600">
+                      Nota: solicitudes y visitas se contabilizan desde los leads del portal.
+                    </p>
+                  </div>
                 </div>
               </div>
             </section>

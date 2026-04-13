@@ -4,6 +4,8 @@ import { fetchPortalListing } from "@/lib/crmPortal";
 import { leadHubFetch } from "@/lib/leadHub";
 import { getOwnerSession } from "@/lib/ownerSessionServer";
 import { redirect } from "next/navigation";
+import Sparkline from "@/components/charts/Sparkline";
+import DeltaPill from "@/components/charts/DeltaPill";
 
 export const metadata: Metadata = {
   title: "Owner Portal (beta)",
@@ -17,6 +19,7 @@ type ListingSummary = {
   ok: boolean;
   metrics: { views: number; last_view_at: string | null };
   counts: { leads_total: number; leads_info: number; leads_visita: number };
+  timeseries?: { points: TimeseriesPoint[] };
 };
 
 type HubConfig = {
@@ -27,11 +30,29 @@ type HubConfig = {
   crmConfigured: boolean;
 };
 
+type TimeseriesPoint = {
+  day: string;
+  views: number;
+  leads: number;
+  visits: number;
+  info: number;
+};
+
 async function getSummary(listingId: string): Promise<ListingSummary | null> {
   try {
     const res = await leadHubFetch(`/v1/metrics?listing_id=${encodeURIComponent(listingId)}`);
     if (!res.ok) return null;
-    return (await res.json()) as ListingSummary;
+    const base = (await res.json()) as ListingSummary;
+    try {
+      const ts = await leadHubFetch(
+        `/v1/metrics/timeseries?listing_id=${encodeURIComponent(listingId)}&days=14`,
+      );
+      if (ts.ok) {
+        const data = (await ts.json()) as { points?: TimeseriesPoint[] };
+        if (Array.isArray(data?.points)) base.timeseries = { points: data.points };
+      }
+    } catch {}
+    return base;
   } catch {
     return null;
   }
@@ -123,6 +144,10 @@ export default async function OwnerDashboard() {
             const views = summary?.metrics?.views ?? 0;
             const leads = summary?.counts?.leads_total ?? 0;
             const visits = summary?.counts?.leads_visita ?? 0;
+            const points = summary?.timeseries?.points ?? [];
+            const viewSeries = points.map((p) => Number(p.views) || 0);
+            const last7 = viewSeries.slice(-7).reduce((a, b) => a + b, 0);
+            const prev7 = viewSeries.slice(-14, -7).reduce((a, b) => a + b, 0);
             return (
               <Link
                 key={listing.id}
@@ -144,6 +169,20 @@ export default async function OwnerDashboard() {
                   <Row label="Vistas" value={String(views)} />
                   <Row label="Solicitudes" value={String(leads)} />
                   <Row label="Visitas" value={String(visits)} />
+                </div>
+                <div className="pt-5 flex items-end justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-medium text-slate-600">Últimos 7 días</p>
+                    <p className="pt-1 text-lg font-semibold tracking-tight">{last7}</p>
+                    <div className="pt-2">
+                      <DeltaPill current={last7} previous={prev7} label="vistas" />
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-3">
+                    <div className="w-[180px]">
+                      <Sparkline values={viewSeries.length ? viewSeries : [0]} width={140} height={44} />
+                    </div>
+                  </div>
                 </div>
                 <p className="pt-5 text-sm font-medium text-[color:var(--foreground)] group-hover:underline">
                   Abrir seguimiento
