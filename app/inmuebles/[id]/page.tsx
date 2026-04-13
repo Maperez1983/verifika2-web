@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { mockListingsById } from "@/lib/listings";
 import ChatWidget from "@/components/chat/ChatWidget";
+import ViewTracker from "@/components/track/ViewTracker";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -204,6 +205,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
           certified: listing.certified,
         }}
       />
+      <ViewTracker listingId={listing.id} />
     </div>
   );
 }

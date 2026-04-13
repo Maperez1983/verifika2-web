@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
 
 const AUTH_COOKIE = "v2_portal_auth";
+const OWNER_AUTH_COOKIE = "v2_owner_auth";
 
 function fromBase64url(input: string) {
   const padded = input.replaceAll("-", "+").replaceAll("_", "/");
@@ -53,6 +54,10 @@ function isProtectedPortalPath(pathname: string) {
   );
 }
 
+function isProtectedOwnerPath(pathname: string) {
+  return pathname === "/owner" || pathname.startsWith("/owner/");
+}
+
 export function proxy(request: NextRequest) {
   const host = request.headers.get("host") ?? "";
 
@@ -65,6 +70,8 @@ export function proxy(request: NextRequest) {
 
   const portalPassword = process.env.PORTAL_PASSWORD;
   const portalSecret = process.env.PORTAL_AUTH_SECRET;
+  const ownerPassword = process.env.OWNER_PORTAL_PASSWORD;
+  const ownerSecret = process.env.OWNER_PORTAL_AUTH_SECRET;
 
   const pathname = request.nextUrl.pathname;
 
@@ -73,6 +80,21 @@ export function proxy(request: NextRequest) {
     if (!token || !verifyToken(token, portalSecret)) {
       const url = request.nextUrl.clone();
       url.pathname = "/acceso";
+      url.searchParams.set("next", pathname + request.nextUrl.search);
+      return NextResponse.redirect(url, 302);
+    }
+  }
+
+  if (
+    ownerPassword &&
+    ownerSecret &&
+    isProtectedOwnerPath(pathname) &&
+    !pathname.startsWith("/owner/acceso")
+  ) {
+    const token = request.cookies.get(OWNER_AUTH_COOKIE)?.value;
+    if (!token || !verifyToken(token, ownerSecret)) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/owner/acceso";
       url.searchParams.set("next", pathname + request.nextUrl.search);
       return NextResponse.redirect(url, 302);
     }

@@ -7,7 +7,14 @@ Servicio “ingestor” para captar leads del portal sin acoplarlo al CRM.
 - `GET /healthz` – healthcheck (incluye ping a Postgres)
 - `POST /v1/leads` – ingesta de lead (requiere `Authorization: Bearer <HUB_TOKEN>`)
 - `GET /v1/leads/recent` – últimos leads (requiere `Authorization: Bearer <HUB_TOKEN>`)
+- `GET /v1/leads/search?listing_id=...` – leads por inmueble (opcional `intent=visita|info|contacto`)
+- `POST /v1/leads/:id/status` – actualizar estado/resultado (visitas y seguimiento)
 - `POST /v1/slack/test` – envía un mensaje de prueba a Slack (requiere `Authorization: Bearer <HUB_TOKEN>`)
+- `POST /v1/events/view` – incrementa vistas por `listing_id`
+- `GET /v1/metrics?listing_id=...` – vistas + contadores (leads/visitas)
+- `GET /v1/documents?listing_id=...` – checklist documental (beta)
+- `POST /v1/documents` – crear solicitud documental (beta)
+- `PATCH /v1/documents/:id` – actualizar estado documental (beta)
 
 ## Variables de entorno (Render)
 

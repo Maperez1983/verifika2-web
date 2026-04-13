@@ -47,11 +47,41 @@ async function ensureSchema() {
       crm_error text
     );
   `);
+
+  await pool.query("alter table public.leads add column if not exists status text not null default 'new';");
+  await pool.query("alter table public.leads add column if not exists scheduled_at timestamptz;");
+  await pool.query("alter table public.leads add column if not exists outcome text;");
+  await pool.query("alter table public.leads add column if not exists outcome_note text;");
+
   await pool.query(
     "create index if not exists leads_created_at_idx on public.leads(created_at desc);",
   );
   await pool.query(
     "create index if not exists leads_listing_id_idx on public.leads(listing_id);",
+  );
+
+  await pool.query(`
+    create table if not exists public.listing_metrics (
+      listing_id text primary key,
+      views bigint not null default 0,
+      last_view_at timestamptz
+    );
+  `);
+
+  await pool.query(`
+    create table if not exists public.documents (
+      id bigserial primary key,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now(),
+      listing_id text not null,
+      title text not null,
+      status text not null default 'pending',
+      note text
+    );
+  `);
+
+  await pool.query(
+    "create index if not exists documents_listing_id_idx on public.documents(listing_id);",
   );
 }
 
@@ -137,6 +167,82 @@ app.get("/healthz", async (_req, res) => {
   }
 });
 
+app.get("/v1/metrics", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  const listingId = normalize(req.query.listing_id);
+  if (!listingId) {
+    res.status(400).json({ ok: false, error: "missing_listing_id" });
+    return;
+  }
+
+  const metrics = await pool.query(
+    "select listing_id, views, last_view_at from public.listing_metrics where listing_id=$1;",
+    [listingId],
+  );
+  const row = metrics.rows[0] ?? { listing_id: listingId, views: 0, last_view_at: null };
+
+  const counts = await pool.query(
+    `
+      select
+        count(*)::int as leads_total,
+        count(*) filter (where intent='info')::int as leads_info,
+        count(*) filter (where intent='visita')::int as leads_visita
+      from public.leads
+      where listing_id=$1;
+    `,
+    [listingId],
+  );
+
+  res.status(200).json({ ok: true, metrics: row, counts: counts.rows[0] });
+});
+
+app.post("/v1/events/view", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  if (!isRecord(req.body)) {
+    res.status(400).json({ ok: false, error: "invalid_payload" });
+    return;
+  }
+
+  const listingId = normalize(req.body.listing_id);
+  if (!listingId) {
+    res.status(400).json({ ok: false, error: "missing_listing_id" });
+    return;
+  }
+
+  const updated = await pool.query(
+    `
+      insert into public.listing_metrics(listing_id, views, last_view_at)
+      values ($1, 1, now())
+      on conflict (listing_id)
+      do update set views=public.listing_metrics.views + 1, last_view_at=now()
+      returning listing_id, views, last_view_at;
+    `,
+    [listingId],
+  );
+
+  res.status(200).json({ ok: true, metrics: updated.rows[0] });
+});
+
 app.get("/v1/leads/recent", async (req, res) => {
   if (!HUB_TOKEN) {
     res.status(500).json({ ok: false, error: "hub_not_configured" });
@@ -211,6 +317,214 @@ app.get("/v1/config", async (req, res) => {
     databaseConfigured: Boolean(DATABASE_URL),
     crmConfigured: Boolean(CRM_LEADS_ENDPOINT),
   });
+});
+
+app.get("/v1/leads/search", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  const listingId = normalize(req.query.listing_id);
+  const intent = normalize(req.query.intent);
+  const limitRaw = Number(req.query.limit || 50);
+  const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(100, limitRaw)) : 50;
+
+  if (!listingId) {
+    res.status(400).json({ ok: false, error: "missing_listing_id" });
+    return;
+  }
+
+  const whereIntent = intent === "info" || intent === "visita" || intent === "contacto";
+  const query = await pool.query(
+    `
+      select
+        id,
+        created_at,
+        persona,
+        intent,
+        contact,
+        name,
+        note,
+        listing_id,
+        listing_title,
+        listing_city,
+        status,
+        scheduled_at,
+        outcome,
+        outcome_note
+      from public.leads
+      where listing_id=$1
+      ${whereIntent ? "and intent=$2" : ""}
+      order by id desc
+      limit ${whereIntent ? "$3" : "$2"}
+    `,
+    whereIntent ? [listingId, intent, limit] : [listingId, limit],
+  );
+
+  res.status(200).json({ ok: true, leads: query.rows });
+});
+
+app.post("/v1/leads/:id/status", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  const id = normalize(req.params.id);
+  const status = normalize(req.body?.status);
+  const outcome = normalize(req.body?.outcome);
+  const outcomeNote = normalize(req.body?.outcome_note);
+  const scheduledAt = normalize(req.body?.scheduled_at);
+
+  const allowedStatus = new Set(["new", "contacted", "scheduled", "done", "rejected"]);
+  if (!allowedStatus.has(status)) {
+    res.status(400).json({ ok: false, error: "invalid_status" });
+    return;
+  }
+
+  const updated = await pool.query(
+    `
+      update public.leads
+      set
+        status=$2,
+        scheduled_at = case when $3 = '' then scheduled_at else $3::timestamptz end,
+        outcome = nullif($4,''),
+        outcome_note = nullif($5,'')
+      where id=$1
+      returning
+        id, created_at, persona, intent, contact, name, note,
+        listing_id, listing_title, listing_city, status, scheduled_at, outcome, outcome_note;
+    `,
+    [id, status, scheduledAt, outcome, outcomeNote],
+  );
+
+  if (!updated.rows[0]) {
+    res.status(404).json({ ok: false, error: "not_found" });
+    return;
+  }
+
+  res.status(200).json({ ok: true, lead: updated.rows[0] });
+});
+
+app.get("/v1/documents", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  const listingId = normalize(req.query.listing_id);
+  if (!listingId) {
+    res.status(400).json({ ok: false, error: "missing_listing_id" });
+    return;
+  }
+
+  const docs = await pool.query(
+    `
+      select id, created_at, updated_at, listing_id, title, status, note
+      from public.documents
+      where listing_id=$1
+      order by id desc;
+    `,
+    [listingId],
+  );
+  res.status(200).json({ ok: true, documents: docs.rows });
+});
+
+app.post("/v1/documents", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  if (!isRecord(req.body)) {
+    res.status(400).json({ ok: false, error: "invalid_payload" });
+    return;
+  }
+
+  const listingId = normalize(req.body.listing_id);
+  const title = normalize(req.body.title);
+  const note = normalize(req.body.note);
+
+  if (!listingId || !title) {
+    res.status(400).json({ ok: false, error: "missing_fields" });
+    return;
+  }
+
+  const doc = await pool.query(
+    `
+      insert into public.documents(listing_id, title, status, note)
+      values ($1, $2, 'pending', nullif($3,''))
+      returning id, created_at, updated_at, listing_id, title, status, note;
+    `,
+    [listingId, title, note],
+  );
+
+  res.status(200).json({ ok: true, document: doc.rows[0] });
+});
+
+app.patch("/v1/documents/:id", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  const id = normalize(req.params.id);
+  const status = normalize(req.body?.status);
+  const note = normalize(req.body?.note);
+
+  const allowedStatus = new Set(["pending", "uploaded", "approved", "rejected"]);
+  if (!allowedStatus.has(status)) {
+    res.status(400).json({ ok: false, error: "invalid_status" });
+    return;
+  }
+
+  const updated = await pool.query(
+    `
+      update public.documents
+      set status=$2, note=nullif($3,''), updated_at=now()
+      where id=$1
+      returning id, created_at, updated_at, listing_id, title, status, note;
+    `,
+    [id, status, note],
+  );
+
+  if (!updated.rows[0]) {
+    res.status(404).json({ ok: false, error: "not_found" });
+    return;
+  }
+
+  res.status(200).json({ ok: true, document: updated.rows[0] });
 });
 
 app.post("/v1/slack/test", async (req, res) => {
@@ -329,10 +643,18 @@ app.post("/v1/leads", async (req, res) => {
   }
 
   try {
-    await pushToCrm(leadRow);
-    await pool.query("update public.leads set crm_status='sent', crm_error=null where id=$1;", [
-      leadRow.id,
-    ]);
+    if (CRM_LEADS_ENDPOINT) {
+      await pushToCrm(leadRow);
+      await pool.query(
+        "update public.leads set crm_status='sent', crm_error=null where id=$1;",
+        [leadRow.id],
+      );
+    } else {
+      await pool.query(
+        "update public.leads set crm_status='skipped', crm_error=null where id=$1;",
+        [leadRow.id],
+      );
+    }
   } catch (error) {
     await pool.query(
       "update public.leads set crm_status='error', crm_error=$2 where id=$1;",
