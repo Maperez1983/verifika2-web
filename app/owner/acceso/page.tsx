@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Acceso propietario (beta)",
+  title: "Acceso propietario",
   description:
-    "Acceso temporal al portal del propietario durante la fase beta de Verifika2.",
+    "Acceso privado al portal del propietario de Verifika2.",
 };
 
 type PageProps = {
@@ -37,7 +37,7 @@ export default async function OwnerAccessPage({ searchParams }: PageProps) {
             ← Volver a “Portal del propietario”
           </Link>
           <h1 className="pt-4 text-3xl font-semibold tracking-tight">
-            Acceso propietario (beta)
+            Acceso propietario
           </h1>
           <p className="pt-3 text-sm leading-6 text-slate-600">
             Área privada para seguimiento: visitas, leads, documentación, hitos

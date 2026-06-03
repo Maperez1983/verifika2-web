@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { mockListingsById } from "@/lib/listings";
 import { fetchPortalListing } from "@/lib/crmPortal";
 import ChatWidget from "@/components/chat/ChatWidget";
 import ViewTracker from "@/components/track/ViewTracker";
@@ -17,7 +16,7 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const listing = (await fetchPortalListing(id).catch(() => null)) || mockListingsById[id];
+  const listing = await fetchPortalListing(id).catch(() => null);
   if (!listing) return { title: "Inmueble" };
   return {
     title: listing.title,
@@ -27,7 +26,7 @@ export async function generateMetadata({
 
 export default async function ListingDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const listing = (await fetchPortalListing(id)) || mockListingsById[id];
+  const listing = await fetchPortalListing(id).catch(() => null);
   if (!listing) notFound();
 
   return (
@@ -66,7 +65,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
             <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="md:col-span-2">
-                  <ListingCover id={listing.id} label="Galería (demo)" />
+                  <ListingCover id={listing.id} label="Galería" />
                 </div>
 
                 <div className="md:col-span-1">
@@ -93,15 +92,15 @@ export default async function ListingDetailPage({ params }: PageProps) {
                 <div className="rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-6">
                   <p className="text-sm font-semibold">Ubicación</p>
                   <p className="pt-2 text-sm text-slate-600">
-                    {listing.city} · mapa/zonas (próximamente)
+                    {listing.city}
                   </p>
                   <div className="mt-4 aspect-[16/10] rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface)]" />
                 </div>
                 <div className="rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-6">
                   <p className="text-sm font-semibold">Interés del comprador</p>
                   <p className="pt-2 text-sm text-slate-600">
-                    Guardar, alertas y solicitud de visita/información. En la
-                    siguiente fase, cada solicitud entra al CRM con trazabilidad.
+                    Solicita información o una visita. Cada solicitud queda registrada
+                    para su seguimiento.
                   </p>
                   <div className="pt-4 flex flex-col gap-2 sm:flex-row">
                     <Link

@@ -58,10 +58,9 @@ export default function PublicFooter() {
 
         <div className="pt-8 flex flex-col gap-2 border-t border-[color:var(--border)] text-xs text-slate-500 md:flex-row md:items-center md:justify-between">
           <p>© {year} Verifika2</p>
-          <p>Beta: el contenido del certificado y los disclaimers se definirán en la fase de producto.</p>
+          <p>Información documental revisada según disponibilidad y alcance de cada operación.</p>
         </div>
       </div>
     </footer>
   );
 }
-

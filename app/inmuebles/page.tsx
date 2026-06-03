@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { mockListings, type Listing } from "@/lib/listings";
+import type { Listing } from "@/lib/listings";
 import { fetchPortalListings } from "@/lib/crmPortal";
 import ChatWidget from "@/components/chat/ChatWidget";
 import PublicHeader from "@/components/site/PublicHeader";
@@ -39,8 +39,6 @@ export default async function ListingsPage({ searchParams }: PageProps) {
   } catch {
     sourceListings = [];
   }
-  if (sourceListings.length === 0) sourceListings = mockListings;
-
   const filtered = sourceListings.filter((listing) => {
     if (certifiedOnly && !listing.certified) return false;
     if (operation && listing.operation !== operation) return false;
@@ -167,8 +165,23 @@ export default async function ListingsPage({ searchParams }: PageProps) {
           </form>
 
           <div className="md:col-span-2">
-            <div className="grid gap-4 sm:grid-cols-2">
-              {filtered.map((listing) => (
+            {sourceListings.length === 0 ? (
+              <EmptyState
+                title="No hay inmuebles publicados"
+                text="Cuando el equipo publique inmuebles desde el CRM aparecerán aquí con su estado de verificación."
+                ctaHref="/publicar"
+                ctaLabel="Solicitar publicación"
+              />
+            ) : filtered.length === 0 ? (
+              <EmptyState
+                title="Sin resultados"
+                text="No hay inmuebles publicados que coincidan con esos filtros. Prueba con otra ciudad, operación o búsqueda."
+                ctaHref="/inmuebles"
+                ctaLabel="Ver todos"
+              />
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {filtered.map((listing) => (
                 <Link
                   key={listing.id}
                   href={`/inmuebles/${listing.id}`}
@@ -210,13 +223,43 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                     Ver ficha
                   </p>
                 </Link>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </main>
       <PublicFooter />
       <ChatWidget scope="portal" defaultPersona="comprador" />
+    </div>
+  );
+}
+
+function EmptyState({
+  title,
+  text,
+  ctaHref,
+  ctaLabel,
+}: {
+  title: string;
+  text: string;
+  ctaHref: string;
+  ctaLabel: string;
+}) {
+  return (
+    <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-8 text-center shadow-sm">
+      <p className="text-lg font-semibold tracking-tight">{title}</p>
+      <p className="mx-auto pt-3 max-w-lg text-sm leading-6 text-slate-600">
+        {text}
+      </p>
+      <div className="pt-5">
+        <Link
+          href={ctaHref}
+          className="inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-medium text-white hover:bg-[#0F2742]"
+        >
+          {ctaLabel}
+        </Link>
+      </div>
     </div>
   );
 }

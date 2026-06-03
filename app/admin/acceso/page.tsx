@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Acceso privado",
-  description:
-    "Acceso privado al portal inmobiliario de Verifika2.",
+  title: "Acceso admin",
+  description: "Acceso privado al panel interno de Verifika2.",
 };
 
 type PageProps = {
@@ -18,12 +17,14 @@ const sanitizeNextPath = (value: unknown, fallback: string) => {
   if (!next.startsWith("/")) return fallback;
   if (next.startsWith("//")) return fallback;
   if (next.includes("\\")) return fallback;
+  if (!next.startsWith("/admin")) return fallback;
+  if (next.startsWith("/admin/acceso")) return fallback;
   return next;
 };
 
-export default async function AccessPage({ searchParams }: PageProps) {
+export default async function AdminAccessPage({ searchParams }: PageProps) {
   const params = (await searchParams) || {};
-  const next = sanitizeNextPath(params.next, "/inmuebles");
+  const next = sanitizeNextPath(params.next, "/admin");
   const error = normalize(params.error) === "1";
 
   return (
@@ -37,31 +38,27 @@ export default async function AccessPage({ searchParams }: PageProps) {
             ← Volver a la landing
           </Link>
           <h1 className="pt-4 text-3xl font-semibold tracking-tight">
-            Acceso privado
+            Acceso admin
           </h1>
           <p className="pt-3 text-sm leading-6 text-slate-600">
-            El acceso a la zona privada de inmuebles está protegido.
+            Panel interno para gestionar propietarios, leads e inmuebles.
           </p>
         </div>
       </header>
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
         <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
-          <p className="text-sm font-semibold tracking-tight">Contraseña</p>
+          <p className="text-sm font-semibold tracking-tight">Contraseña admin</p>
           <p className="pt-2 text-sm leading-6 text-slate-600">
-            Introduce la contraseña para abrir el portal de inmuebles.
-          </p>
-          <p className="pt-2 text-xs leading-5 text-slate-500">
-            Si copias/pegas desde WhatsApp/Slack, asegúrate de no incluir espacios o
-            saltos de línea al final.
+            Introduce la contraseña interna para abrir el panel.
           </p>
 
-          <form method="post" action="/api/portal-auth" className="pt-6 grid gap-3">
+          <form method="post" action="/api/admin-auth" className="pt-6 grid gap-3">
             <input type="hidden" name="next" value={next} />
             <input
               type="password"
               name="password"
-              placeholder="Contraseña"
+              placeholder="Contraseña admin"
               className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
               autoComplete="current-password"
               required
@@ -78,28 +75,6 @@ export default async function AccessPage({ searchParams }: PageProps) {
               Entrar
             </button>
           </form>
-
-          <div className="pt-6 rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-5">
-            <p className="text-sm font-semibold">¿Buscabas información?</p>
-            <p className="pt-2 text-sm leading-6 text-slate-600">
-              La landing sigue pública para presentar el producto y explicar la
-              verificación.
-            </p>
-            <div className="pt-4 flex flex-col gap-2 sm:flex-row">
-              <Link
-                href="/verificacion"
-                className="inline-flex h-11 flex-1 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-5 text-sm font-medium hover:bg-[color:var(--surface)]/70"
-              >
-                Ver verificación
-              </Link>
-              <Link
-                href="/certificacion"
-                className="inline-flex h-11 flex-1 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-5 text-sm font-medium hover:bg-[color:var(--surface)]/70"
-              >
-                Ver premium
-              </Link>
-            </div>
-          </div>
         </div>
       </main>
     </div>

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { mockListingsById } from "@/lib/listings";
 import { fetchPortalListing } from "@/lib/crmPortal";
 
 export const metadata: Metadata = {
@@ -32,7 +31,7 @@ export default async function InterestPage({ searchParams }: PageProps) {
   const detail = normalize(params.detail);
   const next = sanitizeNextPath(params.next, "/inmuebles");
   const listing = listingId
-    ? (await fetchPortalListing(listingId).catch(() => null)) || mockListingsById[listingId]
+    ? await fetchPortalListing(listingId).catch(() => null)
     : undefined;
 
   const title =

@@ -194,7 +194,7 @@ export default function Home() {
               <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-[0_12px_40px_rgba(0,0,0,0.08)]">
                 <div className="flex items-center justify-between gap-4">
                   <p className="text-sm font-semibold tracking-tight">
-                    Búsqueda (demo)
+                    Búsqueda de inmuebles
                   </p>
                   <span className="rounded-full bg-[color:var(--brand)] px-2 py-1 text-xs font-medium text-[color:var(--brand-foreground)]">
                     Portal
@@ -299,7 +299,7 @@ export default function Home() {
                     <div>
                       <p className="text-sm font-semibold">Sello Verifika2</p>
                       <p className="pt-1 text-sm text-zinc-600">
-                        Ejemplo de evidencias públicas.
+                        Evidencias públicas visibles.
                       </p>
                     </div>
                     <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
@@ -470,7 +470,7 @@ export default function Home() {
               />
               <Faq
                 q="¿Cómo empiezo con mi inmobiliaria?"
-                a="Ahora estamos en beta. Activamos módulos, roles y el flujo de publicación, y definimos el checklist de verificación."
+                a="Activamos módulos, roles, flujo de publicación y checklist de verificación según la operativa de tu inmobiliaria."
               />
             </div>
 
@@ -478,11 +478,11 @@ export default function Home() {
               <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
                 <div>
                   <p className="text-sm font-semibold">
-                    ¿Quieres que la home sea 100% “portal” o “producto”?
+                    Publica inmuebles con control documental
                   </p>
                   <p className="pt-2 text-sm text-zinc-600">
-                    Podemos priorizar el buscador de inmuebles o una landing más
-                    comercial. Lo ajustamos según estrategia.
+                    Desde el CRM puedes decidir qué se publica, qué queda en revisión
+                    y qué evidencias ve el comprador.
                   </p>
                 </div>
                 <div className="flex gap-2">

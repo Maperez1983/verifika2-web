@@ -40,7 +40,7 @@ export default function ListingCover({
       </div>
       <div className="absolute bottom-4 left-5 right-5 flex items-end justify-between gap-3">
         <div className="rounded-2xl bg-[color:var(--surface)]/80 px-3 py-2 text-xs font-medium text-slate-700 backdrop-blur">
-          Galería (demo)
+          Galería
         </div>
         <div className="rounded-2xl bg-[color:var(--surface)]/80 px-3 py-2 text-xs font-medium text-slate-700 backdrop-blur">
           Evidencias · Trazabilidad
@@ -49,4 +49,3 @@ export default function ListingCover({
     </div>
   );
 }
-

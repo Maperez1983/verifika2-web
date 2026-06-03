@@ -4,6 +4,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { verifySession } from "@/lib/sessionToken";
 
 const AUTH_COOKIE = "v2_portal_auth";
+const ADMIN_AUTH_COOKIE = "v2_admin_auth";
 const OWNER_SESSION_COOKIE = "v2_owner_session";
 
 function fromBase64url(input: string) {
@@ -38,14 +39,23 @@ function isPublicPath(pathname: string) {
   if (pathname.startsWith("/_next")) return true;
   if (pathname.startsWith("/brand")) return true;
   if (pathname === "/favicon.ico") return true;
-  if (pathname.startsWith("/api/admin")) return false;
+  if (pathname === "/api/admin" || pathname.startsWith("/api/admin/")) return false;
   if (pathname.startsWith("/api")) return true;
   if (pathname.startsWith("/acceso")) return true;
+  if (pathname.startsWith("/admin/acceso")) return true;
   if (pathname.startsWith("/verificacion")) return true;
   if (pathname.startsWith("/certificacion")) return true;
   if (pathname.startsWith("/profesionales")) return true;
   if (pathname.startsWith("/propietarios")) return true;
   return false;
+}
+
+function isAdminPath(pathname: string) {
+  return (
+    pathname.startsWith("/admin") ||
+    pathname === "/api/admin" ||
+    pathname.startsWith("/api/admin/")
+  );
 }
 
 function isProtectedPortalPath(pathname: string) {
@@ -74,11 +84,31 @@ export function proxy(request: NextRequest) {
 
   const portalPassword = process.env.PORTAL_PASSWORD;
   const portalSecret = process.env.PORTAL_AUTH_SECRET;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  const adminSecret = process.env.ADMIN_AUTH_SECRET;
   const ownerSessionSecret = process.env.OWNER_SESSION_SECRET;
 
   const pathname = request.nextUrl.pathname;
 
-  if (portalPassword && portalSecret && isProtectedPortalPath(pathname) && !isPublicPath(pathname)) {
+  if (adminPassword && adminSecret && isAdminPath(pathname) && !pathname.startsWith("/admin/acceso")) {
+    const token = request.cookies.get(ADMIN_AUTH_COOKIE)?.value;
+    if (!token || !verifyToken(token, adminSecret)) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin/acceso";
+      url.searchParams.set("next", pathname + request.nextUrl.search);
+      return NextResponse.redirect(url, 302);
+    }
+  }
+
+  const adminAuthEnabled = Boolean(adminPassword && adminSecret);
+
+  if (
+    portalPassword &&
+    portalSecret &&
+    isProtectedPortalPath(pathname) &&
+    !isPublicPath(pathname) &&
+    !(adminAuthEnabled && isAdminPath(pathname))
+  ) {
     const token = request.cookies.get(AUTH_COOKIE)?.value;
     if (!token || !verifyToken(token, portalSecret)) {
       const url = request.nextUrl.clone();
