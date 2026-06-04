@@ -312,6 +312,8 @@ export default async function ListingDetailPage({ params }: PageProps) {
           operation: listing.operation,
           verifiedAt: listing.verifiedAt,
           certified: listing.certified,
+          priceLabel: listing.priceLabel,
+          detailsShort: listing.detailsShort,
         }}
       />
       <ViewTracker listingId={listing.id} />

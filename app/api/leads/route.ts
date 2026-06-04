@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+import { leadHubFetch } from "@/lib/leadHub";
 
-type LeadIntent = "info" | "visita" | "contacto";
+type LeadIntent = "info" | "visita" | "oferta" | "contacto";
 type Persona = "comprador" | "propietario";
 
 type LeadPayload = {
@@ -8,6 +9,8 @@ type LeadPayload = {
   intent: LeadIntent;
   name?: string;
   contact: string;
+  phone?: string;
+  email?: string;
   note?: string;
   listing?: {
     id: string;
@@ -34,6 +37,7 @@ function normalize(value: unknown) {
 function pickIntent(value: unknown): LeadIntent {
   const v = normalize(value);
   if (v === "visita") return "visita";
+  if (v === "oferta") return "oferta";
   if (v === "contacto") return "contacto";
   return "info";
 }
@@ -66,6 +70,8 @@ export async function POST(request: Request) {
     intent: pickIntent(payload.intent),
     name: normalize(payload.name) || undefined,
     contact,
+    phone: normalize(payload.phone) || undefined,
+    email: normalize(payload.email) || undefined,
     note: normalize(payload.note) || undefined,
   };
 
@@ -98,26 +104,23 @@ export async function POST(request: Request) {
     forwardedFor: request.headers.get("x-forwarded-for") ?? "",
   };
 
-  const webhookUrl = process.env.LEADS_WEBHOOK_URL;
-  const webhookToken = process.env.LEADS_WEBHOOK_TOKEN;
-
-  if (webhookUrl) {
-    const res = await fetch(webhookUrl, {
+  try {
+    const res = await leadHubFetch("/v1/leads", {
       method: "POST",
-      headers: {
-        "content-type": "application/json",
-        ...(webhookToken ? { authorization: `Bearer ${webhookToken}` } : {}),
-      },
+      headers: { "content-type": "application/json" },
       body: JSON.stringify(envelope),
     });
     if (!res.ok) {
-      return NextResponse.json({ ok: false, error: "webhook_failed" }, { status: 502 });
+      const body = await res.text().catch(() => "");
+      return NextResponse.json(
+        { ok: false, error: "lead_hub_failed", detail: body.slice(0, 160) },
+        { status: 502 },
+      );
     }
-  } else {
-    // Temporary fallback: visible in Render logs while CRM sink is not wired.
+  } catch {
+    // Temporary fallback: visible in Render logs while lead hub is not wired.
     console.log("[verifika2-web] lead", envelope);
   }
 
   return NextResponse.json({ ok: true });
 }
-
