@@ -26,6 +26,7 @@ export default async function InterestPage({ searchParams }: PageProps) {
   const params = (await searchParams) || {};
   const listingId = normalize(params.listing);
   const tipo = normalize(params.tipo) || "info";
+  const motivo = normalize(params.motivo) || tipo;
   const sent = normalize(params.sent) === "1";
   const error = normalize(params.error);
   const detail = normalize(params.detail);
@@ -135,6 +136,8 @@ export default async function InterestPage({ searchParams }: PageProps) {
                   <p className="pt-2 leading-6">
                     {error === "missing_contact"
                       ? "Falta un email o teléfono."
+                      : error === "missing_phone"
+                        ? "Para pedir visita necesitamos un teléfono."
                       : error === "missing_consent"
                         ? "Debes aceptar el consentimiento."
                         : "Error al registrar la solicitud. Inténtalo de nuevo."}
@@ -149,6 +152,33 @@ export default async function InterestPage({ searchParams }: PageProps) {
                 <input type="hidden" name="listing" value={listingId} />
                 <input type="hidden" name="tipo" value={tipo} />
                 <input type="hidden" name="next" value={next} />
+                <div className="grid gap-2 sm:grid-cols-3">
+                  <select
+                    name="motivo"
+                    defaultValue={motivo}
+                    className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
+                  >
+                    <option value="info">Información</option>
+                    <option value="visita">Visita</option>
+                    <option value="oferta">Oferta</option>
+                  </select>
+                  <select
+                    name="urgencia"
+                    defaultValue={normalize(params.urgencia)}
+                    className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
+                  >
+                    <option value="">Prioridad</option>
+                    <option value="hoy">Hoy</option>
+                    <option value="48h">Próximas 48h</option>
+                    <option value="semana">Esta semana</option>
+                  </select>
+                  <input
+                    name="horario"
+                    defaultValue={normalize(params.horario)}
+                    placeholder="Horario"
+                    className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
+                  />
+                </div>
                 <div className="grid gap-2 sm:grid-cols-2">
                   <input
                     name="nombre"
@@ -176,7 +206,7 @@ export default async function InterestPage({ searchParams }: PageProps) {
                   className="min-h-[112px] w-full resize-y rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
                 />
                 <p className="text-xs text-slate-600">
-                  Necesitamos al menos <span className="font-medium">teléfono o email</span> para poder contactarte.
+                  Para visitas recomendamos dejar <span className="font-medium">teléfono</span>. Para información basta teléfono o email.
                 </p>
 
                 <label className="flex items-start gap-3 rounded-2xl bg-[color:var(--surface-2)] px-4 py-3 text-sm text-slate-700">

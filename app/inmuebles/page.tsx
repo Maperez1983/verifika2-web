@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import type { Listing } from "@/lib/listings";
 import { fetchPortalListings } from "@/lib/crmPortal";
@@ -27,6 +28,8 @@ export default async function ListingsPage({ searchParams }: PageProps) {
   const operation = normalize(params.operacion) as Listing["operation"] | "";
   const city = normalize(params.ciudad).toLowerCase();
   const certifiedOnly = normalize(params.certificado) === "1";
+  const propertyType = normalize(params.tipo).toLowerCase();
+  const sort = normalize(params.orden) || "recientes";
 
   let sourceListings: Listing[] = [];
   try {
@@ -43,13 +46,19 @@ export default async function ListingsPage({ searchParams }: PageProps) {
   const filtered = sourceListings.filter((listing) => {
     if (certifiedOnly && !listing.certified) return false;
     if (operation && listing.operation !== operation) return false;
+    if (propertyType && listing.propertyType !== propertyType) return false;
     if (city && !listing.city.toLowerCase().includes(city)) return false;
     if (q) {
       const hay = `${listing.title} ${listing.city} ${listing.propertyType} ${listing.operation}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
+  }).sort((a, b) => {
+    if (sort === "precio_asc") return a.priceValue - b.priceValue;
+    if (sort === "precio_desc") return b.priceValue - a.priceValue;
+    return String(b.verifiedAt || "").localeCompare(String(a.verifiedAt || ""));
   });
+  const hasFilters = Boolean(q || operation || city || certifiedOnly || propertyType);
 
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
@@ -79,6 +88,32 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                 ¿Qué significa?
               </Link>
             </div>
+          </div>
+        </div>
+
+        <div className="mb-4 flex flex-col justify-between gap-3 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4 sm:flex-row sm:items-center">
+          <div>
+            <p className="text-sm font-semibold">{filtered.length} inmuebles publicados</p>
+            <p className="pt-1 text-xs text-slate-500">
+              Grupo Modernia publica la cartera. Verifika2 revisa la información del anuncio.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 text-sm">
+            <QuickLink href="/inmuebles" active={!hasFilters}>
+              Todos
+            </QuickLink>
+            <QuickLink href="/inmuebles?operacion=venta" active={operation === "venta" && !propertyType}>
+              Venta
+            </QuickLink>
+            <QuickLink href="/inmuebles?operacion=alquiler" active={operation === "alquiler" && !propertyType}>
+              Alquiler
+            </QuickLink>
+            <QuickLink href="/inmuebles?tipo=local" active={propertyType === "local"}>
+              Locales
+            </QuickLink>
+            <QuickLink href="/inmuebles?tipo=piso" active={propertyType === "piso"}>
+              Pisos
+            </QuickLink>
           </div>
         </div>
 
@@ -134,6 +169,46 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                     placeholder="Madrid"
                     className="mt-2 w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
                   />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label
+                    className="text-xs font-medium text-slate-600"
+                    htmlFor="tipo"
+                  >
+                    Tipo
+                  </label>
+                  <select
+                    id="tipo"
+                    name="tipo"
+                    defaultValue={propertyType}
+                    className="mt-2 w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-3 text-sm outline-none focus:border-slate-400"
+                  >
+                    <option value="">Todos</option>
+                    <option value="piso">Piso</option>
+                    <option value="casa">Casa</option>
+                    <option value="ático">Ático</option>
+                    <option value="local">Local</option>
+                  </select>
+                </div>
+                <div>
+                  <label
+                    className="text-xs font-medium text-slate-600"
+                    htmlFor="orden"
+                  >
+                    Orden
+                  </label>
+                  <select
+                    id="orden"
+                    name="orden"
+                    defaultValue={sort}
+                    className="mt-2 w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-3 text-sm outline-none focus:border-slate-400"
+                  >
+                    <option value="recientes">Recientes</option>
+                    <option value="precio_asc">Precio asc.</option>
+                    <option value="precio_desc">Precio desc.</option>
+                  </select>
                 </div>
               </div>
               <label className="flex items-center gap-2 rounded-2xl bg-[color:var(--surface-2)] px-4 py-3">
@@ -203,7 +278,7 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                           compact
                         />
                         <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
-                          Verificado
+                          Verifika2
                         </span>
                       </div>
                       <div className="flex items-start justify-between gap-3">
@@ -216,7 +291,9 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                           </p>
                         </div>
                       </div>
-                      <p className="pt-2 text-sm text-slate-600">{listing.city}</p>
+                      <p className="pt-2 text-sm text-slate-600">
+                        {[listing.zone, listing.city].filter(Boolean).join(", ") || listing.city}
+                      </p>
                       <p className="pt-4 text-2xl font-semibold tracking-tight">
                         {listing.priceLabel}
                       </p>
@@ -225,7 +302,7 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                       </p>
                       <div className="mt-4 flex items-center justify-between border-t border-[color:var(--border)] pt-4">
                         <p className="text-xs text-slate-500">
-                          Documentación revisada
+                          Publica Grupo Modernia
                         </p>
                         <span className="text-sm font-medium text-[color:var(--foreground)] group-hover:underline">
                           Ver ficha
@@ -271,5 +348,28 @@ function EmptyState({
         </Link>
       </div>
     </div>
+  );
+}
+
+function QuickLink({
+  href,
+  active,
+  children,
+}: {
+  href: string;
+  active: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`inline-flex h-9 items-center justify-center rounded-full px-4 font-medium ${
+        active
+          ? "bg-[#0B1D33] text-white"
+          : "border border-[color:var(--border)] bg-[color:var(--surface)] text-slate-700 hover:bg-[color:var(--surface-2)]"
+      }`}
+    >
+      {children}
+    </Link>
   );
 }

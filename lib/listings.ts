@@ -13,6 +13,17 @@ export type Listing = {
   certified: boolean;
   published?: boolean;
   photo?: string | null;
+  photos?: string[];
   agencyName?: string;
   agencyLogo?: string | null;
+  address?: string;
+  zone?: string;
+  province?: string;
+  lat?: number | null;
+  lon?: number | null;
+  seoSlug?: string;
+  verificationChecks?: Array<{
+    label: string;
+    status: "ok" | "review";
+  }>;
 };

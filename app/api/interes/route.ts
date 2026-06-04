@@ -39,6 +39,9 @@ export async function POST(request: Request) {
   const email = normalize(form.get("email")) || "";
   const phone = normalize(form.get("telefono")) || "";
   const message = normalize(form.get("mensaje")) || "";
+  const motivo = normalize(form.get("motivo")) || intent;
+  const urgencia = normalize(form.get("urgencia"));
+  const horario = normalize(form.get("horario"));
   const consent = normalize(form.get("consent"));
 
   const contact = email || phone;
@@ -49,6 +52,14 @@ export async function POST(request: Request) {
     if (listingId) url.searchParams.set("listing", listingId);
     url.searchParams.set("tipo", tipo);
     url.searchParams.set("error", "missing_contact");
+    return NextResponse.redirect(url, 302);
+  }
+
+  if ((intent === "visita" || motivo === "visita") && !phone) {
+    const url = new URL("/interes", origin);
+    if (listingId) url.searchParams.set("listing", listingId);
+    url.searchParams.set("tipo", tipo);
+    url.searchParams.set("error", "missing_phone");
     return NextResponse.redirect(url, 302);
   }
 
@@ -67,7 +78,11 @@ export async function POST(request: Request) {
     listing = null;
   }
   const note = buildNote([
+    motivo ? `Motivo: ${motivo}` : null,
+    urgencia ? `Prioridad: ${urgencia}` : null,
+    horario ? `Horario preferido: ${horario}` : null,
     phone ? `Teléfono: ${phone}` : null,
+    email ? `Email: ${email}` : null,
     message ? `Mensaje: ${message}` : null,
   ]);
 
