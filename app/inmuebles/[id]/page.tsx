@@ -34,57 +34,77 @@ export default async function ListingDetailPage({ params }: PageProps) {
       <PublicHeader current="portal" showBack backHref="/inmuebles" backLabel="Inmuebles" />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
-        <div className="mb-6 grid gap-4 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm lg:grid-cols-12 lg:items-center">
-          <div className="lg:col-span-8">
-            <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-              {listing.title}
-            </h1>
-            <p className="pt-2 text-sm text-slate-600">{listing.city}</p>
-            <div className="pt-4 flex flex-wrap items-center gap-2">
-              {listing.certified ? (
-                <span className="rounded-full bg-[color:var(--brand)] px-3 py-1 text-xs font-medium text-[color:var(--brand-foreground)]">
-                  Certificado (premium)
-                </span>
-              ) : null}
-              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
-                Verificado
-              </span>
-              <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-1 text-xs font-medium text-slate-700">
-                Revisado: {listing.verifiedAt}
-              </span>
+        <section className="mb-6 overflow-hidden rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] shadow-sm">
+          <div className="grid gap-0 lg:grid-cols-12">
+            <div className="lg:col-span-7">
+              <ListingCover
+                id={listing.id}
+                src={listing.photo}
+                title={listing.title}
+                location={listing.city}
+                label={listing.certified ? "Certificado" : "Verificado"}
+              />
+            </div>
+            <div className="flex flex-col justify-between p-6 lg:col-span-5">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
+                    Verificado
+                  </span>
+                  {listing.certified ? (
+                    <span className="rounded-full bg-[color:var(--brand)] px-3 py-1 text-xs font-medium text-[color:var(--brand-foreground)]">
+                      Certificado
+                    </span>
+                  ) : null}
+                  <span className="rounded-full border border-[color:var(--border)] px-3 py-1 text-xs font-medium text-slate-600">
+                    {listing.operation === "alquiler" ? "Alquiler" : "Venta"}
+                  </span>
+                </div>
+                <h1 className="pt-5 text-3xl font-semibold tracking-tight md:text-4xl">
+                  {listing.title}
+                </h1>
+                <p className="pt-3 text-sm text-slate-600">{listing.city}</p>
+                <p className="pt-6 text-4xl font-semibold tracking-tight">
+                  {listing.priceLabel}
+                </p>
+              </div>
+              <div className="pt-6 grid gap-2 sm:grid-cols-2">
+                <Link
+                  href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=visita&next=${encodeURIComponent(`/inmuebles/${listing.id}`)}`}
+                  className="inline-flex h-12 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-medium text-white hover:bg-[#0F2742]"
+                >
+                  Pedir visita
+                </Link>
+                <Link
+                  href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=info&next=${encodeURIComponent(`/inmuebles/${listing.id}`)}`}
+                  className="inline-flex h-12 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-5 text-sm font-medium hover:bg-[color:var(--surface-2)]"
+                >
+                  Solicitar info
+                </Link>
+              </div>
             </div>
           </div>
-
-          <div className="lg:col-span-4">
-            <ListingCover id={listing.id} tone="dark" label={listing.certified ? "Certificado" : "Verificado"} />
-          </div>
-        </div>
+        </section>
 
         <div className="grid gap-6 lg:grid-cols-12">
           <section className="lg:col-span-8">
             <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="md:col-span-2">
-                  <ListingCover id={listing.id} label="Galería" />
-                </div>
-
-                <div className="md:col-span-1">
-                  <p className="text-3xl font-semibold tracking-tight">
-                    {listing.priceLabel}
-                  </p>
-                  <p className="pt-2 text-sm leading-6 text-slate-600">
-                    {listing.description}
-                  </p>
-                  <div className="pt-5 grid gap-2">
-                    {listing.details.slice(0, 5).map((detail) => (
-                      <div
-                        key={detail}
-                        className="rounded-2xl bg-[color:var(--surface-2)] px-4 py-3 text-sm text-slate-800"
-                      >
-                        {detail}
-                      </div>
-                    ))}
-                  </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  Descripción
+                </p>
+                <p className="pt-3 text-base leading-7 text-slate-700">
+                  {listing.description}
+                </p>
+                <div className="pt-6 grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                  {listing.details.slice(0, 6).map((detail) => (
+                    <div
+                      key={detail}
+                      className="rounded-2xl bg-[color:var(--surface-2)] px-4 py-3 text-sm font-medium text-slate-800"
+                    >
+                      {detail}
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -99,8 +119,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
                 <div className="rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-6">
                   <p className="text-sm font-semibold">Interés del comprador</p>
                   <p className="pt-2 text-sm text-slate-600">
-                    Solicita información o una visita. Cada solicitud queda registrada
-                    para su seguimiento.
+                    Solicita información o una visita. La petición queda registrada para que el equipo pueda responder con contexto.
                   </p>
                   <div className="pt-4 flex flex-col gap-2 sm:flex-row">
                     <Link
@@ -126,7 +145,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
               <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
                 <p className="text-sm font-semibold">Verificación Verifika2</p>
                 <p className="pt-2 text-sm leading-6 text-slate-600">
-                  Evidencias visibles para reducir inseguridad jurídica.
+                  Información revisada antes de publicar para reducir dudas antes de visitar.
                 </p>
                 <div className="pt-4 space-y-2 text-sm text-slate-700">
                   <Item label="Titularidad / nota simple" status="OK" tone="ok" />

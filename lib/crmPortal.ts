@@ -49,6 +49,16 @@ function firstText(source: Record<string, unknown>, keys: string[]) {
   return "";
 }
 
+function absoluteCrmUrl(value: unknown) {
+  const raw = normalize(value);
+  if (!raw) return "";
+  try {
+    return new URL(raw).toString();
+  } catch {
+    return new URL(raw.startsWith("/") ? raw : `/${raw}`, crmOrigin()).toString();
+  }
+}
+
 function buildDetails(source: Record<string, unknown>) {
   const details: string[] = [];
   const m2 = numberValue(source.m2);
@@ -98,7 +108,7 @@ function mapCrmListing(raw: unknown): Listing | null {
     verifiedAt: firstText(source, ["publicado_at", "verifiedAt"]) || "Verificado",
     certified: Boolean(Number(source.certificado ?? source.certified ?? 0)),
     published: source.publicado_at ? true : source.published !== false,
-    photo: firstText(source, ["foto", "photo"]) || null,
+    photo: absoluteCrmUrl(source.foto ?? source.photo) || null,
   };
 }
 

@@ -55,25 +55,25 @@ export default async function ListingsPage({ searchParams }: PageProps) {
       <PublicHeader current="portal" showBack backHref="/" backLabel="Landing" />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
-        <div className="relative mb-6 overflow-hidden rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
-          <div className="pointer-events-none absolute -right-24 -top-24 h-[340px] w-[520px] opacity-60">
+        <div className="relative mb-6 overflow-hidden rounded-[28px] border border-[color:var(--border)] bg-[#101827] p-6 text-white shadow-sm">
+          <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/2 opacity-35 md:block">
             <HeroIllustration className="h-full w-full" />
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
+            <div className="relative">
               <h1 className="text-2xl font-semibold tracking-tight">Inmuebles verificados</h1>
-              <p className="pt-2 text-sm leading-6 text-slate-600">
-                Evidencias visibles, estado documental y trazabilidad en cada anuncio.
+              <p className="pt-2 max-w-2xl text-sm leading-6 text-white/72">
+                Inmuebles revisados antes de publicarse, con información clara para decidir mejor antes de visitar.
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <span className="rounded-full bg-emerald-50 px-3 py-1 font-medium text-emerald-800">Verificados</span>
+            <div className="relative flex flex-wrap items-center gap-2 text-xs">
+              <span className="rounded-full bg-white/12 px-3 py-1 font-medium text-white ring-1 ring-white/18">Verificados</span>
               <span className="rounded-full bg-[color:var(--brand)] px-3 py-1 font-medium text-[color:var(--brand-foreground)]">
-                Certificados (premium)
+                Documentación revisada
               </span>
               <Link
                 href="/verificacion"
-                className="font-medium text-slate-600 hover:text-[color:var(--foreground)] hover:underline"
+                className="font-medium text-white/72 hover:text-white hover:underline"
               >
                 ¿Qué significa?
               </Link>
@@ -182,47 +182,49 @@ export default async function ListingsPage({ searchParams }: PageProps) {
             ) : (
               <div className="grid gap-4 sm:grid-cols-2">
                 {filtered.map((listing) => (
-                <Link
-                  key={listing.id}
-                  href={`/inmuebles/${listing.id}`}
-                  className="group rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-sm hover:border-slate-300"
-                >
-                  <div className="mb-4">
+                  <Link
+                    key={listing.id}
+                    href={`/inmuebles/${listing.id}`}
+                    className="group overflow-hidden rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+                  >
                     <ListingCover
                       id={listing.id}
                       label={listing.certified ? "Certificado" : "Verificado"}
+                      src={listing.photo}
+                      title={listing.title}
+                      location={listing.city}
                     />
-                  </div>
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="text-sm font-semibold tracking-tight">
-                      {listing.title}
-                    </p>
-                    <div className="flex shrink-0 flex-col items-end gap-2">
-                      {listing.certified ? (
-                        <span className="rounded-full bg-[color:var(--brand)] px-2 py-1 text-xs font-medium text-[color:var(--brand-foreground)]">
-                          Certificado
+                    <div className="p-5">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
+                            {listing.operation === "alquiler" ? "Alquiler" : "Venta"} · {listing.propertyType}
+                          </p>
+                          <p className="pt-2 text-base font-semibold tracking-tight">
+                            {listing.title}
+                          </p>
+                        </div>
+                        <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
+                          Verificado
                         </span>
-                      ) : null}
-                      <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800">
-                        Verificado
-                      </span>
+                      </div>
+                      <p className="pt-2 text-sm text-slate-600">{listing.city}</p>
+                      <p className="pt-4 text-2xl font-semibold tracking-tight">
+                        {listing.priceLabel}
+                      </p>
+                      <p className="pt-2 min-h-10 text-sm leading-5 text-slate-600">
+                        {listing.detailsShort}
+                      </p>
+                      <div className="mt-4 flex items-center justify-between border-t border-[color:var(--border)] pt-4">
+                        <p className="text-xs text-slate-500">
+                          Documentación revisada
+                        </p>
+                        <span className="text-sm font-medium text-[color:var(--foreground)] group-hover:underline">
+                          Ver ficha
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <p className="pt-2 text-sm text-slate-600">{listing.city}</p>
-                  <p className="pt-3 text-xl font-semibold tracking-tight">
-                    {listing.priceLabel}
-                  </p>
-                  <p className="pt-2 text-sm text-slate-600">
-                    {listing.detailsShort}
-                  </p>
-                  <p className="pt-3 text-xs text-slate-600">
-                    Verificado:{" "}
-                    <span className="font-medium">{listing.verifiedAt}</span>
-                  </p>
-                  <p className="pt-4 text-sm font-medium text-[color:var(--foreground)] group-hover:underline">
-                    Ver ficha
-                  </p>
-                </Link>
+                  </Link>
                 ))}
               </div>
             )}
