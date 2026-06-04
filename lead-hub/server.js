@@ -528,7 +528,12 @@ app.get("/v1/buyers/leads", async (req, res) => {
         listing_id, listing_title, listing_city, status, scheduled_at,
         outcome, outcome_note, crm_status
       from public.leads
-      where persona='comprador' and lower(contact)=$1
+      where persona='comprador'
+        and (
+          lower(contact)=$1
+          or lower(coalesce(payload->>'email',''))=$1
+          or lower(coalesce(payload->>'phone',''))=$1
+        )
       order by id desc
       limit 100;
     `,
@@ -1356,17 +1361,37 @@ app.post("/v1/leads", async (req, res) => {
   let buyerCode = "";
   if (persona === "comprador" && BUYER_CODE_SALT) {
     try {
-      const buyerContact = normalizeContact(contact);
+      const buyerContacts = [
+        normalizeContact(contact),
+        normalizeContact(payload.email),
+        normalizeContact(payload.phone),
+      ].filter(Boolean);
+      const uniqueBuyerContacts = [...new Set(buyerContacts)];
       const existing = await pool.query(
-        "select id from public.buyers where contact=$1 limit 1;",
-        [buyerContact],
+        "select id from public.buyers where contact = any($1::text[]) limit 1;",
+        [uniqueBuyerContacts],
       );
       if (!existing.rows[0]) {
         buyerCode = generateBuyerCode();
-        await pool.query(
-          "insert into public.buyers(name, contact, code_hash) values ($1,$2,$3);",
-          [normalize(payload.name) || null, buyerContact, hashBuyerCode(buyerCode)],
+        const codeHash = hashBuyerCode(buyerCode);
+        for (const buyerContact of uniqueBuyerContacts) {
+          await pool.query(
+            "insert into public.buyers(name, contact, code_hash) values ($1,$2,$3) on conflict (contact) do nothing;",
+            [normalize(payload.name) || null, buyerContact, codeHash],
+          );
+        }
+      } else if (uniqueBuyerContacts.length > 1) {
+        const existingBuyer = await pool.query(
+          "select code_hash from public.buyers where contact = any($1::text[]) limit 1;",
+          [uniqueBuyerContacts],
         );
+        const codeHash = existingBuyer.rows[0]?.code_hash || "";
+        for (const buyerContact of uniqueBuyerContacts) {
+          await pool.query(
+            "insert into public.buyers(name, contact, code_hash) values ($1,$2,$3) on conflict (contact) do nothing;",
+            [normalize(payload.name) || null, buyerContact, codeHash],
+          );
+        }
       }
     } catch (error) {
       // eslint-disable-next-line no-console
