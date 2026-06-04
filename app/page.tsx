@@ -58,10 +58,10 @@ const audiences = [
   {
     title: "Compradores",
     badge: "Seguridad",
-    desc: "Encuentran inmuebles con más contexto, piden visita y conservan un área privada de seguimiento.",
+    desc: "Disponen de un portal virtual para gestionar los inmuebles que han consultado o visitado y solicitar información documental.",
     href: links.portal,
-    cta: "Explorar inmuebles",
-    bullets: ["Verificación", "Visitas", "Ofertas", "Área comprador"],
+    cta: "Ver portal comprador",
+    bullets: ["Inmuebles visitados", "Seguimiento", "Solicitar documentación", "Verificación documental"],
   },
 ];
 
@@ -256,16 +256,16 @@ export default function Home() {
                   Seguimiento 360 a tiempo real de la venta de tu inmueble.
                 </h2>
                 <p className="mt-4 text-sm leading-6 text-slate-600 md:text-base">
-                  Si vendes como particular o a través de una inmobiliaria, en
-                  Verifika2 tienes un portal propio con información de la gestión
-                  de tu propiedad: citas, agenda, clientes interesados, tareas
-                  del intermediario, hitos y anuncio publicado. Nada relevante
-                  de la venta queda fuera de tu vista.
+                  Si vendes, tienes información de la gestión de tu propiedad:
+                  citas, agenda, clientes interesados y tareas del intermediario.
+                  Si compras, tienes un portal virtual para gestionar los
+                  inmuebles que has consultado o visitado, hacer seguimiento y
+                  solicitar documentación o verificación de su situación documental.
                 </p>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <PrivateDashboard title="Portal vendedor" href={links.ownerAccess} metrics={["Citas", "Agenda", "Intermediario", "Clientes"]} />
-                <PrivateDashboard title="Área comprador" href={links.buyer} metrics={["Consultas", "Visitas", "Ofertas", "Código"]} />
+                <PrivateDashboard title="Portal comprador" href={links.buyer} metrics={["Visitados", "Seguimiento", "Documentación", "Verificación"]} />
               </div>
             </div>
           </div>
