@@ -18,8 +18,8 @@ const links = {
 const advantages = [
   {
     title: "Seguridad jurídica",
-    desc: "Anuncios con evidencias, checklist documental y estado visible para reducir dudas antes de visitar o reservar.",
-    proof: "Nota simple, titularidad, certificado energético y documentación comercial.",
+    desc: "Inmuebles analizados documentalmente antes de presentarse como oportunidad: titularidad, situación registral y cargas.",
+    proof: "Nota simple, titularidad, situación registral, validación de cargas y documentación comercial.",
   },
   {
     title: "CRM inmobiliario",
@@ -99,13 +99,13 @@ export default function Home() {
 
               <div className="grid gap-5">
                 <h1 className="max-w-4xl text-4xl font-semibold leading-[1.03] tracking-tight md:text-6xl">
-                  Una web inmobiliaria que no solo enseña inmuebles: genera confianza, organiza ventas y convierte leads.
+                  ¿Cansado de la inseguridad jurídica de los portales inmobiliarios tradicionales?
                 </h1>
                 <p className="max-w-2xl text-base leading-7 text-white/72 md:text-lg">
-                  Verifika2 conecta portal público, CRM inmobiliario, verificación
-                  documental, inteligencia artificial y áreas privadas para que
-                  inmobiliarias, propietarios y compradores trabajen sobre la
-                  misma información.
+                  Los inmuebles publicados en Verifika2 han sido analizados
+                  documentalmente: titularidad, situación registral, validación
+                  de cargas y evidencias clave para que compradores, propietarios
+                  e inmobiliarias trabajen con más seguridad.
                 </p>
               </div>
 
@@ -122,7 +122,7 @@ export default function Home() {
               </div>
 
               <div className="grid gap-3 pt-2 sm:grid-cols-3">
-                <HeroMetric value="Jurídico" label="evidencias y trazabilidad" />
+                <HeroMetric value="Jurídico" label="titularidad, registro y cargas" />
                 <HeroMetric value="Comercial" label="leads, visitas y ofertas" />
                 <HeroMetric value="Privado" label="dashboards por perfil" />
               </div>
@@ -176,16 +176,17 @@ export default function Home() {
                 Seguridad jurídica
               </p>
               <h2 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
-                La confianza aparece dentro del propio anuncio.
+                El anuncio deja de ser una promesa y pasa a estar respaldado por revisión documental.
               </h2>
               <p className="mt-4 text-sm leading-6 text-slate-600 md:text-base">
-                Un comprador no solo pregunta precio y metros. Quiere saber si
-                el inmueble es real, qué se ha revisado y qué falta. Verifika2
-                convierte esa tranquilidad en una parte visible del producto.
+                Un comprador no solo pregunta precio y metros. Quiere saber quién
+                es titular, cuál es la situación registral, si existen cargas y
+                qué documentación respalda el anuncio. Verifika2 convierte esa
+                tranquilidad en una parte visible del producto.
               </p>
               <div className="mt-6 grid gap-3">
                 <ProofLine title="Antes de visitar" desc="El comprador ve estado documental y señales de fiabilidad." />
-                <ProofLine title="Antes de reservar" desc="La agencia reduce fricción y explicaciones repetidas." />
+                <ProofLine title="Antes de reservar" desc="La agencia puede explicar titularidad, cargas y situación registral con base documental." />
                 <ProofLine title="Durante la venta" desc="Propietario y equipo comparten hitos y documentación." />
               </div>
             </div>
@@ -325,7 +326,7 @@ function HeroShowcase() {
               <div className="h-full rounded-xl border border-white/70 bg-white/38" />
             </div>
             <div className="grid gap-3">
-              <MiniStatus title="Seguridad jurídica" value="4 evidencias" tone="emerald" />
+              <MiniStatus title="Seguridad jurídica" value="Titularidad y cargas" tone="emerald" />
               <MiniStatus title="Lead comprador" value="Perfil creado" tone="blue" />
               <MiniStatus title="Propietario" value="Reporte visible" tone="amber" />
             </div>
@@ -424,17 +425,17 @@ function LegalPreview() {
           </span>
         </div>
         <div className="mt-5 grid gap-3">
-          <DocumentRow title="Nota simple" status="Verificada" />
-          <DocumentRow title="Titularidad" status="Coincide" />
-          <DocumentRow title="Certificado energético" status="Registrado" />
-          <DocumentRow title="Datos del anuncio" status="Revisado" />
+          <DocumentRow title="Titularidad" status="Validada" />
+          <DocumentRow title="Situación registral" status="Analizada" />
+          <DocumentRow title="Cargas" status="Revisadas" />
+          <DocumentRow title="Datos del anuncio" status="Contrastados" />
         </div>
         <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-800">
             Ejemplo de mensaje al comprador
           </p>
           <p className="mt-2 text-sm leading-6 text-amber-950">
-            Este anuncio cuenta con evidencias documentales revisadas antes de su publicación.
+            Este inmueble ha sido analizado documentalmente antes de su publicación en el portal.
           </p>
         </div>
       </div>
