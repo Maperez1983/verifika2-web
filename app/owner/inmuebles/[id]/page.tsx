@@ -8,6 +8,8 @@ import { redirect } from "next/navigation";
 import Sparkline from "@/components/charts/Sparkline";
 import DeltaPill from "@/components/charts/DeltaPill";
 import MiniFunnel from "@/components/charts/MiniFunnel";
+import ListingCover from "@/components/listings/ListingCover";
+import type { Listing } from "@/lib/listings";
 
 export const metadata: Metadata = {
   title: "Seguimiento del inmueble",
@@ -71,7 +73,7 @@ type HubSignature = {
 
 type ListingSummary = {
   metrics: { views: number; last_view_at: string | null };
-  counts: { leads_total: number; leads_info: number; leads_visita: number };
+  counts: { leads_total: number; leads_info: number; leads_visita: number; leads_oferta?: number };
 };
 
 type TimeseriesPoint = {
@@ -80,6 +82,7 @@ type TimeseriesPoint = {
   leads: number;
   visits: number;
   info: number;
+  offers?: number;
 };
 
 const normalize = (value: unknown) => String(value ?? "").trim();
@@ -183,7 +186,9 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
 
   const summary = await getSummary(listing.id);
   const timeseries = tab === "resumen" ? await getTimeseries(listing.id, 14) : [];
-  const leads = tab === "leads" ? await getLeads(listing.id) : [];
+  const allLeads = tab === "resumen" || tab === "leads" || tab === "clientes" ? await getLeads(listing.id) : [];
+  const leads = tab === "leads" ? allLeads : [];
+  const clientLeads = tab === "resumen" || tab === "clientes" ? allLeads : [];
   const visits = tab === "visitas" ? await getLeads(listing.id, "visita") : [];
   const agenda = tab === "agenda" ? await getLeads(listing.id, "visita") : [];
   const documents = tab === "docs" ? await getDocuments(listing.id) : [];
@@ -194,14 +199,27 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
   const leadsTotal = summary?.counts?.leads_total ?? 0;
   const leadsInfo = summary?.counts?.leads_info ?? 0;
   const leadsVisits = summary?.counts?.leads_visita ?? 0;
+  const leadsOffers = summary?.counts?.leads_oferta ?? clientLeads.filter((lead) => lead.intent === "oferta").length;
   const viewSeries = timeseries.map((p) => Number(p.views) || 0);
   const leadsSeries = timeseries.map((p) => Number(p.leads) || 0);
   const visitsSeries = timeseries.map((p) => Number(p.visits) || 0);
+  const offersSeries = timeseries.map((p) => Number(p.offers) || 0);
   const last7Views = viewSeries.slice(-7).reduce((a, b) => a + b, 0);
   const prev7Views = viewSeries.slice(-14, -7).reduce((a, b) => a + b, 0);
   const total14Views = viewSeries.reduce((a, b) => a + b, 0);
   const total14Leads = leadsSeries.reduce((a, b) => a + b, 0);
   const total14Visits = visitsSeries.reduce((a, b) => a + b, 0);
+  const total14Offers = offersSeries.reduce((a, b) => a + b, 0);
+  const scheduledClients = clientLeads.filter((lead) => lead.status === "scheduled" || Boolean(lead.scheduled_at)).length;
+  const activeClients = clientLeads.filter((lead) => ["new", "contacted", "scheduled"].includes(lead.status || "new")).length;
+  const doneClients = clientLeads.filter((lead) => lead.status === "done").length;
+  const conversionRate = views > 0 ? Math.round((leadsTotal / views) * 100) : 0;
+  const nextAction =
+    scheduledClients > 0
+      ? "Revisar próximas citas"
+      : activeClients > 0
+        ? "Actualizar estado de clientes"
+        : "Impulsar captación de leads";
 
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
@@ -226,8 +244,8 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <Kpi label="Vistas" value={views} />
             <Kpi label="Solicitudes" value={leadsTotal} />
-            <Kpi label="Info" value={leadsInfo} />
             <Kpi label="Visitas" value={leadsVisits} />
+            <Kpi label="Ofertas" value={leadsOffers} />
           </div>
         </div>
 
@@ -238,6 +256,9 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
             </Tab>
             <Tab href={`/owner/inmuebles/${listing.id}?tab=leads`} active={tab === "leads"}>
               Leads
+            </Tab>
+            <Tab href={`/owner/inmuebles/${listing.id}?tab=clientes`} active={tab === "clientes"}>
+              Clientes
             </Tab>
             <Tab href={`/owner/inmuebles/${listing.id}?tab=visitas`} active={tab === "visitas"}>
               Visitas
@@ -253,6 +274,9 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
             </Tab>
             <Tab href={`/owner/inmuebles/${listing.id}?tab=firma`} active={tab === "firma"}>
               Firma
+            </Tab>
+            <Tab href={`/owner/inmuebles/${listing.id}?tab=anuncio`} active={tab === "anuncio"}>
+              Anuncio
             </Tab>
           </div>
         </div>
@@ -270,15 +294,52 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
         {tab === "resumen" ? (
           <div className="grid gap-6 lg:grid-cols-12">
             <section className="lg:col-span-8">
-              <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+              <div className="overflow-hidden rounded-[28px] border border-[color:var(--border)] bg-[#0B1D33] text-white shadow-sm">
+                <div className="grid gap-0 lg:grid-cols-12">
+                  <div className="lg:col-span-5">
+                    <ListingCover
+                      id={listing.id}
+                      src={listing.photo}
+                      title={listing.title}
+                      location={listing.city}
+                      label={listing.certified ? "Certificado" : "Verificado"}
+                      tone="dark"
+                    />
+                  </div>
+                  <div className="p-6 lg:col-span-7">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/64">
+                      Reporte propietario
+                    </p>
+                    <h2 className="pt-3 text-2xl font-semibold tracking-tight">
+                      {nextAction}
+                    </h2>
+                    <p className="pt-3 text-sm leading-6 text-white/72">
+                      {listing.priceLabel} · {listing.detailsShort}. El anuncio acumula {views} vistas, {leadsTotal} leads, {leadsVisits} visitas y {leadsOffers} ofertas registradas.
+                    </p>
+                    <div className="pt-5 grid gap-3 sm:grid-cols-3">
+                      <HeroMetric label="Clientes activos" value={activeClients} />
+                      <HeroMetric label="Citas" value={scheduledClients} />
+                      <HeroMetric label="Conversión" value={`${conversionRate}%`} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 grid gap-4 md:grid-cols-3">
+                <SignalCard title="Leads" value={leadsTotal} desc={`${leadsInfo} consultas, ${leadsVisits} visitas y ${leadsOffers} ofertas.`} />
+                <SignalCard title="Clientes" value={activeClients} desc={`${doneClients} cerrados o finalizados. Mantén cada estado actualizado.`} />
+                <SignalCard title="Anuncio" value={listing.certified ? "Premium" : "Activo"} desc="Ficha pública disponible para revisar fotos, precio y descripción." />
+              </div>
+
+              <div className="mt-6 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
                 <p className="text-sm font-semibold tracking-tight">
-                  Qué se controla aquí
+                  Qué ve el propietario
                 </p>
                 <div className="pt-6 grid gap-3 sm:grid-cols-2">
-                  <Card title="Estadísticas" desc="Vistas, solicitudes, visitas y evolución." />
-                  <Card title="Visitas" desc="Solicitudes y resultado de cada visita." />
-                  <Card title="Documentación" desc="Checklist y estado por documento." />
-                  <Card title="Trazabilidad" desc="Quién pidió qué y cuándo, sin perder contexto." />
+                  <Card title="Leads" desc="Todas las solicitudes con contacto, fecha, origen y mensaje." />
+                  <Card title="Citas" desc="Visitas programadas y resultado de cada cliente." />
+                  <Card title="Estado de clientes" desc="Nuevo, contactado, cita, finalizado o descartado." />
+                  <Card title="Anuncio" desc="Vista de la ficha pública publicada en Verifika2." />
                 </div>
               </div>
 
@@ -327,7 +388,7 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
                       <MiniFunnel views={Math.max(0, total14Views)} leads={Math.max(0, total14Leads)} visits={Math.max(0, total14Visits)} />
                     </div>
                     <p className="pt-3 text-xs text-slate-600">
-                      Nota: solicitudes y visitas se contabilizan desde los leads del portal.
+                      Ofertas en 14 días: <span className="font-semibold text-[color:var(--foreground)]">{total14Offers}</span>.
                     </p>
                   </div>
                 </div>
@@ -335,6 +396,16 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
             </section>
 
             <aside className="lg:col-span-4 space-y-4">
+              <OwnerReportCard
+                views={views}
+                leads={leadsTotal}
+                visits={leadsVisits}
+                offers={leadsOffers}
+                activeClients={activeClients}
+                scheduledClients={scheduledClients}
+                conversionRate={conversionRate}
+                lastViewAt={summary?.metrics?.last_view_at ?? null}
+              />
               <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
                 <p className="text-sm font-semibold tracking-tight">Acciones rápidas</p>
                 <div className="pt-4 grid gap-2">
@@ -345,10 +416,16 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
                     Ver visitas
                   </Link>
                   <Link
-                    href={`/owner/inmuebles/${listing.id}?tab=docs`}
+                    href={`/owner/inmuebles/${listing.id}?tab=clientes`}
                     className="inline-flex h-11 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-5 text-sm font-medium hover:bg-[color:var(--surface-2)]"
                   >
-                    Ver documentos
+                    Estado clientes
+                  </Link>
+                  <Link
+                    href={`/owner/inmuebles/${listing.id}?tab=anuncio`}
+                    className="inline-flex h-11 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-5 text-sm font-medium hover:bg-[color:var(--surface-2)]"
+                  >
+                    Ver anuncio
                   </Link>
                 </div>
                 <p className="pt-4 text-xs leading-5 text-slate-600">
@@ -365,6 +442,13 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
             listingId={listing.id}
             leads={leads}
             returnTo={`/owner/inmuebles/${listing.id}?tab=leads`}
+          />
+        ) : null}
+
+        {tab === "clientes" ? (
+          <ClientsSection
+            leads={clientLeads}
+            returnTo={`/owner/inmuebles/${listing.id}?tab=clientes`}
           />
         ) : null}
 
@@ -407,6 +491,10 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
             returnTo={`/owner/inmuebles/${listing.id}?tab=firma`}
           />
         ) : null}
+
+        {tab === "anuncio" ? (
+          <AnnouncementSection listing={listing} />
+        ) : null}
       </main>
     </div>
   );
@@ -417,6 +505,88 @@ function Kpi({ label, value }: { label: string; value: number }) {
     <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3">
       <p className="text-xs font-medium text-slate-600">{label}</p>
       <p className="pt-1 text-lg font-semibold tracking-tight">{value}</p>
+    </div>
+  );
+}
+
+function HeroMetric({ label, value }: { label: string; value: number | string }) {
+  return (
+    <div className="rounded-3xl border border-white/12 bg-white/10 px-4 py-3">
+      <p className="text-xs font-medium text-white/64">{label}</p>
+      <p className="pt-1 text-2xl font-semibold tracking-tight text-white">{value}</p>
+    </div>
+  );
+}
+
+function SignalCard({
+  title,
+  value,
+  desc,
+}: {
+  title: string;
+  value: number | string;
+  desc: string;
+}) {
+  return (
+    <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-sm">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+        {title}
+      </p>
+      <p className="pt-3 text-3xl font-semibold tracking-tight">{value}</p>
+      <p className="pt-2 text-sm leading-6 text-slate-600">{desc}</p>
+    </div>
+  );
+}
+
+function OwnerReportCard({
+  views,
+  leads,
+  visits,
+  offers,
+  activeClients,
+  scheduledClients,
+  conversionRate,
+  lastViewAt,
+}: {
+  views: number;
+  leads: number;
+  visits: number;
+  offers: number;
+  activeClients: number;
+  scheduledClients: number;
+  conversionRate: number;
+  lastViewAt: string | null;
+}) {
+  return (
+    <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+      <p className="text-sm font-semibold tracking-tight">Reporte rápido</p>
+      <p className="pt-2 text-sm leading-6 text-slate-600">
+        Resumen comercial para entender si el anuncio genera actividad real.
+      </p>
+      <div className="pt-5 grid gap-3">
+        <ReportRow label="Vistas acumuladas" value={views} />
+        <ReportRow label="Leads recibidos" value={leads} />
+        <ReportRow label="Visitas solicitadas" value={visits} />
+        <ReportRow label="Ofertas" value={offers} />
+        <ReportRow label="Clientes activos" value={activeClients} />
+        <ReportRow label="Citas programadas" value={scheduledClients} />
+        <ReportRow label="Conversión" value={`${conversionRate}%`} />
+      </div>
+      <p className="pt-4 text-xs leading-5 text-slate-600">
+        Última vista:{" "}
+        <span className="font-medium text-[color:var(--foreground)]">
+          {lastViewAt ? new Date(lastViewAt).toLocaleString("es-ES") : "Sin vistas registradas"}
+        </span>
+      </p>
+    </div>
+  );
+}
+
+function ReportRow({ label, value }: { label: string; value: number | string }) {
+  return (
+    <div className="flex items-center justify-between rounded-2xl bg-[color:var(--surface-2)] px-4 py-3">
+      <span className="text-xs font-medium text-slate-600">{label}</span>
+      <span className="text-sm font-semibold text-[color:var(--foreground)]">{value}</span>
     </div>
   );
 }
@@ -432,6 +602,135 @@ function Tab({ href, active, children }: { href: string; active: boolean; childr
     >
       {children}
     </Link>
+  );
+}
+
+function ClientsSection({
+  leads,
+  returnTo,
+}: {
+  leads: HubLead[];
+  returnTo: string;
+}) {
+  const active = leads.filter((lead) => ["new", "contacted", "scheduled"].includes(lead.status || "new"));
+  const scheduled = leads.filter((lead) => lead.status === "scheduled" || Boolean(lead.scheduled_at));
+  const offers = leads.filter((lead) => lead.intent === "oferta" || lead.outcome === "oferta");
+  const closed = leads.filter((lead) => lead.status === "done" || lead.status === "rejected");
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-12">
+      <section className="lg:col-span-4">
+        <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+          <p className="text-sm font-semibold tracking-tight">Estado de clientes</p>
+          <p className="pt-2 text-sm leading-6 text-slate-600">
+            Vista ejecutiva para propietario: quién ha entrado, qué quiere y en qué punto está.
+          </p>
+          <div className="pt-5 grid gap-3">
+            <ReportRow label="Activos" value={active.length} />
+            <ReportRow label="Con cita" value={scheduled.length} />
+            <ReportRow label="Oferta / negociación" value={offers.length} />
+            <ReportRow label="Finalizados" value={closed.length} />
+          </div>
+        </div>
+      </section>
+      <section className="lg:col-span-8">
+        <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+          <p className="text-sm font-semibold tracking-tight">Clientes y seguimiento</p>
+          <p className="pt-2 text-sm leading-6 text-slate-600">
+            Actualiza estado, agenda y resultado para que el propietario vea el avance real de cada interesado.
+          </p>
+          <div className="pt-6 grid gap-3">
+            {leads.length === 0 ? (
+              <Empty text="Aún no hay clientes registrados para este inmueble." />
+            ) : (
+              leads.map((lead) => (
+                <LeadCard
+                  key={lead.id}
+                  lead={lead}
+                  returnTo={returnTo}
+                  showVisitFields={lead.intent === "visita" || lead.intent === "oferta"}
+                />
+              ))
+            )}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function AnnouncementSection({ listing }: { listing: Listing }) {
+  return (
+    <div className="grid gap-6 lg:grid-cols-12">
+      <section className="lg:col-span-7">
+        <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-sm">
+          <ListingCover
+            id={listing.id}
+            src={listing.photo}
+            title={listing.title}
+            location={listing.city}
+            label={listing.certified ? "Certificado" : "Verificado"}
+          />
+          <div className="pt-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+              Vista publicada
+            </p>
+            <h2 className="pt-3 text-2xl font-semibold tracking-tight">
+              {listing.title}
+            </h2>
+            <p className="pt-2 text-sm text-slate-600">
+              {[listing.zone, listing.city, listing.province].filter(Boolean).join(", ") || listing.city}
+            </p>
+            <p className="pt-5 text-3xl font-semibold tracking-tight">
+              {listing.priceLabel}
+            </p>
+            <p className="pt-4 text-sm leading-7 text-slate-700">
+              {listing.description}
+            </p>
+          </div>
+        </div>
+      </section>
+      <aside className="lg:col-span-5">
+        <div className="sticky top-24 space-y-4">
+          <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+            <p className="text-sm font-semibold tracking-tight">Datos del anuncio</p>
+            <div className="pt-5 grid gap-3">
+              <ReportRow label="Operación" value={listing.operation === "alquiler" ? "Alquiler" : "Venta"} />
+              <ReportRow label="Tipo" value={listing.propertyType} />
+              <ReportRow label="Estado" value={listing.certified ? "Certificado" : "Verificado"} />
+              <ReportRow label="Fotos" value={listing.photos?.length ?? (listing.photo ? 1 : 0)} />
+            </div>
+            <div className="pt-5 flex flex-col gap-2 sm:flex-row">
+              <Link
+                href={`/inmuebles/${encodeURIComponent(listing.id)}`}
+                className="inline-flex h-11 flex-1 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-medium text-white hover:bg-[#0F2742]"
+              >
+                Abrir anuncio
+              </Link>
+              <Link
+                href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=info&next=${encodeURIComponent(`/owner/inmuebles/${listing.id}?tab=anuncio`)}`}
+                className="inline-flex h-11 flex-1 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-5 text-sm font-medium hover:bg-[color:var(--surface-2)]"
+              >
+                Probar lead
+              </Link>
+            </div>
+          </div>
+          <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+            <p className="text-sm font-semibold tracking-tight">Características</p>
+            <div className="pt-4 flex flex-wrap gap-2">
+              {listing.details.map((detail) => (
+                <span
+                  key={detail}
+                  className="rounded-full bg-[color:var(--surface-2)] px-3 py-2 text-xs font-medium text-slate-700"
+                >
+                  {detail}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
   );
 }
 

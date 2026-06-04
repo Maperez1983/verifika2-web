@@ -415,7 +415,8 @@ app.get("/v1/metrics", async (req, res) => {
       select
         count(*)::int as leads_total,
         count(*) filter (where intent='info')::int as leads_info,
-        count(*) filter (where intent='visita')::int as leads_visita
+        count(*) filter (where intent='visita')::int as leads_visita,
+        count(*) filter (where intent='oferta')::int as leads_oferta
       from public.leads
       where listing_id=$1;
     `,
@@ -464,7 +465,8 @@ app.get("/v1/metrics/timeseries", async (req, res) => {
           date_trunc('day', created_at)::date as day,
           count(*)::int as leads,
           count(*) filter (where intent='visita')::int as visits,
-          count(*) filter (where intent='info')::int as info
+          count(*) filter (where intent='info')::int as info,
+          count(*) filter (where intent='oferta')::int as offers
         from public.leads
         where listing_id=$1 and created_at >= (current_date - (($2::int - 1) * interval '1 day'))
         group by 1
@@ -474,7 +476,8 @@ app.get("/v1/metrics/timeseries", async (req, res) => {
         coalesce(v.views, 0)::int as views,
         coalesce(l.leads, 0)::int as leads,
         coalesce(l.visits, 0)::int as visits,
-        coalesce(l.info, 0)::int as info
+        coalesce(l.info, 0)::int as info,
+        coalesce(l.offers, 0)::int as offers
       from series
       left join v on v.day=series.day
       left join l on l.day=series.day
@@ -632,7 +635,7 @@ app.get("/v1/leads/search", async (req, res) => {
     return;
   }
 
-  const whereIntent = intent === "info" || intent === "visita" || intent === "contacto";
+  const whereIntent = intent === "info" || intent === "visita" || intent === "oferta" || intent === "contacto";
   const query = await pool.query(
     `
       select

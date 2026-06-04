@@ -8,7 +8,7 @@ import Sparkline from "@/components/charts/Sparkline";
 import DeltaPill from "@/components/charts/DeltaPill";
 
 export const metadata: Metadata = {
-  title: "Owner Portal (beta)",
+  title: "Portal de propietario",
   description:
     "Área privada de propietario: métricas del anuncio, visitas, documentación y trazabilidad.",
 };
@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 type ListingSummary = {
   ok: boolean;
   metrics: { views: number; last_view_at: string | null };
-  counts: { leads_total: number; leads_info: number; leads_visita: number };
+  counts: { leads_total: number; leads_info: number; leads_visita: number; leads_oferta?: number };
   timeseries?: { points: TimeseriesPoint[] };
 };
 
@@ -36,6 +36,7 @@ type TimeseriesPoint = {
   leads: number;
   visits: number;
   info: number;
+  offers?: number;
 };
 
 async function getSummary(listingId: string): Promise<ListingSummary | null> {
@@ -78,6 +79,16 @@ export default async function OwnerDashboard() {
   const hubConfig = await getHubConfig();
   const summaries = await Promise.all(listings.map((l) => getSummary(l.id)));
   const anySummaryOk = summaries.some(Boolean);
+  const totals = summaries.reduce(
+    (acc, summary) => {
+      acc.views += summary?.metrics?.views ?? 0;
+      acc.leads += summary?.counts?.leads_total ?? 0;
+      acc.visits += summary?.counts?.leads_visita ?? 0;
+      acc.offers += summary?.counts?.leads_oferta ?? 0;
+      return acc;
+    },
+    { views: 0, leads: 0, visits: 0, offers: 0 },
+  );
 
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
@@ -89,15 +100,14 @@ export default async function OwnerDashboard() {
         <div className="mx-auto flex w-full max-w-6xl items-start justify-between gap-6 px-6 py-10">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">
-              Owner Portal (beta)
+              Portal de propietario
             </p>
             <h1 className="pt-3 text-3xl font-semibold tracking-tight">
               Seguimiento del inmueble
             </h1>
             <p className="pt-3 max-w-2xl text-sm leading-6 text-slate-600">
-              Métricas del anuncio, solicitudes (info/visita), documentación y
-              trazabilidad. En la siguiente fase se conectará con el CRM y la
-              firma digital.
+              Métricas del anuncio, solicitudes, citas, ofertas, clientes,
+              documentación y trazabilidad de cada inmueble.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -118,6 +128,28 @@ export default async function OwnerDashboard() {
       </header>
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
+        <section className="mb-6 overflow-hidden rounded-[28px] border border-[color:var(--border)] bg-[#0B1D33] p-6 text-white shadow-sm">
+          <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/64">
+                Dashboard propietario
+              </p>
+              <h2 className="pt-3 max-w-2xl text-3xl font-semibold tracking-tight">
+                Reporte comercial de tus inmuebles
+              </h2>
+              <p className="pt-3 max-w-2xl text-sm leading-6 text-white/72">
+                Revisa actividad, solicitudes, citas, ofertas y el estado de los clientes desde una sola pantalla.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:min-w-[520px]">
+              <HeroStat label="Vistas" value={totals.views} />
+              <HeroStat label="Leads" value={totals.leads} />
+              <HeroStat label="Citas" value={totals.visits} />
+              <HeroStat label="Ofertas" value={totals.offers} />
+            </div>
+          </div>
+        </section>
+
         {!anySummaryOk ? (
           <div className="mb-6 rounded-[28px] border border-amber-200 bg-amber-50 px-6 py-5 text-sm text-amber-900">
             <p className="font-semibold">No se pueden cargar las métricas.</p>
@@ -144,10 +176,17 @@ export default async function OwnerDashboard() {
             const views = summary?.metrics?.views ?? 0;
             const leads = summary?.counts?.leads_total ?? 0;
             const visits = summary?.counts?.leads_visita ?? 0;
+            const offers = summary?.counts?.leads_oferta ?? 0;
             const points = summary?.timeseries?.points ?? [];
             const viewSeries = points.map((p) => Number(p.views) || 0);
             const last7 = viewSeries.slice(-7).reduce((a, b) => a + b, 0);
             const prev7 = viewSeries.slice(-14, -7).reduce((a, b) => a + b, 0);
+            const nextAction =
+              visits > 0
+                ? "Revisar citas"
+                : leads > 0
+                  ? "Actualizar clientes"
+                  : "Impulsar anuncio";
             return (
               <Link
                 key={listing.id}
@@ -169,6 +208,7 @@ export default async function OwnerDashboard() {
                   <Row label="Vistas" value={String(views)} />
                   <Row label="Solicitudes" value={String(leads)} />
                   <Row label="Visitas" value={String(visits)} />
+                  <Row label="Ofertas" value={String(offers)} />
                 </div>
                 <div className="pt-5 flex items-end justify-between gap-4">
                   <div>
@@ -185,13 +225,22 @@ export default async function OwnerDashboard() {
                   </div>
                 </div>
                 <p className="pt-5 text-sm font-medium text-[color:var(--foreground)] group-hover:underline">
-                  Abrir seguimiento
+                  {nextAction}
                 </p>
               </Link>
             );
           })}
         </div>
       </main>
+    </div>
+  );
+}
+
+function HeroStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-3xl border border-white/12 bg-white/10 px-4 py-3">
+      <p className="text-xs font-medium text-white/64">{label}</p>
+      <p className="pt-1 text-2xl font-semibold tracking-tight text-white">{value}</p>
     </div>
   );
 }

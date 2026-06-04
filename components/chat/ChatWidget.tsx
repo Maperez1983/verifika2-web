@@ -210,7 +210,7 @@ export default function ChatWidget({ listing, defaultPersona, scope }: Props) {
     setLeadIntent(null);
     push(
       "bot",
-      "Como propietario puedes consultar estado, hitos, leads y documentación desde tu área privada. Si no tienes acceso, deja tus datos y lo gestionan.",
+      "Como propietario puedes consultar reportes de leads, citas, estado de clientes, documentación y el anuncio publicado desde tu área privada. Si no tienes acceso, deja tus datos y lo gestionan.",
     );
   };
 
@@ -218,7 +218,7 @@ export default function ChatWidget({ listing, defaultPersona, scope }: Props) {
     setPersona("propietario");
     push(
       "bot",
-      "En el portal de propietario se ven hitos como publicación, visitas, reserva, arras, notaría y documentación pendiente.",
+      "En el dashboard de propietario se ven vistas del anuncio, leads, visitas, ofertas, clientes activos y próximos pasos. En cada inmueble hay pestañas de clientes, agenda y anuncio.",
     );
   };
 
