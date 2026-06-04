@@ -6,6 +6,7 @@ import ChatWidget from "@/components/chat/ChatWidget";
 import PublicHeader from "@/components/site/PublicHeader";
 import PublicFooter from "@/components/site/PublicFooter";
 import ListingCover from "@/components/listings/ListingCover";
+import AgencyBadge from "@/components/listings/AgencyBadge";
 import HeroIllustration from "@/components/site/HeroIllustration";
 
 export const metadata: Metadata = {
@@ -195,6 +196,16 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                       location={listing.city}
                     />
                     <div className="p-5">
+                      <div className="mb-4 flex items-center justify-between gap-3">
+                        <AgencyBadge
+                          name={listing.agencyName}
+                          logo={listing.agencyLogo}
+                          compact
+                        />
+                        <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
+                          Verificado
+                        </span>
+                      </div>
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
@@ -204,9 +215,6 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                             {listing.title}
                           </p>
                         </div>
-                        <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
-                          Verificado
-                        </span>
                       </div>
                       <p className="pt-2 text-sm text-slate-600">{listing.city}</p>
                       <p className="pt-4 text-2xl font-semibold tracking-tight">

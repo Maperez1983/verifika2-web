@@ -13,4 +13,6 @@ export type Listing = {
   certified: boolean;
   published?: boolean;
   photo?: string | null;
+  agencyName?: string;
+  agencyLogo?: string | null;
 };

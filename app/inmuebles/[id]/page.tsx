@@ -7,6 +7,7 @@ import ViewTracker from "@/components/track/ViewTracker";
 import PublicHeader from "@/components/site/PublicHeader";
 import PublicFooter from "@/components/site/PublicFooter";
 import ListingCover from "@/components/listings/ListingCover";
+import AgencyBadge from "@/components/listings/AgencyBadge";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -47,6 +48,12 @@ export default async function ListingDetailPage({ params }: PageProps) {
             </div>
             <div className="flex flex-col justify-between p-6 lg:col-span-5">
               <div>
+                <div className="mb-5 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] px-4 py-3">
+                  <AgencyBadge
+                    name={listing.agencyName}
+                    logo={listing.agencyLogo}
+                  />
+                </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
                     Verificado

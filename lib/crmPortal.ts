@@ -109,6 +109,10 @@ function mapCrmListing(raw: unknown): Listing | null {
     certified: Boolean(Number(source.certificado ?? source.certified ?? 0)),
     published: source.publicado_at ? true : source.published !== false,
     photo: absoluteCrmUrl(source.foto ?? source.photo) || null,
+    agencyName:
+      firstText(source, ["inmobiliaria_nombre", "agencia_nombre", "empresa_nombre", "agencyName"]) ||
+      "Verifika2",
+    agencyLogo: absoluteCrmUrl(source.inmobiliaria_logo ?? source.agencia_logo ?? source.empresa_logo ?? source.agencyLogo) || null,
   };
 }
 
