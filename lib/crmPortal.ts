@@ -59,17 +59,6 @@ function absoluteCrmUrl(value: unknown) {
   }
 }
 
-function normalizeAgencyName(value: unknown) {
-  const raw = normalize(value);
-  if (!raw) return "";
-  const plain = raw
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-  if (plain.startsWith("estudio velazquez")) return "Estudio Velazquez";
-  return raw.replace(/\s+(20\d{2})?\s*,?\s*S\.?\s*L\.?U?\.?\s*$/i, "").trim() || raw;
-}
-
 function buildDetails(source: Record<string, unknown>) {
   const details: string[] = [];
   const m2 = numberValue(source.m2);
@@ -120,14 +109,8 @@ function mapCrmListing(raw: unknown): Listing | null {
     certified: Boolean(Number(source.certificado ?? source.certified ?? 0)),
     published: source.publicado_at ? true : source.published !== false,
     photo: absoluteCrmUrl(source.foto ?? source.photo) || null,
-    agencyName:
-      normalizeAgencyName(firstText(source, ["inmobiliaria_nombre", "agencia_nombre", "empresa_nombre", "agencyName"])) ||
-      "Verifika2",
-    agencyLogo:
-      normalizeAgencyName(firstText(source, ["inmobiliaria_nombre", "agencia_nombre", "empresa_nombre", "agencyName"])) ===
-      "Estudio Velazquez"
-        ? null
-        : absoluteCrmUrl(source.inmobiliaria_logo ?? source.agencia_logo ?? source.empresa_logo ?? source.agencyLogo) || null,
+    agencyName: "Grupo Modernia",
+    agencyLogo: "/brand/grupo_modernia_logo.png",
   };
 }
 
