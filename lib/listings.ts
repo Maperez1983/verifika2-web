@@ -12,4 +12,5 @@ export type Listing = {
   verifiedAt: string;
   certified: boolean;
   published?: boolean;
+  photo?: string | null;
 };
