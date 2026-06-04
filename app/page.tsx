@@ -33,8 +33,8 @@ const advantages = [
   },
   {
     title: "Transparencia comercial",
-    desc: "Propietarios con dashboard privado: leads, citas, clientes interesados, hitos, documentos y anuncio publicado.",
-    proof: "Menos llamadas de seguimiento, más confianza en la operación.",
+    desc: "Vendedores particulares o con inmobiliaria con seguimiento 360 en tiempo real de la gestión de su inmueble.",
+    proof: "Citas, agenda, clientes interesados, gestión del intermediario, hitos, documentos y anuncio publicado.",
   },
 ];
 
@@ -48,12 +48,12 @@ const audiences = [
     bullets: ["CRM + portal", "Leads y citas", "IA comercial", "Control documental"],
   },
   {
-    title: "Particulares propietarios",
+    title: "Vendedores particulares",
     badge: "Confianza",
-    desc: "Ven qué ocurre con su inmueble sin depender de llamadas dispersas ni capturas de pantalla.",
+    desc: "Tienen un portal propio para saber en todo momento qué ocurre con la venta de su inmueble, incluso si gestiona una inmobiliaria.",
     href: links.owners,
-    cta: "Ver ventajas para propietario",
-    bullets: ["Reportes", "Clientes interesados", "Documentos", "Estado del anuncio"],
+    cta: "Ver portal vendedor",
+    bullets: ["Seguimiento 360", "Citas y agenda", "Gestión intermediario", "Estado del anuncio"],
   },
   {
     title: "Compradores",
@@ -154,8 +154,8 @@ export default function Home() {
                 </h2>
                 <p className="mt-4 text-sm leading-6 text-slate-600 md:text-base">
                   La web debe vender una ventaja evidente: cada usuario ve lo
-                  que necesita. La inmobiliaria opera, el propietario entiende
-                  el avance y el comprador decide con más seguridad.
+                  que necesita. La inmobiliaria opera, el vendedor controla el
+                  avance de su propiedad y el comprador decide con más seguridad.
                 </p>
               </div>
 
@@ -253,16 +253,18 @@ export default function Home() {
                   Áreas privadas
                 </p>
                 <h2 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
-                  Dashboards que convierten transparencia en producto.
+                  Seguimiento 360 a tiempo real de la venta de tu inmueble.
                 </h2>
                 <p className="mt-4 text-sm leading-6 text-slate-600 md:text-base">
-                  La web gana valor cuando el usuario vuelve. El propietario
-                  vuelve para ver actividad; el comprador vuelve para seguir sus
-                  visitas, ofertas y anuncios consultados.
+                  Si vendes como particular o a través de una inmobiliaria, en
+                  Verifika2 tienes un portal propio con información de la gestión
+                  de tu propiedad: citas, agenda, clientes interesados, tareas
+                  del intermediario, hitos y anuncio publicado. Nada relevante
+                  de la venta queda fuera de tu vista.
                 </p>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
-                <PrivateDashboard title="Dashboard propietario" href={links.ownerAccess} metrics={["Leads", "Citas", "Clientes", "Anuncio"]} />
+                <PrivateDashboard title="Portal vendedor" href={links.ownerAccess} metrics={["Citas", "Agenda", "Intermediario", "Clientes"]} />
                 <PrivateDashboard title="Área comprador" href={links.buyer} metrics={["Consultas", "Visitas", "Ofertas", "Código"]} />
               </div>
             </div>
@@ -278,9 +280,10 @@ export default function Home() {
                     Una web así vende más que inmuebles: vende confianza y control.
                   </p>
                   <p className="mt-3 max-w-3xl text-sm leading-6 text-white/72 md:text-base">
-                    Para una inmobiliaria es captación y CRM. Para un propietario,
-                    transparencia. Para un comprador, seguridad. Para todos,
-                    menos incertidumbre y una experiencia más profesional.
+                    Para una inmobiliaria es captación y CRM. Para un vendedor,
+                    seguimiento total de su propiedad. Para un comprador,
+                    seguridad. Para todos, menos incertidumbre y una experiencia
+                    más profesional.
                   </p>
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row">
