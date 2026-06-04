@@ -104,6 +104,7 @@ export async function POST(request: Request) {
     forwardedFor: request.headers.get("x-forwarded-for") ?? "",
   };
 
+  let buyerCode = "";
   try {
     const res = await leadHubFetch("/v1/leads", {
       method: "POST",
@@ -117,10 +118,12 @@ export async function POST(request: Request) {
         { status: 502 },
       );
     }
+    const data = await res.json().catch(() => null);
+    buyerCode = String(data?.buyer_code ?? "").trim();
   } catch {
     // Temporary fallback: visible in Render logs while lead hub is not wired.
     console.log("[verifika2-web] lead", envelope);
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, buyerCode: buyerCode || undefined });
 }

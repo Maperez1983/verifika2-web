@@ -6,6 +6,7 @@ const links = {
   verification: "/verificacion",
   certification: "/certificacion",
   owners: "/propietarios",
+  buyer: "/comprador",
   pros: "/profesionales",
   publish: "/publicar",
   app: "https://app.verifika2.com",
@@ -49,6 +50,9 @@ export default function PublicHeader({
             <Link className={navCls(current === "owners")} href={links.owners}>
               Propietarios
             </Link>
+            <Link className={navCls(current === "buyer")} href={links.buyer}>
+              Comprador
+            </Link>
             <Link className={navCls(current === "pros")} href={links.pros}>
               Profesionales
             </Link>
@@ -85,6 +89,9 @@ export default function PublicHeader({
             <Link className="hover:underline" href={links.owners}>
               Propietarios
             </Link>
+            <Link className="hover:underline" href={links.buyer}>
+              Comprador
+            </Link>
             <Link className="hover:underline" href={links.pros}>
               Profesionales
             </Link>
@@ -101,4 +108,3 @@ export default function PublicHeader({
 function navCls(active: boolean) {
   return active ? "text-zinc-950 font-semibold" : "hover:text-zinc-950";
 }
-

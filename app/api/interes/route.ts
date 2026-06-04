@@ -110,6 +110,7 @@ export async function POST(request: Request) {
     },
   };
 
+  let buyerCode = "";
   try {
     const res = await leadHubFetch("/v1/leads", {
       method: "POST",
@@ -125,6 +126,8 @@ export async function POST(request: Request) {
       if (body) url.searchParams.set("detail", body.slice(0, 120));
       return NextResponse.redirect(url, 302);
     }
+    const data = await res.json().catch(() => null);
+    buyerCode = normalize(data?.buyer_code);
   } catch (error) {
     const url = new URL("/interes", origin);
     if (listingId) url.searchParams.set("listing", listingId);
@@ -139,5 +142,6 @@ export async function POST(request: Request) {
   okUrl.searchParams.set("tipo", tipo);
   okUrl.searchParams.set("sent", "1");
   okUrl.searchParams.set("next", next);
+  if (buyerCode) okUrl.searchParams.set("buyer_code", buyerCode);
   return NextResponse.redirect(okUrl, 302);
 }

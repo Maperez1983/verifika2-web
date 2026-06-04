@@ -30,6 +30,7 @@ export default async function InterestPage({ searchParams }: PageProps) {
   const sent = normalize(params.sent) === "1";
   const error = normalize(params.error);
   const detail = normalize(params.detail);
+  const buyerCode = normalize(params.buyer_code);
   const next = sanitizeNextPath(params.next, "/inmuebles");
   const listing = listingId
     ? await fetchPortalListing(listingId).catch(() => null)
@@ -103,6 +104,23 @@ export default async function InterestPage({ searchParams }: PageProps) {
                   consultando la ficha del inmueble.
                 </li>
               </ol>
+
+              {buyerCode ? (
+                <div className="mt-6 rounded-3xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-950">
+                  <p className="font-semibold">Área comprador creada</p>
+                  <p className="pt-2 leading-6">
+                    Código: <span className="font-semibold">{buyerCode}</span>. Entra con tu teléfono/email y este código para seguir solicitudes, visitas y ofertas.
+                  </p>
+                  <div className="pt-4">
+                    <Link
+                      href="/comprador"
+                      className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-medium text-white hover:bg-[#0F2742]"
+                    >
+                      Ir a mi área
+                    </Link>
+                  </div>
+                </div>
+              ) : null}
 
               <div className="pt-6 flex flex-col gap-2 sm:flex-row">
                 <Link

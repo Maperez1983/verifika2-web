@@ -15,6 +15,7 @@ const SLACK_WEBHOOK_URL = (process.env.SLACK_WEBHOOK_URL || process.env.SLACK_WE
 const CRM_LEADS_ENDPOINT = process.env.CRM_LEADS_ENDPOINT || "";
 const CRM_TOKEN = process.env.CRM_TOKEN || "";
 const OWNER_CODE_SALT = process.env.OWNER_CODE_SALT || "";
+const BUYER_CODE_SALT = process.env.BUYER_CODE_SALT || OWNER_CODE_SALT || "";
 
 if (!DATABASE_URL) {
   // eslint-disable-next-line no-console
@@ -109,6 +110,21 @@ async function ensureSchema() {
   `);
 
   await pool.query(`
+    create table if not exists public.buyers (
+      id bigserial primary key,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now(),
+      name text,
+      contact text not null unique,
+      code_hash text not null,
+      status text not null default 'active'
+    );
+  `);
+  await pool.query(
+    "create index if not exists buyers_contact_idx on public.buyers(contact);",
+  );
+
+  await pool.query(`
     create table if not exists public.milestones (
       id bigserial primary key,
       created_at timestamptz not null default now(),
@@ -180,6 +196,16 @@ function hashOwnerCode(code) {
   return sha256(`${OWNER_CODE_SALT || "v2"}:${normalized}`);
 }
 
+function normalizeContact(value) {
+  return normalize(value).toLowerCase();
+}
+
+function hashBuyerCode(code) {
+  const normalized = normalize(code).toLowerCase();
+  if (!normalized) return "";
+  return sha256(`${BUYER_CODE_SALT || "v2-buyer"}:${normalized}`);
+}
+
 function generateOwnerCode() {
   const letters = "ABCDEFGHJKLMNPQRSTUVWXYZ"; // avoid I/O ambiguity
   const digits = "23456789"; // avoid 0/1 ambiguity
@@ -189,6 +215,10 @@ function generateOwnerCode() {
     return out.join("");
   };
   return `V2-${pick(letters, 4)}-${pick(digits, 4)}`;
+}
+
+function generateBuyerCode() {
+  return generateOwnerCode().replace("V2-", "CB-");
 }
 
 async function postToSlack(text) {
@@ -384,6 +414,128 @@ app.post("/v1/owners/verify", async (req, res) => {
   }
 
   res.status(200).json({ ok: true, owner: row });
+});
+
+app.post("/v1/buyers/create_code", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  if (!BUYER_CODE_SALT) {
+    res.status(500).json({ ok: false, error: "buyer_code_salt_missing" });
+    return;
+  }
+
+  if (!isRecord(req.body)) {
+    res.status(400).json({ ok: false, error: "invalid_payload" });
+    return;
+  }
+
+  const contact = normalizeContact(req.body.contact);
+  const name = normalize(req.body.name);
+  if (!contact) {
+    res.status(400).json({ ok: false, error: "missing_contact" });
+    return;
+  }
+
+  const code = generateBuyerCode();
+  const codeHash = hashBuyerCode(code);
+  const buyer = await pool.query(
+    `
+      insert into public.buyers(name, contact, code_hash)
+      values ($1, $2, $3)
+      on conflict (contact)
+      do update set name=coalesce(nullif($1,''), public.buyers.name), code_hash=$3, updated_at=now(), status='active'
+      returning id, name, contact, status, updated_at;
+    `,
+    [name || null, contact, codeHash],
+  );
+
+  res.status(200).json({ ok: true, code, buyer: buyer.rows[0] });
+});
+
+app.post("/v1/buyers/verify", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  if (!BUYER_CODE_SALT) {
+    res.status(500).json({ ok: false, error: "buyer_code_salt_missing" });
+    return;
+  }
+
+  if (!isRecord(req.body)) {
+    res.status(400).json({ ok: false, error: "invalid_payload" });
+    return;
+  }
+
+  const contact = normalizeContact(req.body.contact);
+  const codeHash = hashBuyerCode(req.body.code);
+  if (!contact || !codeHash) {
+    res.status(400).json({ ok: false, error: "missing_fields" });
+    return;
+  }
+
+  const buyer = await pool.query(
+    "select id, name, contact, status from public.buyers where contact=$1 and code_hash=$2 and status='active' limit 1;",
+    [contact, codeHash],
+  );
+  const row = buyer.rows[0];
+  if (!row) {
+    res.status(401).json({ ok: false, error: "invalid_code" });
+    return;
+  }
+
+  res.status(200).json({ ok: true, buyer: row });
+});
+
+app.get("/v1/buyers/leads", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  const contact = normalizeContact(req.query.contact);
+  if (!contact) {
+    res.status(400).json({ ok: false, error: "missing_contact" });
+    return;
+  }
+
+  const leads = await pool.query(
+    `
+      select
+        id, created_at, persona, intent, contact, name, note,
+        listing_id, listing_title, listing_city, status, scheduled_at,
+        outcome, outcome_note, crm_status
+      from public.leads
+      where persona='comprador' and lower(contact)=$1
+      order by id desc
+      limit 100;
+    `,
+    [contact],
+  );
+
+  res.status(200).json({ ok: true, leads: leads.rows });
 });
 
 app.get("/v1/metrics", async (req, res) => {
@@ -608,6 +760,7 @@ app.get("/v1/config", async (req, res) => {
     slackWebhookLength: SLACK_WEBHOOK_URL.length,
     slackEnvKeys,
     ownerCodeConfigured: Boolean(OWNER_CODE_SALT),
+    buyerCodeConfigured: Boolean(BUYER_CODE_SALT),
     databaseConfigured: Boolean(DATABASE_URL),
     crmConfigured: Boolean(CRM_LEADS_ENDPOINT),
   });
@@ -1136,7 +1289,13 @@ app.post("/v1/leads", async (req, res) => {
   const persona = normalize(payload.persona) === "propietario" ? "propietario" : "comprador";
   const intentRaw = normalize(payload.intent);
   const intent =
-    intentRaw === "visita" ? "visita" : intentRaw === "contacto" ? "contacto" : "info";
+    intentRaw === "visita"
+      ? "visita"
+      : intentRaw === "oferta"
+        ? "oferta"
+        : intentRaw === "contacto"
+          ? "contacto"
+          : "info";
   const contact = normalize(payload.contact);
   if (!contact) {
     res.status(400).json({ ok: false, error: "missing_contact" });
@@ -1194,8 +1353,28 @@ app.post("/v1/leads", async (req, res) => {
   );
 
   const leadRow = insert.rows[0];
+  let buyerCode = "";
+  if (persona === "comprador" && BUYER_CODE_SALT) {
+    try {
+      const buyerContact = normalizeContact(contact);
+      const existing = await pool.query(
+        "select id from public.buyers where contact=$1 limit 1;",
+        [buyerContact],
+      );
+      if (!existing.rows[0]) {
+        buyerCode = generateBuyerCode();
+        await pool.query(
+          "insert into public.buyers(name, contact, code_hash) values ($1,$2,$3);",
+          [normalize(payload.name) || null, buyerContact, hashBuyerCode(buyerCode)],
+        );
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.warn("[lead-hub] buyer access creation failed:", error);
+    }
+  }
 
-  res.status(200).json({ ok: true, id: String(leadRow.id) });
+  res.status(200).json({ ok: true, id: String(leadRow.id), buyer_code: buyerCode || undefined });
 
   try {
     await notifySlack(leadRow);

@@ -339,6 +339,14 @@ export default function ChatWidget({ listing, defaultPersona, scope }: Props) {
         );
         return;
       }
+      const data = await res.json().catch(() => null);
+      const buyerCode = typeof data?.buyerCode === "string" ? data.buyerCode.trim() : "";
+      if (buyerCode) {
+        push(
+          "bot",
+          `Código de área comprador: ${buyerCode}. Puedes entrar en /comprador con tu teléfono/email y este código.`,
+        );
+      }
     } catch {
       push(
         "bot",
