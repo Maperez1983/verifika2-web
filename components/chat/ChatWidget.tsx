@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
@@ -392,17 +393,22 @@ export default function ChatWidget({ listing, defaultPersona, scope }: Props) {
   return (
     <div className="fixed bottom-5 right-5 z-40">
       {open ? (
-        <div className="w-[390px] max-w-[calc(100vw-40px)] overflow-hidden rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] shadow-[0_18px_60px_rgba(0,0,0,0.18)]">
-          <div className="flex items-center justify-between gap-4 border-b border-[color:var(--border)] px-5 py-4">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold tracking-tight">
-                Asistente Verifika2
-              </p>
-              <p className="truncate text-xs text-slate-600">
-                {persona === "comprador"
-                  ? "Comprador / inquilino"
-                  : "Propietario"}
-              </p>
+        <div className="w-[390px] max-w-[calc(100vw-40px)] overflow-hidden rounded-[28px] border border-white/20 bg-[color:var(--surface)] shadow-[0_24px_80px_rgba(11,29,51,0.24)] ring-1 ring-[#F2C14E]/20">
+          <div className="flex items-center justify-between gap-4 border-b border-white/10 bg-[#0B1D33] px-5 py-4 text-white">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm">
+                <Image src="/brand/verifika2_mark.svg" alt="" width={22} height={22} />
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold tracking-tight">
+                  Asistente Verifika2
+                </p>
+                <p className="truncate text-xs text-white/62">
+                  {persona === "comprador"
+                    ? "Comprador / inquilino"
+                    : "Propietario"}
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -410,21 +416,21 @@ export default function ChatWidget({ listing, defaultPersona, scope }: Props) {
                 onClick={() =>
                   setPersona((p) => (p === "comprador" ? "propietario" : "comprador"))
                 }
-                className="inline-flex h-9 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-3 text-xs font-medium hover:bg-[color:var(--surface-2)]"
+                className="inline-flex h-9 items-center justify-center rounded-full border border-white/18 bg-white/10 px-3 text-xs font-medium text-white hover:bg-white/16"
               >
                 Cambiar
               </button>
               <button
                 type="button"
                 onClick={resetConversation}
-                className="inline-flex h-9 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-3 text-xs font-medium hover:bg-[color:var(--surface-2)]"
+                className="hidden h-9 items-center justify-center rounded-full border border-white/18 bg-white/10 px-3 text-xs font-medium text-white hover:bg-white/16 sm:inline-flex"
               >
                 Reset
               </button>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] text-sm font-semibold hover:bg-[color:var(--surface-2)]"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/18 bg-white/10 text-sm font-semibold text-white hover:bg-white/16"
                 aria-label="Cerrar chat"
               >
                 x
@@ -434,7 +440,7 @@ export default function ChatWidget({ listing, defaultPersona, scope }: Props) {
 
           <div ref={scrollRef} className="max-h-[470px] overflow-auto px-5 py-4">
             {listing ? (
-              <div className="mb-4 rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] px-4 py-3">
+              <div className="mb-4 rounded-3xl border border-[#e7d7aa] bg-[#fffaf0] px-4 py-3 shadow-sm">
                 <p className="truncate text-sm font-semibold">{listing.title}</p>
                 <p className="pt-1 text-xs leading-5 text-slate-600">
                   {[listing.priceLabel, listing.city, listing.detailsShort]
@@ -455,8 +461,8 @@ export default function ChatWidget({ listing, defaultPersona, scope }: Props) {
                   <div
                     className={`max-w-[86%] rounded-3xl px-4 py-3 text-sm leading-6 ${
                       message.role === "user"
-                        ? "bg-[#0B1D33] text-white"
-                        : "border border-[color:var(--border)] bg-[color:var(--surface-2)] text-slate-800"
+                        ? "bg-[#0B1D33] text-white shadow-sm"
+                        : "border border-[#dce3ec] bg-[#f8fafc] text-slate-800"
                     }`}
                   >
                     {message.text}
@@ -506,7 +512,7 @@ export default function ChatWidget({ listing, defaultPersona, scope }: Props) {
 
             {leadIntent ? (
               <div className="pt-5">
-                <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4">
+                <div className="rounded-[28px] border border-[#dce3ec] bg-white p-4 shadow-sm">
                   <p className="text-sm font-semibold tracking-tight">
                     {intentLabel(leadIntent)}
                   </p>
@@ -581,7 +587,7 @@ export default function ChatWidget({ listing, defaultPersona, scope }: Props) {
             ) : null}
           </div>
 
-          <div className="border-t border-[color:var(--border)] px-5 py-4">
+          <div className="border-t border-[color:var(--border)] bg-[#fbfcfe] px-5 py-4">
             <div className="flex gap-2">
               <input
                 value={draft}
@@ -609,9 +615,10 @@ export default function ChatWidget({ listing, defaultPersona, scope }: Props) {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#0B1D33] px-5 text-sm font-semibold text-white shadow-[0_16px_48px_rgba(11,29,51,0.34)] hover:bg-[#0F2742]"
+          className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#0B1D33] px-5 text-sm font-semibold text-white shadow-[0_18px_54px_rgba(11,29,51,0.38)] ring-2 ring-[#F2C14E]/30 hover:bg-[#0F2742]"
           aria-label="Abrir chat"
         >
+          <Image src="/brand/verifika2_mark.svg" alt="" width={18} height={18} className="rounded-full bg-white p-0.5" />
           Chat
           <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400" />
         </button>
@@ -631,7 +638,7 @@ function Quick({
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex h-9 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-3 text-xs font-medium text-slate-700 hover:bg-[color:var(--surface-2)]"
+      className="inline-flex h-9 items-center justify-center rounded-full border border-[#d9e0ea] bg-[#f8fafc] px-3 text-xs font-medium text-slate-700 hover:border-[#F2C14E] hover:bg-white"
     >
       {children}
     </button>

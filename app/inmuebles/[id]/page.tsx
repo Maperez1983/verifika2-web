@@ -65,6 +65,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
                 title={listing.title}
                 location={listing.city}
                 label={listing.certified ? "Certificado" : "Verificado"}
+                propertyType={listing.propertyType}
               />
               <div className="grid gap-3 p-5 sm:grid-cols-3">
                 <HeroTrust title="Anuncio revisado" desc="Datos publicados con control previo." />
@@ -72,7 +73,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
                 <HeroTrust title="Seguimiento privado" desc="Visitas y ofertas trazables." />
               </div>
             </div>
-            <div className="flex flex-col justify-between p-6 lg:col-span-5">
+            <div className="flex flex-col justify-between border-t border-[color:var(--border)] p-6 lg:col-span-5 lg:border-l lg:border-t-0">
               <div>
                 <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
                   <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] px-4 py-3">
@@ -103,13 +104,13 @@ export default async function ListingDetailPage({ params }: PageProps) {
                     {listing.operation === "alquiler" ? "Alquiler" : "Venta"}
                   </span>
                 </div>
-                <h1 className="pt-5 text-3xl font-semibold tracking-tight md:text-4xl">
+                <h1 className="pt-5 text-4xl font-semibold leading-tight tracking-tight md:text-5xl">
                   {listing.title}
                 </h1>
                 <p className="pt-3 text-sm text-slate-600">
                   {[listing.zone, listing.city].filter(Boolean).join(", ") || listing.city}
                 </p>
-                <p className="pt-6 text-4xl font-semibold tracking-tight">
+                <p className="pt-6 text-5xl font-semibold tracking-tight">
                   {listing.priceLabel}
                 </p>
                 <p className="pt-4 text-sm leading-6 text-slate-600">
@@ -143,7 +144,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
           </div>
         </section>
 
-        <nav className="mb-6 flex gap-2 overflow-x-auto rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-2 text-sm shadow-sm">
+        <nav className="mb-6 flex gap-2 overflow-x-auto rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-2 text-sm shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
           <SectionTab href="#resumen" label="Resumen" />
           <SectionTab href="#documentacion" label="Documentación" />
           <SectionTab href="#zona" label="Zona" />
@@ -276,12 +277,16 @@ export default async function ListingDetailPage({ params }: PageProps) {
                 <p className="pt-3 text-sm leading-6 text-slate-600">
                   Grupo Modernia gestiona la publicación y el contacto comercial. Verifika2 aporta revisión, trazabilidad y estructura de seguimiento.
                 </p>
+                <div className="mt-4 grid gap-2 text-xs text-slate-700">
+                  <RoleSignal label="Publicador" value="Grupo Modernia" />
+                  <RoleSignal label="Confianza" value="Verifika2" />
+                </div>
               </div>
 
               <div id="documentacion" className="scroll-mt-24 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
-                <p className="text-sm font-semibold">Verificación Verifika2</p>
-                <p className="pt-2 text-sm leading-6 text-slate-600">
-                  Verifika2 revisa la consistencia del anuncio y deja trazabilidad del interés generado. La revisión no sustituye el asesoramiento legal, pero reduce incertidumbre antes de avanzar.
+                  <p className="text-sm font-semibold">Dossier Verifika2</p>
+                  <p className="pt-2 text-sm leading-6 text-slate-600">
+                    Verifika2 revisa la consistencia del anuncio y deja trazabilidad del interés generado. La revisión no sustituye el asesoramiento legal, pero reduce incertidumbre antes de avanzar.
                 </p>
                 <div className="pt-4 space-y-2 text-sm text-slate-700">
                   {(listing.verificationChecks || []).map((check) => (
@@ -387,7 +392,7 @@ function GuidedAction({ href, title, desc }: { href: string; title: string; desc
 
 function DecisionSignal({ text }: { text: string }) {
   return (
-    <span className="rounded-2xl bg-[color:var(--surface-2)] px-3 py-2">
+    <span className="rounded-2xl border border-[#ead7a4] bg-[#fff8e5] px-3 py-2 font-semibold text-[#5a4300]">
       {text}
     </span>
   );
@@ -395,9 +400,18 @@ function DecisionSignal({ text }: { text: string }) {
 
 function HeroTrust({ title, desc }: { title: string; desc: string }) {
   return (
-    <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-4">
+    <div className="rounded-2xl border border-[#dce3ec] bg-[#f8fafc] p-4 shadow-sm">
       <p className="text-sm font-semibold tracking-tight">{title}</p>
       <p className="pt-2 text-xs leading-5 text-slate-600">{desc}</p>
+    </div>
+  );
+}
+
+function RoleSignal({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-2xl bg-[color:var(--surface-2)] px-3 py-2">
+      <span className="text-slate-500">{label}</span>
+      <span className="font-semibold text-slate-800">{value}</span>
     </div>
   );
 }

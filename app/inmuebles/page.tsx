@@ -65,14 +65,17 @@ export default async function ListingsPage({ searchParams }: PageProps) {
       <PublicHeader current="portal" showBack backHref="/" backLabel="Landing" />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
-        <div className="relative mb-6 overflow-hidden rounded-[28px] border border-[color:var(--border)] bg-[#101827] p-6 text-white shadow-sm">
+        <div className="relative mb-6 overflow-hidden rounded-[28px] border border-[color:var(--border)] bg-[#101827] p-6 text-white shadow-[0_22px_70px_rgba(11,29,51,0.18)]">
           <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/2 opacity-35 md:block">
             <HeroIllustration className="h-full w-full" />
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative">
-              <h1 className="text-2xl font-semibold tracking-tight">Inmuebles verificados</h1>
-              <p className="pt-2 max-w-2xl text-sm leading-6 text-white/72">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/56">
+                Portal inmobiliario premium
+              </p>
+              <h1 className="pt-3 max-w-2xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">Inmuebles verificados con dossier y seguimiento.</h1>
+              <p className="pt-3 max-w-2xl text-sm leading-6 text-white/72">
                 Inmuebles revisados antes de publicarse, con señales documentales y seguimiento privado para decidir mejor antes de visitar.
               </p>
               <div className="mt-4 grid gap-2 text-xs text-white/72 sm:grid-cols-3">
@@ -278,7 +281,7 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                   <Link
                     key={listing.id}
                     href={`/inmuebles/${listing.id}`}
-                    className="group overflow-hidden rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+                    className="group overflow-hidden rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] shadow-[0_14px_42px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_18px_54px_rgba(15,23,42,0.10)]"
                   >
                     <ListingCover
                       id={listing.id}
@@ -286,6 +289,7 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                       src={listing.photo}
                       title={listing.title}
                       location={listing.city}
+                      propertyType={listing.propertyType}
                     />
                     <div className="p-5">
                       <div className="mb-4 flex items-center justify-between gap-3">
@@ -311,15 +315,15 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                       <p className="pt-2 text-sm text-slate-600">
                         {[listing.zone, listing.city].filter(Boolean).join(", ") || listing.city}
                       </p>
-                      <p className="pt-4 text-2xl font-semibold tracking-tight">
+                      <p className="pt-4 text-3xl font-semibold tracking-tight">
                         {listing.priceLabel}
                       </p>
                       <p className="pt-2 min-h-10 text-sm leading-5 text-slate-600">
                         {listing.detailsShort}
                       </p>
-                      <div className="mt-4 grid gap-2 text-xs text-slate-700">
-                        <CardSignal text="Información revisada antes de publicarse" />
-                        <CardSignal text="Solicitud conectada al equipo comercial" />
+                      <div className="mt-4 grid gap-2 text-xs text-slate-700 sm:grid-cols-2">
+                        <CardSignal text="Dossier bajo solicitud" />
+                        <CardSignal text="Lead trazable en CRM" />
                       </div>
                       <div className="mt-4 flex items-center justify-between border-t border-[color:var(--border)] pt-4">
                         <p className="text-xs text-slate-500">
@@ -372,7 +376,7 @@ function TrustPill({ text }: { text: string }) {
 
 function CardSignal({ text }: { text: string }) {
   return (
-    <span className="rounded-2xl bg-[color:var(--surface-2)] px-3 py-2">
+    <span className="rounded-2xl border border-[#ead7a4] bg-[#fff8e5] px-3 py-2 font-semibold text-[#5a4300]">
       {text}
     </span>
   );

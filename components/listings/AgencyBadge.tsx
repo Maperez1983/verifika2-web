@@ -13,8 +13,8 @@ export default function AgencyBadge({
   const initial = agencyName.slice(0, 1).toUpperCase() || "V";
 
   return (
-    <div className="flex min-w-0 items-center gap-2">
-      <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[color:var(--border)] bg-white shadow-sm">
+    <div className="flex min-w-0 items-center gap-3">
+      <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#e4d6ad] bg-white shadow-sm ring-2 ring-[#F2C14E]/18">
         {logo ? (
           // Agency logos can come from CRM uploads or external domains.
           // eslint-disable-next-line @next/next/no-img-element
@@ -35,7 +35,7 @@ export default function AgencyBadge({
             Publica
           </p>
         ) : null}
-        <p className="truncate text-sm font-semibold text-slate-800">
+        <p className="truncate text-sm font-semibold text-slate-900">
           {agencyName}
         </p>
       </div>
