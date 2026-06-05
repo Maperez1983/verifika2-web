@@ -473,6 +473,7 @@ export default function ChatWidget({ listing, defaultPersona, scope }: Props) {
                     <Quick onClick={() => handleQuick("precio")}>Precio</Quick>
                     <Quick onClick={() => handleQuick("ubicacion")}>Ubicación</Quick>
                     <Quick onClick={() => handleQuick("verificacion")}>Verificación</Quick>
+                    <Quick onClick={() => handleQuick("documentacion")}>Documentación</Quick>
                     <Quick onClick={() => handleQuick("visita")}>Visita</Quick>
                     <Quick onClick={() => handleQuick("oferta")}>Oferta</Quick>
                     <Quick onClick={() => handleQuick("info")}>Info</Quick>
@@ -496,6 +497,9 @@ export default function ChatWidget({ listing, defaultPersona, scope }: Props) {
                 </Link>
                 <Link className="hover:text-[color:var(--foreground)]" href="/propietarios">
                   Propietarios
+                </Link>
+                <Link className="hover:text-[color:var(--foreground)]" href="/como-funciona">
+                  Cómo funciona
                 </Link>
               </div>
             </div>

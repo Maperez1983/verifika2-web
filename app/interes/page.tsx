@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { fetchPortalListing } from "@/lib/crmPortal";
+import PublicFooter from "@/components/site/PublicFooter";
+import PublicHeader from "@/components/site/PublicHeader";
 
 export const metadata: Metadata = {
   title: "Solicitar información o visita",
@@ -41,49 +43,43 @@ export default async function InterestPage({ searchParams }: PageProps) {
       ? "Pedir visita"
       : tipo === "contacto"
         ? "Contactar"
+        : motivo === "documentacion"
+          ? "Pedir documentación"
+          : motivo === "oferta"
+            ? "Hacer oferta"
+            : motivo === "duda"
+              ? "Resolver una duda"
         : "Solicitar información";
 
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
-      <header className="border-b border-[color:var(--border)] bg-[color:var(--surface)]">
-        <div className="mx-auto w-full max-w-3xl px-6 py-10">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">
-            Portal verificado
-          </p>
-          <h1 className="pt-3 text-3xl font-semibold tracking-tight">
-            {sent ? "Solicitud enviada" : title}
-          </h1>
-          {sent ? (
-            <p className="pt-3 text-sm leading-6 text-slate-600">
-              {listing ? (
-                <>
-                  Hemos registrado tu solicitud para{" "}
-                  <span className="font-medium">{listing.title}</span> en{" "}
-                  <span className="font-medium">{listing.city}</span>.
-                </>
-              ) : (
-                <>Hemos registrado tu solicitud.</>
-              )}{" "}
-              Tipo: <span className="font-medium">{tipo}</span>.
+      <PublicHeader showBack backHref={listing ? `/inmuebles/${listing.id}` : "/inmuebles"} backLabel={listing ? "Ficha" : "Inmuebles"} />
+
+      <header className="border-b border-[#d8e0ea] bg-[#0B1D33] text-white">
+        <div className="mx-auto grid w-full max-w-6xl gap-8 px-6 py-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">
+              Portal verificado
             </p>
-          ) : (
-            <p className="pt-3 text-sm leading-6 text-slate-600">
-              {listing ? (
-                <>
-                  Estás solicitando <span className="font-medium">{tipo}</span>{" "}
-                  para <span className="font-medium">{listing.title}</span> en{" "}
-                  <span className="font-medium">{listing.city}</span>.
-                </>
-              ) : (
-                <>Completa el formulario para registrar tu solicitud.</>
-              )}{" "}
-              Te responderemos lo antes posible.
+            <h1 className="pt-3 max-w-2xl text-3xl font-semibold tracking-tight md:text-4xl">
+              {sent ? "Solicitud registrada con trazabilidad" : title}
+            </h1>
+            <p className="pt-3 max-w-2xl text-sm leading-6 text-white/72">
+              {sent
+                ? "La solicitud queda conectada al inmueble, al contacto y al flujo comercial para que no se pierda el contexto."
+                : "Completa tus datos y el equipo recibirá la solicitud con el contexto del inmueble, motivo y preferencia de contacto."}
             </p>
-          )}
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <HeaderStep index="01" title="Solicitud" />
+            <HeaderStep index="02" title="CRM" />
+            <HeaderStep index="03" title="Seguimiento" />
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
+      <main className="mx-auto grid w-full max-w-6xl flex-1 gap-6 px-6 py-12 lg:grid-cols-12">
+        <section className="lg:col-span-7">
         <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
           {sent ? (
             <>
@@ -114,7 +110,7 @@ export default async function InterestPage({ searchParams }: PageProps) {
                   <div className="pt-4">
                     <Link
                       href="/comprador"
-                      className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-medium text-white hover:bg-[#0F2742]"
+                      className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-semibold text-white hover:bg-[#0F2742]"
                     >
                       Ir a mi área
                     </Link>
@@ -141,11 +137,11 @@ export default async function InterestPage({ searchParams }: PageProps) {
             </>
           ) : (
             <>
-              <p className="text-sm font-semibold tracking-tight">Formulario</p>
+              <p className="text-sm font-semibold tracking-tight">Datos de contacto</p>
               <p className="pt-2 text-sm leading-6 text-slate-600">
                 {tipo === "visita"
                   ? "Indica tus datos y, si quieres, tu disponibilidad."
-                  : "Indica tus datos para poder responderte."}
+                  : "Indica tus datos para poder responderte con contexto y trazabilidad."}
               </p>
 
               {error ? (
@@ -216,7 +212,7 @@ export default async function InterestPage({ searchParams }: PageProps) {
                 <input
                   name="email"
                   defaultValue={normalize(params.email)}
-                  placeholder="Email (si prefieres que te respondamos por email)"
+                  placeholder="Email opcional"
                   className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
                 />
                 <textarea
@@ -245,8 +241,7 @@ export default async function InterestPage({ searchParams }: PageProps) {
                 </button>
 
                 <div className="pt-2 text-xs text-slate-600">
-                  Consejo: si prefieres, puedes volver a la ficha y pedir visita o
-                  información desde allí.
+                  La solicitud se registra vinculada al inmueble y puede crear tu área comprador.
                 </div>
               </form>
 
@@ -269,7 +264,77 @@ export default async function InterestPage({ searchParams }: PageProps) {
             </>
           )}
         </div>
+        </section>
+
+        <aside className="lg:col-span-5">
+          <div className="sticky top-24 grid gap-4">
+            <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+              <p className="text-sm font-semibold tracking-tight">Resumen de la solicitud</p>
+              {listing ? (
+                <div className="mt-4 rounded-2xl bg-[color:var(--surface-2)] p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                    Inmueble
+                  </p>
+                  <p className="pt-2 text-base font-semibold tracking-tight">{listing.title}</p>
+                  <p className="pt-1 text-sm text-slate-600">{listing.city} · {listing.priceLabel}</p>
+                </div>
+              ) : null}
+              <div className="mt-4 grid gap-2 text-sm text-slate-700">
+                <SummaryRow label="Motivo" value={motivoLabel(motivo || tipo)} />
+                <SummaryRow label="Registro" value="Lead trazable" />
+                <SummaryRow label="Respuesta" value="Equipo comercial" />
+              </div>
+            </div>
+
+            <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+              <p className="text-sm font-semibold tracking-tight">Qué ocurre después</p>
+              <div className="pt-4 grid gap-3">
+                <ProcessStep index="01" title="Se registra el interés" desc="Queda vinculado al inmueble y al motivo indicado." />
+                <ProcessStep index="02" title="El equipo responde" desc="La inmobiliaria recibe contexto para priorizar la respuesta." />
+                <ProcessStep index="03" title="Puedes hacer seguimiento" desc="Si se genera código, podrás entrar en tu área comprador." />
+              </div>
+            </div>
+          </div>
+        </aside>
       </main>
+      <PublicFooter />
+    </div>
+  );
+}
+
+function motivoLabel(value: string) {
+  if (value === "visita") return "Visita";
+  if (value === "documentacion") return "Documentación";
+  if (value === "oferta") return "Oferta";
+  if (value === "duda") return "Duda";
+  if (value === "contacto") return "Contacto";
+  return "Información";
+}
+
+function HeaderStep({ index, title }: { index: string; title: string }) {
+  return (
+    <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
+      <p className="text-xs font-semibold text-[#F2C14E]">{index}</p>
+      <p className="pt-1 text-sm font-semibold">{title}</p>
+    </div>
+  );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-2xl bg-[color:var(--surface-2)] px-4 py-3">
+      <span className="text-xs font-medium text-slate-600">{label}</span>
+      <span className="text-sm font-semibold">{value}</span>
+    </div>
+  );
+}
+
+function ProcessStep({ index, title, desc }: { index: string; title: string; desc: string }) {
+  return (
+    <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] px-4 py-3">
+      <p className="text-xs font-semibold text-[#9a6b00]">{index}</p>
+      <p className="pt-1 text-sm font-semibold tracking-tight">{title}</p>
+      <p className="pt-1 text-xs leading-5 text-slate-600">{desc}</p>
     </div>
   );
 }

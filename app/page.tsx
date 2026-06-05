@@ -12,6 +12,7 @@ const links = {
   buyerAccess: "/comprador",
   pros: "/profesionales",
   publish: "/publicar",
+  how: "/como-funciona",
   app: "https://app.verifika2.com",
   crm: "https://crm.verifika2.com",
 };
@@ -137,6 +138,9 @@ export default function Home() {
                 </Link>
                 <Link className="inline-flex h-12 items-center justify-center rounded-full border border-white/25 bg-white px-5 text-sm font-semibold text-[#0B1D33] hover:bg-slate-100" href={links.owners}>
                   Soy propietario
+                </Link>
+                <Link className="inline-flex h-12 items-center justify-center rounded-full border border-white/25 bg-white/10 px-5 text-sm font-semibold text-white hover:bg-white/20" href={links.how}>
+                  Cómo funciona
                 </Link>
               </div>
 

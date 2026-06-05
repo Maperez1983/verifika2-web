@@ -5,6 +5,7 @@ const links = {
   portal: "/inmuebles",
   verification: "/verificacion",
   certification: "/certificacion",
+  how: "/como-funciona",
   owners: "/propietarios",
   buyer: "/compradores",
   pros: "/profesionales",
@@ -25,7 +26,7 @@ export default function PublicHeader({
 }) {
   return (
     <header className="border-b border-[color:var(--border)] bg-[color:var(--surface)]/85 backdrop-blur">
-      <div className="mx-auto w-full max-w-6xl px-6 py-4">
+      <div className="mx-auto w-full max-w-7xl px-6 py-4">
         {showBack ? (
           <div className="pb-4">
             <Link href={backHref} className="text-sm font-medium text-slate-600 hover:text-[color:var(--foreground)]">
@@ -37,7 +38,7 @@ export default function PublicHeader({
         <div className="flex items-center justify-between gap-4">
           <BrandMark />
 
-          <nav className="hidden items-center gap-6 text-sm text-zinc-700 md:flex">
+          <nav className="hidden items-center gap-5 text-sm text-zinc-700 md:flex">
             <Link className={navCls(current === "portal")} href={links.portal}>
               Inmuebles
             </Link>
@@ -46,6 +47,9 @@ export default function PublicHeader({
             </Link>
             <Link className={navCls(current === "certification")} href={links.certification}>
               Premium
+            </Link>
+            <Link className={navCls(current === "how")} href={links.how}>
+              Cómo funciona
             </Link>
             <Link className={navCls(current === "owners")} href={links.owners}>
               Propietarios
@@ -61,7 +65,7 @@ export default function PublicHeader({
           <div className="flex items-center gap-2">
             <Link
               href={links.publish}
-              className="hidden h-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm font-medium text-[color:var(--foreground)] hover:bg-[color:var(--surface-2)] md:inline-flex"
+              className="hidden h-10 items-center justify-center whitespace-nowrap rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm font-medium text-[color:var(--foreground)] hover:bg-[color:var(--surface-2)] md:inline-flex"
             >
               Portal inmobiliario
             </Link>
@@ -85,6 +89,9 @@ export default function PublicHeader({
             </Link>
             <Link className="hover:underline" href={links.certification}>
               Premium
+            </Link>
+            <Link className="hover:underline" href={links.how}>
+              Cómo funciona
             </Link>
             <Link className="hover:underline" href={links.owners}>
               Propietarios
