@@ -87,21 +87,33 @@ export default async function AdminListingPage({ params, searchParams }: PagePro
 
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
-      <header className="border-b border-[color:var(--border)] bg-[color:var(--surface)]">
+      <header className="border-b border-[#d8e0ea] bg-[#0B1D33] text-white">
         <div className="mx-auto w-full max-w-6xl px-6 py-10">
           <Link
             href="/admin/listings"
-            className="text-sm font-medium text-slate-600 hover:text-[color:var(--foreground)]"
+            className="text-sm font-medium text-white/64 hover:text-white"
           >
             ← Volver a inmuebles
           </Link>
-          <div className="pt-3 flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+          <div className="pt-3 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight">{listing.title}</h1>
-              <p className="pt-2 text-sm text-slate-600">{listing.city}</p>
-              <p className="pt-2 text-sm text-slate-600">
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                    published ? "bg-emerald-400/18 text-emerald-100" : "bg-amber-400/18 text-amber-100"
+                  }`}
+                >
+                  {published ? "Publicado" : "Oculto"}
+                </span>
+                <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/72">
+                  {listing.certified ? "Certificación premium" : "Verificado"}
+                </span>
+              </div>
+              <h1 className="pt-4 text-3xl font-semibold tracking-tight">{listing.title}</h1>
+              <p className="pt-2 text-sm text-white/64">{listing.city} · {listing.priceLabel}</p>
+              <p className="pt-2 text-sm text-white/64">
                 Portal:{" "}
-                <Link className="font-medium hover:underline" href={`/inmuebles/${encodeURIComponent(listing.id)}`}>
+                <Link className="font-medium text-white hover:underline" href={`/inmuebles/${encodeURIComponent(listing.id)}`}>
                   /inmuebles/{listing.id}
                 </Link>
               </p>
@@ -132,7 +144,8 @@ export default async function AdminListingPage({ params, searchParams }: PagePro
         <div className="grid gap-6 lg:grid-cols-12">
           <section className="lg:col-span-6">
             <Panel title="Publicación" subtitle="Controla si este inmueble aparece en el portal público.">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-sm text-slate-700">
                   Estado:{" "}
                   <span className={published ? "font-semibold text-emerald-800" : "font-semibold text-amber-900"}>
@@ -154,6 +167,7 @@ export default async function AdminListingPage({ params, searchParams }: PagePro
                     {published ? "Ocultar en portal" : "Publicar en portal"}
                   </button>
                 </form>
+                </div>
               </div>
               <p className="pt-3 text-xs text-slate-500">
                 Requiere `CRM_PORTAL_ADMIN_TOKEN` configurado en `verifika2-web`.
@@ -271,9 +285,9 @@ function Panel({ title, subtitle, children }: { title: string; subtitle: string;
 
 function Kpi({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3">
-      <p className="text-xs font-medium text-slate-600">{label}</p>
-      <p className="pt-1 text-lg font-semibold tracking-tight">{value}</p>
+    <div className="rounded-2xl border border-white/12 bg-white/10 px-4 py-3">
+      <p className="text-xs font-medium text-white/64">{label}</p>
+      <p className="pt-1 text-lg font-semibold tracking-tight text-white">{value}</p>
     </div>
   );
 }

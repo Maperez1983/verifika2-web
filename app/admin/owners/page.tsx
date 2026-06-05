@@ -25,31 +25,30 @@ export default async function OwnersAdminPage({ searchParams }: PageProps) {
 
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
-      <header className="border-b border-[color:var(--border)] bg-[color:var(--surface)]">
-        <div className="mx-auto flex w-full max-w-6xl items-start justify-between gap-6 px-6 py-10">
+      <header className="border-b border-[#d8e0ea] bg-[#0B1D33] text-white">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <Link
               href="/admin"
-              className="text-sm font-medium text-slate-600 hover:text-[color:var(--foreground)]"
+              className="text-sm font-medium text-white/64 hover:text-white"
             >
               ← Volver a admin
             </Link>
-            <h1 className="pt-3 text-3xl font-semibold tracking-tight">Owners</h1>
-            <p className="pt-3 max-w-2xl text-sm leading-6 text-slate-600">
-              Crea un código de acceso para el propietario y asigna el/los
-              inmuebles que puede ver en el Owner Portal.
+            <h1 className="pt-3 text-3xl font-semibold tracking-tight">Accesos de propietario</h1>
+            <p className="pt-3 max-w-2xl text-sm leading-6 text-white/72">
+              Genera un código privado y asigna exactamente los inmuebles que el propietario podrá consultar.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Link
               href="/owner"
-              className="inline-flex h-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm font-medium hover:bg-[color:var(--surface-2)]"
+              className="inline-flex h-10 items-center justify-center rounded-full border border-white/18 bg-white/10 px-4 text-sm font-medium text-white hover:bg-white/16"
             >
-              Owner portal
+              Portal propietario
             </Link>
             <Link
               href="/admin/leads"
-              className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-medium text-white hover:bg-[#0F2742]"
+              className="inline-flex h-10 items-center justify-center rounded-full bg-[#F2C14E] px-4 text-sm font-semibold text-[#0B1D33] hover:bg-[#ffd56f]"
             >
               Ver leads
             </Link>
@@ -58,6 +57,12 @@ export default async function OwnersAdminPage({ searchParams }: PageProps) {
       </header>
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
+        <section className="mb-6 grid gap-3 md:grid-cols-3">
+          <OwnerStep index="01" title="Identifica al propietario" desc="Nombre y contacto para trazabilidad interna." />
+          <OwnerStep index="02" title="Selecciona inmuebles" desc="El acceso queda limitado a las fichas marcadas." />
+          <OwnerStep index="03" title="Entrega el código" desc="El propietario entra en /owner y consulta su dashboard." />
+        </section>
+
         {created && code ? (
           <div className="mb-6 rounded-[28px] border border-emerald-200 bg-emerald-50 px-6 py-5 text-sm text-emerald-900">
             <p className="font-semibold">Código generado</p>
@@ -81,9 +86,9 @@ export default async function OwnersAdminPage({ searchParams }: PageProps) {
         <div className="grid gap-6 lg:grid-cols-12">
           <section className="lg:col-span-5">
             <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
-              <p className="text-sm font-semibold tracking-tight">Nuevo código</p>
+              <p className="text-sm font-semibold tracking-tight">Código manual</p>
               <p className="pt-2 text-sm leading-6 text-slate-600">
-                Selecciona 1+ inmuebles y genera el código automáticamente (evita colisiones).
+                Úsalo si ya conoces los IDs o necesitas generar un acceso rápido sin navegar la lista.
               </p>
               <form method="post" action="/api/admin/owners/create" className="pt-6 grid gap-3">
                 <textarea
@@ -105,10 +110,10 @@ export default async function OwnersAdminPage({ searchParams }: PageProps) {
                   type="submit"
                   className="mt-1 inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-medium text-white hover:bg-[#0F2742]"
                 >
-                  Generar código
+                  Generar acceso privado
                 </button>
                 <p className="text-xs leading-5 text-slate-500">
-                  Puedes usar la lista de la derecha (checkboxes) o pegar los IDs aquí (separados por coma/espacios).
+                  Puedes usar la lista de la derecha o pegar IDs separados por coma/espacios.
                 </p>
               </form>
             </div>
@@ -116,10 +121,17 @@ export default async function OwnersAdminPage({ searchParams }: PageProps) {
 
           <aside className="lg:col-span-7">
             <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
-              <p className="text-sm font-semibold tracking-tight">Seleccionar inmuebles</p>
-              <p className="pt-2 text-sm leading-6 text-slate-600">
-                Marca los inmuebles que verá el propietario en su portal.
-              </p>
+              <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+                <div>
+                  <p className="text-sm font-semibold tracking-tight">Seleccionar inmuebles</p>
+                  <p className="pt-2 text-sm leading-6 text-slate-600">
+                    Marca las fichas que verá el propietario en su portal.
+                  </p>
+                </div>
+                <span className="rounded-full bg-[color:var(--surface-2)] px-3 py-1 text-xs font-semibold text-slate-700">
+                  {listings.length} disponibles
+                </span>
+              </div>
               <form method="post" action="/api/admin/owners/create" className="pt-4 grid gap-3">
                 <div className="grid gap-2 sm:grid-cols-2">
                   {listings.length === 0 ? (
@@ -130,12 +142,12 @@ export default async function OwnersAdminPage({ searchParams }: PageProps) {
                     listings.map((l) => (
                       <label
                         key={l.id}
-                        className="flex items-start gap-3 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] px-4 py-3 text-sm"
+                        className="flex items-start gap-3 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] px-4 py-3 text-sm transition hover:border-slate-300 hover:bg-white"
                       >
                         <input type="checkbox" name="listing_ids" value={l.id} className="mt-1" />
                         <span>
-                          <span className="font-semibold">{l.title}</span>
-                          <span className="text-slate-600"> · {l.city}</span>
+                          <span className="block font-semibold">{l.title}</span>
+                          <span className="block pt-1 text-xs text-slate-600">{l.city} · {l.priceLabel}</span>
                         </span>
                       </label>
                     ))
@@ -157,13 +169,23 @@ export default async function OwnersAdminPage({ searchParams }: PageProps) {
                   type="submit"
                   className="mt-1 inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-medium text-white hover:bg-[#0F2742]"
                 >
-                  Generar código con inmuebles marcados
+                  Generar acceso con inmuebles marcados
                 </button>
               </form>
             </div>
           </aside>
         </div>
       </main>
+    </div>
+  );
+}
+
+function OwnerStep({ index, title, desc }: { index: string; title: string; desc: string }) {
+  return (
+    <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-sm">
+      <p className="text-xs font-semibold text-[#9a6b00]">{index}</p>
+      <p className="pt-2 text-sm font-semibold tracking-tight">{title}</p>
+      <p className="pt-2 text-sm leading-6 text-slate-600">{desc}</p>
     </div>
   );
 }
