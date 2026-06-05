@@ -40,7 +40,7 @@ body {
   font-family: var(--font-sans);
 }
 
-a {
+a:not([class]) {
   color: inherit;
 }
 

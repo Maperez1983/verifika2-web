@@ -113,10 +113,10 @@ export default function Home() {
                 <Link className="inline-flex h-12 items-center justify-center rounded-full bg-[#F2C14E] px-6 text-sm font-semibold text-[#1A1A1A] hover:bg-[#F6CD68]" href={links.pros}>
                   Solicitar alta
                 </Link>
-                <Link className="inline-flex h-12 items-center justify-center rounded-full border border-white/20 bg-white/10 px-6 text-sm font-semibold text-white hover:bg-white/16" href={links.portal}>
+                <Link className="inline-flex h-12 items-center justify-center rounded-full border border-white/25 bg-white/10 px-6 text-sm font-semibold text-white hover:bg-white/20" href={links.portal}>
                   Ver portal
                 </Link>
-                <a className="inline-flex h-12 items-center justify-center rounded-full border border-transparent px-4 text-sm font-semibold text-white/70 hover:text-white" href={links.crm}>
+                <a className="inline-flex h-12 items-center justify-center rounded-full border border-white/25 bg-white px-5 text-sm font-semibold text-[#0B1D33] hover:bg-slate-100" href={links.crm}>
                   Acceso CRM
                 </a>
               </div>
@@ -211,7 +211,7 @@ export default function Home() {
                 <a className="inline-flex h-11 items-center justify-center rounded-full bg-[#F2C14E] px-5 text-sm font-semibold text-[#1A1A1A] hover:bg-[#F6CD68]" href={links.crm}>
                   Ver CRM
                 </a>
-                <Link className="inline-flex h-11 items-center justify-center rounded-full border border-white/16 bg-white/8 px-5 text-sm font-semibold hover:bg-white/14" href={links.pros}>
+                <Link className="inline-flex h-11 items-center justify-center rounded-full border border-white/20 bg-white/10 px-5 text-sm font-semibold text-white hover:bg-white/20" href={links.pros}>
                   Alta inmobiliaria
                 </Link>
               </div>
@@ -290,7 +290,7 @@ export default function Home() {
                   <Link className="inline-flex h-11 items-center justify-center rounded-full bg-[#F2C14E] px-5 text-sm font-semibold text-[#1A1A1A] hover:bg-[#F6CD68]" href={links.pros}>
                     Quiero darme de alta
                   </Link>
-                  <Link className="inline-flex h-11 items-center justify-center rounded-full border border-white/18 bg-white/10 px-5 text-sm font-semibold hover:bg-white/16" href={links.portal}>
+                  <Link className="inline-flex h-11 items-center justify-center rounded-full border border-white/25 bg-white/10 px-5 text-sm font-semibold text-white hover:bg-white/20" href={links.portal}>
                     Ver inmuebles
                   </Link>
                 </div>
@@ -308,7 +308,7 @@ export default function Home() {
 
 function HeroShowcase() {
   return (
-    <div className="rounded-[28px] border border-white/12 bg-white/8 p-3 shadow-[0_28px_90px_rgba(0,0,0,0.28)]">
+    <div className="rounded-[28px] border border-white/15 bg-white/10 p-3 shadow-[0_28px_90px_rgba(0,0,0,0.28)]">
       <div className="rounded-[22px] bg-white p-5 text-[#0B1D33]">
         <div className="flex items-center justify-between gap-4 border-b border-slate-200 pb-4">
           <div className="flex items-center gap-3">
@@ -360,7 +360,7 @@ function HeroShowcase() {
 
 function HeroMetric({ value, label }: { value: string; label: string }) {
   return (
-    <div className="rounded-2xl border border-white/12 bg-white/8 p-4">
+    <div className="rounded-2xl border border-white/15 bg-white/10 p-4">
       <p className="text-lg font-semibold tracking-tight text-white">{value}</p>
       <p className="mt-1 text-xs leading-5 text-white/62">{label}</p>
     </div>
@@ -448,7 +448,7 @@ function LegalPreview() {
 
 function CrmPreview() {
   return (
-    <div className="rounded-[28px] border border-white/12 bg-white/8 p-4">
+    <div className="rounded-[28px] border border-white/15 bg-white/10 p-4">
       <div className="rounded-[22px] bg-white p-5 text-[#0B1D33]">
         <div className="flex items-center justify-between gap-4">
           <div>
