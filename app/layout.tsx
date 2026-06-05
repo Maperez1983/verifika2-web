@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     template: "%s — Verifika2",
   },
   description:
-    "Portal inmobiliario con anuncios verificados. Publica desde tu CRM y muestra inmuebles con máxima transparencia.",
+    "Portal inmobiliario con anuncios verificados documentalmente, CRM inmobiliario, áreas privadas para comprador y propietario, y trazabilidad comercial.",
   applicationName: "Verifika2",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
   openGraph: {
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     siteName: "Verifika2",
     title: "Verifika2 — Portal inmobiliario verificado",
     description:
-      "Anuncios verificados documentalmente. Gestión desde CRM. Portal público para compradores e inquilinos.",
+      "Anuncios verificados documentalmente, gestión desde CRM y seguimiento privado para compradores, propietarios e inmobiliarias.",
   },
   robots: {
     index: true,

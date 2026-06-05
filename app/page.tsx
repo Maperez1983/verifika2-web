@@ -80,6 +80,24 @@ const aiExamples = [
   "Prepara un resumen comercial",
 ];
 
+const productStories = [
+  {
+    title: "Comprador que pide documentación",
+    desc: "Antes de visitar, solicita información documental. El interés queda vinculado al inmueble y se crea seguimiento privado.",
+    result: "Menos dudas antes de reservar",
+  },
+  {
+    title: "Propietario que revisa la gestión",
+    desc: "Consulta clientes interesados, citas, agenda, estado del anuncio y próximos pasos desde su dashboard.",
+    result: "Control 360 de la venta",
+  },
+  {
+    title: "Inmobiliaria que no pierde leads",
+    desc: "Publica desde CRM, recibe solicitudes con contexto y convierte el interés en comprador gestionable.",
+    result: "Operativa trazable",
+  },
+];
+
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
@@ -136,6 +154,27 @@ export default function Home() {
         <JourneySelector />
 
         <section className="border-b border-[color:var(--border)] bg-[color:var(--surface)]">
+          <div className="mx-auto grid w-full max-w-6xl gap-10 px-6 py-14 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Casos de uso
+              </p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
+                Ejemplos reales de cómo la web genera confianza.
+              </h2>
+              <p className="mt-4 text-sm leading-6 text-slate-600 md:text-base">
+                La experiencia no se queda en ver anuncios: ordena información, crea perfiles, registra actividad y muestra el avance a quien corresponde.
+              </p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {productStories.map((story) => (
+                <StoryCard key={story.title} {...story} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="border-b border-[color:var(--border)] bg-[color:var(--surface)]">
           <div className="mx-auto w-full max-w-6xl px-6 py-14">
             <div className="grid gap-4 md:grid-cols-4">
               {advantages.map((item) => (
@@ -167,6 +206,27 @@ export default function Home() {
                   <AudienceCard key={item.title} {...item} />
                 ))}
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-b border-[color:var(--border)] bg-[color:var(--surface)]">
+          <div className="mx-auto grid w-full max-w-6xl gap-10 px-6 py-14 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Demo guiada
+              </p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
+                Mira cómo funciona Verifika2 por dentro.
+              </h2>
+              <p className="mt-4 text-sm leading-6 text-slate-600 md:text-base">
+                Recorre el producto como lo viviría cada perfil: publicación profesional, seguimiento del propietario y decisión del comprador.
+              </p>
+            </div>
+            <div className="grid gap-3">
+              <DemoStep index="01" title="Publicar con CRM" desc="La inmobiliaria crea el inmueble, vincula documentación y decide cuándo se publica." href={links.pros} />
+              <DemoStep index="02" title="Seguimiento propietario" desc="El vendedor consulta actividad, citas, clientes y estado de gestión en su dashboard." href={links.owners} />
+              <DemoStep index="03" title="Decisión comprador" desc="El comprador solicita documentación, visita u oferta y sigue el proceso en su área privada." href={links.buyer} />
             </div>
           </div>
         </section>
@@ -306,6 +366,30 @@ export default function Home() {
       <PublicFooter />
       <ChatWidget scope="landing" defaultPersona="comprador" />
     </div>
+  );
+}
+
+function StoryCard({ title, desc, result }: { title: string; desc: string; result: string }) {
+  return (
+    <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-sm">
+      <div className="mb-4 h-1.5 w-10 rounded-full bg-[#F2C14E]" />
+      <p className="text-base font-semibold tracking-tight">{title}</p>
+      <p className="mt-3 min-h-[120px] text-sm leading-6 text-slate-600">{desc}</p>
+      <p className="mt-4 rounded-2xl bg-[color:var(--surface-2)] px-3 py-2 text-xs font-semibold text-slate-700">
+        {result}
+      </p>
+    </div>
+  );
+}
+
+function DemoStep({ index, title, desc, href }: { index: string; title: string; desc: string; href: string }) {
+  return (
+    <Link href={href} className="group rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)]">
+      <p className="text-xs font-semibold text-[#9a6b00]">{index}</p>
+      <p className="pt-2 text-base font-semibold tracking-tight">{title}</p>
+      <p className="pt-2 text-sm leading-6 text-slate-600">{desc}</p>
+      <p className="pt-4 text-sm font-semibold group-hover:underline">Ver recorrido</p>
+    </Link>
   );
 }
 

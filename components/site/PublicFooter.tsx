@@ -26,6 +26,9 @@ export default function PublicFooter() {
               <Link className="hover:underline" href="/verificacion">
                 Verificación
               </Link>
+              <Link className="hover:underline" href="/seguridad-juridica">
+                Seguridad jurídica
+              </Link>
               <Link className="hover:underline" href="/certificacion">
                 Certificación
               </Link>

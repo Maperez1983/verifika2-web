@@ -177,8 +177,10 @@ export default async function InterestPage({ searchParams }: PageProps) {
                     className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
                   >
                     <option value="info">Información</option>
+                    <option value="documentacion">Documentación</option>
                     <option value="visita">Visita</option>
                     <option value="oferta">Oferta</option>
+                    <option value="duda">Tengo una duda</option>
                   </select>
                   <select
                     name="urgencia"
@@ -237,9 +239,9 @@ export default async function InterestPage({ searchParams }: PageProps) {
 
                 <button
                   type="submit"
-                  className="mt-1 inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-medium text-white hover:bg-[#0F2742]"
+                  className="mt-1 inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-semibold text-white hover:bg-[#0F2742]"
                 >
-                  Enviar
+                  Registrar solicitud
                 </button>
 
                 <div className="pt-2 text-xs text-slate-600">

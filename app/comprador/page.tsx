@@ -123,8 +123,13 @@ export default async function BuyerDashboard() {
             <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-8 text-center shadow-sm">
               <p className="text-lg font-semibold tracking-tight">Sin solicitudes todavía</p>
               <p className="mx-auto max-w-xl pt-3 text-sm leading-6 text-slate-600">
-                Cuando solicites información, una visita u oferta desde el portal, aparecerá aquí.
+                Cuando solicites información, documentación, una visita u oferta desde el portal, aparecerá aquí con su estado y próximos pasos.
               </p>
+              <div className="mx-auto mt-5 grid max-w-2xl gap-3 text-left sm:grid-cols-3">
+                <EmptyBenefit title="Visitados" desc="Inmuebles consultados y vistos." />
+                <EmptyBenefit title="Documentación" desc="Solicitudes y respuesta del equipo." />
+                <EmptyBenefit title="Seguimiento" desc="Visitas, ofertas y estado comercial." />
+              </div>
               <div className="pt-5">
                 <Link
                   href="/inmuebles"
@@ -139,6 +144,15 @@ export default async function BuyerDashboard() {
           )}
         </div>
       </main>
+    </div>
+  );
+}
+
+function EmptyBenefit({ title, desc }: { title: string; desc: string }) {
+  return (
+    <div className="rounded-2xl bg-[color:var(--surface-2)] px-4 py-3">
+      <p className="text-sm font-semibold tracking-tight">{title}</p>
+      <p className="pt-1 text-xs leading-5 text-slate-600">{desc}</p>
     </div>
   );
 }

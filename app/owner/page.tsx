@@ -165,6 +165,19 @@ export default async function OwnerDashboard() {
             )}
           </div>
         ) : null}
+        {listings.length === 0 ? (
+          <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-8 text-center shadow-sm">
+            <p className="text-lg font-semibold tracking-tight">Aún no hay inmuebles asignados</p>
+            <p className="mx-auto max-w-xl pt-3 text-sm leading-6 text-slate-600">
+              Cuando tu inmobiliaria vincule tu propiedad, aquí verás actividad comercial, citas, interesados, documentación y próximos pasos.
+            </p>
+            <div className="pt-5">
+              <Link href="/propietarios" className="inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-semibold text-white hover:bg-[#0F2742]">
+                Ver cómo funciona
+              </Link>
+            </div>
+          </div>
+        ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {listings.map((listing, index) => {
             const summary = summaries[index];
@@ -226,6 +239,7 @@ export default async function OwnerDashboard() {
             );
           })}
         </div>
+        )}
       </main>
     </div>
   );

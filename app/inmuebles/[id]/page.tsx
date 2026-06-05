@@ -143,6 +143,14 @@ export default async function ListingDetailPage({ params }: PageProps) {
           </div>
         </section>
 
+        <nav className="mb-6 flex gap-2 overflow-x-auto rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-2 text-sm shadow-sm">
+          <SectionTab href="#resumen" label="Resumen" />
+          <SectionTab href="#documentacion" label="Documentación" />
+          <SectionTab href="#zona" label="Zona" />
+          <SectionTab href="#contacto" label="Contacto" />
+          <SectionTab href="#faq" label="Dudas frecuentes" />
+        </nav>
+
         {listing.photos && listing.photos.length > 1 ? (
           <section className="mb-6 grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {listing.photos.slice(1, 7).map((photo, index) => (
@@ -163,7 +171,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
         ) : null}
 
         <div className="grid gap-6 lg:grid-cols-12">
-          <section className="lg:col-span-8">
+          <section id="resumen" className="scroll-mt-24 lg:col-span-8">
             <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
@@ -185,7 +193,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
               </div>
 
               <div className="pt-6 grid gap-4 md:grid-cols-2">
-                <div className="rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-6">
+                <div id="zona" className="scroll-mt-24 rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-6">
                   <p className="text-sm font-semibold">Ubicación</p>
                   <p className="pt-2 text-sm text-slate-600">
                     {locationLabel || listing.city}
@@ -211,7 +219,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
                     ) : null}
                   </div>
                 </div>
-                <div className="rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-6">
+                <div id="contacto" className="scroll-mt-24 rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-6">
                   <p className="text-sm font-semibold">Interés del comprador</p>
                   <p className="pt-2 text-sm text-slate-600">
                     Solicita visita, condiciones u oferta. La petición entra con contexto del inmueble para que el equipo responda mejor.
@@ -261,6 +269,16 @@ export default async function ListingDetailPage({ params }: PageProps) {
           <aside className="lg:col-span-4">
             <div className="sticky top-24 space-y-4">
               <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+                <p className="text-sm font-semibold">Publica Grupo Modernia</p>
+                <div className="mt-4 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] px-4 py-3">
+                  <AgencyBadge name={listing.agencyName} logo={listing.agencyLogo} />
+                </div>
+                <p className="pt-3 text-sm leading-6 text-slate-600">
+                  Grupo Modernia gestiona la publicación y el contacto comercial. Verifika2 aporta revisión, trazabilidad y estructura de seguimiento.
+                </p>
+              </div>
+
+              <div id="documentacion" className="scroll-mt-24 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
                 <p className="text-sm font-semibold">Verificación Verifika2</p>
                 <p className="pt-2 text-sm leading-6 text-slate-600">
                   Verifika2 revisa la consistencia del anuncio y deja trazabilidad del interés generado. La revisión no sustituye el asesoramiento legal, pero reduce incertidumbre antes de avanzar.
@@ -302,50 +320,19 @@ export default async function ListingDetailPage({ params }: PageProps) {
               </div>
 
               <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
-                <p className="text-sm font-semibold">Lead comercial</p>
+                <p className="text-sm font-semibold">Qué quieres hacer</p>
                 <p className="pt-2 text-sm leading-6 text-slate-600">
-                  Deja teléfono y preferencia de contacto para priorizar la respuesta sobre este inmueble.
+                  Elige la acción y te llevamos al formulario completo con el motivo preseleccionado.
                 </p>
-                <form
-                  method="get"
-                  action="/interes"
-                  className="pt-4 grid gap-2"
-                >
-                  <input type="hidden" name="listing" value={listing.id} />
-                  <input type="hidden" name="tipo" value="contacto" />
-                  <input type="hidden" name="next" value={`/inmuebles/${listing.id}`} />
-                  <select
-                    name="motivo"
-                    defaultValue="info"
-                    className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
-                  >
-                    <option value="info">Quiero información</option>
-                    <option value="visita">Quiero visitar</option>
-                    <option value="oferta">Quiero hacer oferta</option>
-                  </select>
-                  <input
-                    name="nombre"
-                    placeholder="Nombre"
-                    className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
-                  />
-                  <input
-                    name="telefono"
-                    placeholder="Teléfono"
-                    className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
-                  />
-                  <button
-                    type="submit"
-                    className="mt-1 inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-semibold text-white hover:bg-[#0F2742]"
-                  >
-                    Solicitar contacto
-                  </button>
-                  <p className="text-xs leading-5 text-slate-500">
-                    Trazabilidad desde el primer contacto: el equipo sabrá qué inmueble, motivo y preferencia has indicado.
-                  </p>
-                </form>
+                <div className="pt-4 grid gap-2">
+                  <GuidedAction href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=visita&motivo=visita&next=${encodeURIComponent(`/inmuebles/${listing.id}`)}`} title="Quiero visitar" desc="Indica disponibilidad y teléfono." />
+                  <GuidedAction href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=info&motivo=documentacion&next=${encodeURIComponent(`/inmuebles/${listing.id}`)}`} title="Quiero documentación" desc="Solicita dossier o información adicional." />
+                  <GuidedAction href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=info&motivo=oferta&next=${encodeURIComponent(`/inmuebles/${listing.id}`)}`} title="Quiero hacer oferta" desc="Deja contexto para que el equipo te contacte." />
+                  <GuidedAction href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=contacto&motivo=duda&next=${encodeURIComponent(`/inmuebles/${listing.id}`)}`} title="Tengo una duda" desc="Consulta condiciones, zona o documentación." />
+                </div>
               </div>
 
-              <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+              <div id="faq" className="scroll-mt-24 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
                 <p className="text-sm font-semibold">Área comprador</p>
                 <p className="pt-2 text-sm leading-6 text-slate-600">
                   Si avanzas con este inmueble, podrás consultar solicitudes, visitas, ofertas y documentación desde tu espacio privado.
@@ -378,6 +365,23 @@ export default async function ListingDetailPage({ params }: PageProps) {
       <ViewTracker listingId={listing.id} />
       <PublicFooter />
     </div>
+  );
+}
+
+function SectionTab({ href, label }: { href: string; label: string }) {
+  return (
+    <a href={href} className="inline-flex h-10 shrink-0 items-center justify-center rounded-full px-4 font-semibold text-slate-700 hover:bg-[color:var(--surface-2)]">
+      {label}
+    </a>
+  );
+}
+
+function GuidedAction({ href, title, desc }: { href: string; title: string; desc: string }) {
+  return (
+    <Link href={href} className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] px-4 py-3 transition hover:border-slate-300 hover:bg-white">
+      <span className="block text-sm font-semibold tracking-tight">{title}</span>
+      <span className="block pt-1 text-xs leading-5 text-slate-600">{desc}</span>
+    </Link>
   );
 }
 

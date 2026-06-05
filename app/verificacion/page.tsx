@@ -14,6 +14,7 @@ const links = {
   portal: "/inmuebles",
   publish: "/publicar",
   certification: "/certificacion",
+  legal: "/seguridad-juridica",
   app: "https://app.verifika2.com",
 };
 
@@ -43,6 +44,12 @@ export default function VerificationPage() {
                 className="inline-flex h-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm font-medium hover:bg-[color:var(--surface-2)]"
               >
                 Publicar
+              </Link>
+              <Link
+                href={links.legal}
+                className="inline-flex h-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm font-medium hover:bg-[color:var(--surface-2)]"
+              >
+                Seguridad jurídica
               </Link>
             </div>
           </div>
