@@ -111,14 +111,14 @@ export default function Home() {
 
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link className="inline-flex h-12 items-center justify-center rounded-full bg-[#F2C14E] px-6 text-sm font-semibold text-[#1A1A1A] hover:bg-[#F6CD68]" href={links.pros}>
-                  Solicitar alta
+                  Soy inmobiliaria
                 </Link>
                 <Link className="inline-flex h-12 items-center justify-center rounded-full border border-white/25 bg-white/10 px-6 text-sm font-semibold text-white hover:bg-white/20" href={links.portal}>
-                  Ver portal
+                  Busco inmueble
                 </Link>
-                <a className="inline-flex h-12 items-center justify-center rounded-full border border-white/25 bg-white px-5 text-sm font-semibold text-[#0B1D33] hover:bg-slate-100" href={links.crm}>
-                  Acceso CRM
-                </a>
+                <Link className="inline-flex h-12 items-center justify-center rounded-full border border-white/25 bg-white px-5 text-sm font-semibold text-[#0B1D33] hover:bg-slate-100" href={links.owners}>
+                  Soy propietario
+                </Link>
               </div>
 
               <div className="grid gap-3 pt-2 sm:grid-cols-3">
@@ -131,6 +131,8 @@ export default function Home() {
             <HeroShowcase />
           </div>
         </section>
+
+        <JourneySelector />
 
         <section className="border-b border-[color:var(--border)] bg-[color:var(--surface)]">
           <div className="mx-auto w-full max-w-6xl px-6 py-14">
@@ -364,6 +366,72 @@ function HeroMetric({ value, label }: { value: string; label: string }) {
       <p className="text-lg font-semibold tracking-tight text-white">{value}</p>
       <p className="mt-1 text-xs leading-5 text-white/62">{label}</p>
     </div>
+  );
+}
+
+function JourneySelector() {
+  const paths = [
+    {
+      role: "Comprador",
+      title: "Quiero comprar o alquilar con seguridad",
+      desc: "Explora inmuebles verificados, solicita visita y pide documentación desde tu espacio privado.",
+      href: links.portal,
+      action: "Ver inmuebles",
+    },
+    {
+      role: "Propietario",
+      title: "Quiero vender con seguimiento total",
+      desc: "Accede a reportes de citas, interesados, agenda, estado del anuncio y gestión del intermediario.",
+      href: links.owners,
+      action: "Ver portal propietario",
+    },
+    {
+      role: "Inmobiliaria",
+      title: "Quiero publicar y operar con CRM",
+      desc: "Convierte leads en compradores, coordina visitas, controla documentación y muestra un producto premium.",
+      href: links.pros,
+      action: "Alta profesional",
+    },
+  ];
+
+  return (
+    <section className="border-b border-[color:var(--border)] bg-[color:var(--surface)]">
+      <div className="mx-auto w-full max-w-6xl px-6 py-8">
+        <div className="grid gap-4 lg:grid-cols-[0.72fr_1.28fr] lg:items-stretch">
+          <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-2)] p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Empieza por tu perfil
+            </p>
+            <h2 className="mt-3 text-2xl font-semibold tracking-tight">
+              Una entrada clara para cada cliente.
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              La experiencia evita que el usuario tenga que interpretar la plataforma: cada perfil tiene su recorrido, datos y siguiente acción.
+            </p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            {paths.map((item) => (
+              <Link
+                key={item.role}
+                href={item.href}
+                className="group flex min-h-[220px] flex-col justify-between rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)]"
+              >
+                <div>
+                  <span className="rounded-full bg-[#F2C14E] px-3 py-1 text-xs font-semibold text-[#1A1A1A]">
+                    {item.role}
+                  </span>
+                  <p className="mt-4 text-base font-semibold tracking-tight">{item.title}</p>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">{item.desc}</p>
+                </div>
+                <span className="mt-5 text-sm font-semibold text-[#0B1D33] group-hover:underline">
+                  {item.action}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 

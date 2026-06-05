@@ -69,7 +69,7 @@ export default function PublicHeader({
               href={links.app}
               className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-medium text-white shadow-sm hover:bg-[#0F2742]"
             >
-              Acceso
+              Entrar
             </a>
           </div>
         </div>
@@ -98,6 +98,9 @@ export default function PublicHeader({
             <Link className="hover:underline" href={links.publish}>
               Publicar
             </Link>
+            <a className="hover:underline" href={links.app}>
+              Entrar
+            </a>
           </div>
         </details>
       </div>
