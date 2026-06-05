@@ -73,8 +73,13 @@ export default async function ListingsPage({ searchParams }: PageProps) {
             <div className="relative">
               <h1 className="text-2xl font-semibold tracking-tight">Inmuebles verificados</h1>
               <p className="pt-2 max-w-2xl text-sm leading-6 text-white/72">
-                Inmuebles revisados antes de publicarse, con información clara para decidir mejor antes de visitar.
+                Inmuebles revisados antes de publicarse, con señales documentales y seguimiento privado para decidir mejor antes de visitar.
               </p>
+              <div className="mt-4 grid gap-2 text-xs text-white/72 sm:grid-cols-3">
+                <TrustPill text="Titularidad revisable" />
+                <TrustPill text="Cargas y registro" />
+                <TrustPill text="Lead trazable en CRM" />
+              </div>
             </div>
             <div className="relative flex flex-wrap items-center gap-2 text-xs">
               <span className="rounded-full bg-white/12 px-3 py-1 font-medium text-white ring-1 ring-white/18">Verificados</span>
@@ -95,7 +100,7 @@ export default async function ListingsPage({ searchParams }: PageProps) {
           <div>
             <p className="text-sm font-semibold">{filtered.length} inmuebles publicados</p>
             <p className="pt-1 text-xs text-slate-500">
-              Grupo Modernia publica la cartera. Verifika2 revisa la información del anuncio.
+              Grupo Modernia publica la cartera. Verifika2 revisa la información y registra cada solicitud con trazabilidad.
             </p>
           </div>
           <div className="flex flex-wrap gap-2 text-sm">
@@ -122,7 +127,10 @@ export default async function ListingsPage({ searchParams }: PageProps) {
             method="get"
             className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 md:col-span-1"
           >
-            <p className="text-sm font-semibold">Filtros</p>
+            <p className="text-sm font-semibold">Encuentra una oportunidad</p>
+            <p className="pt-2 text-xs leading-5 text-slate-500">
+              Filtra por operación, zona y nivel de certificación antes de pedir visita.
+            </p>
             <div className="pt-4 space-y-3 text-sm text-slate-700">
               <div>
                 <label className="text-xs font-medium text-slate-600" htmlFor="q">
@@ -238,6 +246,15 @@ export default async function ListingsPage({ searchParams }: PageProps) {
             <div className="pt-4 text-xs text-slate-600">
               Resultados: <span className="font-medium">{filtered.length}</span>
             </div>
+            <div className="mt-4 rounded-2xl bg-[color:var(--surface-2)] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Comprador</p>
+              <p className="pt-2 text-xs leading-5 text-slate-600">
+                Al solicitar información se crea seguimiento privado para consultar visitas, documentación y estado.
+              </p>
+              <Link href="/compradores" className="mt-3 inline-flex text-xs font-semibold text-[#0B1D33] hover:underline">
+                Ver experiencia comprador
+              </Link>
+            </div>
           </form>
 
           <div className="md:col-span-2">
@@ -300,6 +317,10 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                       <p className="pt-2 min-h-10 text-sm leading-5 text-slate-600">
                         {listing.detailsShort}
                       </p>
+                      <div className="mt-4 grid gap-2 text-xs text-slate-700">
+                        <CardSignal text="Información revisada antes de publicarse" />
+                        <CardSignal text="Solicitud conectada al equipo comercial" />
+                      </div>
                       <div className="mt-4 flex items-center justify-between border-t border-[color:var(--border)] pt-4">
                         <p className="text-xs text-slate-500">
                           Publica Grupo Modernia
@@ -315,10 +336,45 @@ export default async function ListingsPage({ searchParams }: PageProps) {
             )}
           </div>
         </div>
+
+        <section className="mt-8 rounded-[28px] border border-[color:var(--border)] bg-[#0B1D33] p-6 text-white shadow-sm">
+          <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-center">
+            <div>
+              <p className="text-sm font-semibold text-[#F2C14E]">No es un portal tradicional.</p>
+              <p className="pt-2 max-w-3xl text-sm leading-6 text-white/72">
+                Cada anuncio busca reducir incertidumbre: información revisada, lead trazable y áreas privadas para comprador y propietario.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Link href="/compradores" className="inline-flex h-11 items-center justify-center rounded-full bg-[#F2C14E] px-5 text-sm font-semibold text-[#0B1D33] hover:bg-[#ffd56f]">
+                Soy comprador
+              </Link>
+              <Link href="/publicar" className="inline-flex h-11 items-center justify-center rounded-full border border-white/20 bg-white/10 px-5 text-sm font-semibold text-white hover:bg-white/16">
+                Publicar inmueble
+              </Link>
+            </div>
+          </div>
+        </section>
       </main>
       <PublicFooter />
       <ChatWidget scope="portal" defaultPersona="comprador" />
     </div>
+  );
+}
+
+function TrustPill({ text }: { text: string }) {
+  return (
+    <span className="rounded-full border border-white/15 bg-white/10 px-3 py-2 font-medium">
+      {text}
+    </span>
+  );
+}
+
+function CardSignal({ text }: { text: string }) {
+  return (
+    <span className="rounded-2xl bg-[color:var(--surface-2)] px-3 py-2">
+      {text}
+    </span>
   );
 }
 

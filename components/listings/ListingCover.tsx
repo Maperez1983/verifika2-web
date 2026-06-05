@@ -40,7 +40,7 @@ export default function ListingCover({
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={src}
-          alt={title || "Inmueble Verifika2"}
+          alt=""
           className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
         />
       ) : (

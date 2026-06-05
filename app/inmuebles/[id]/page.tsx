@@ -66,6 +66,11 @@ export default async function ListingDetailPage({ params }: PageProps) {
                 location={listing.city}
                 label={listing.certified ? "Certificado" : "Verificado"}
               />
+              <div className="grid gap-3 p-5 sm:grid-cols-3">
+                <HeroTrust title="Anuncio revisado" desc="Datos publicados con control previo." />
+                <HeroTrust title="Dossier disponible" desc="Documentación bajo solicitud." />
+                <HeroTrust title="Seguimiento privado" desc="Visitas y ofertas trazables." />
+              </div>
             </div>
             <div className="flex flex-col justify-between p-6 lg:col-span-5">
               <div>
@@ -110,6 +115,12 @@ export default async function ListingDetailPage({ params }: PageProps) {
                 <p className="pt-4 text-sm leading-6 text-slate-600">
                   Publicado por Grupo Modernia con la información del anuncio revisada por Verifika2.
                 </p>
+                <div className="mt-5 grid gap-2 text-xs text-slate-700 sm:grid-cols-2">
+                  <DecisionSignal text="Revisión documental previa" />
+                  <DecisionSignal text="Interés conectado al CRM" />
+                  <DecisionSignal text="Seguimiento privado comprador" />
+                  <DecisionSignal text="Reporte visible para propietario" />
+                </div>
               </div>
               <div className="pt-6 grid gap-2 sm:grid-cols-2">
                 <Link
@@ -125,6 +136,9 @@ export default async function ListingDetailPage({ params }: PageProps) {
                   Solicitar info
                 </Link>
               </div>
+              <p className="pt-3 text-xs leading-5 text-slate-500">
+                Al solicitar información se registra tu interés y podrás seguir la operación desde el área comprador si recibes código.
+              </p>
             </div>
           </div>
         </section>
@@ -218,6 +232,29 @@ export default async function ListingDetailPage({ params }: PageProps) {
                   </div>
                 </div>
               </div>
+
+              <div className="pt-6">
+                <div className="rounded-3xl border border-[#d8e0ea] bg-[#0B1D33] p-6 text-white">
+                  <p className="text-sm font-semibold text-[#F2C14E]">Antes de decidir</p>
+                  <p className="pt-2 max-w-3xl text-sm leading-6 text-white/72">
+                    Puedes pedir documentación, solicitar verificación adicional o dejar una consulta concreta. La operación queda trazada para que no se pierda información entre visitas, mensajes y llamadas.
+                  </p>
+                  <div className="pt-4 flex flex-col gap-2 sm:flex-row">
+                    <Link
+                      href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=info&next=${encodeURIComponent(`/inmuebles/${listing.id}`)}`}
+                      className="inline-flex h-11 items-center justify-center rounded-full bg-[#F2C14E] px-5 text-sm font-semibold text-[#0B1D33] hover:bg-[#ffd56f]"
+                    >
+                      Pedir documentación
+                    </Link>
+                    <Link
+                      href="/compradores"
+                      className="inline-flex h-11 items-center justify-center rounded-full border border-white/20 bg-white/10 px-5 text-sm font-semibold text-white hover:bg-white/16"
+                    >
+                      Cómo funciona comprador
+                    </Link>
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -226,7 +263,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
               <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
                 <p className="text-sm font-semibold">Verificación Verifika2</p>
                 <p className="pt-2 text-sm leading-6 text-slate-600">
-                  Verifika2 revisa la consistencia del anuncio y deja trazabilidad del interés generado.
+                  Verifika2 revisa la consistencia del anuncio y deja trazabilidad del interés generado. La revisión no sustituye el asesoramiento legal, pero reduce incertidumbre antes de avanzar.
                 </p>
                 <div className="pt-4 space-y-2 text-sm text-slate-700">
                   {(listing.verificationChecks || []).map((check) => (
@@ -242,6 +279,12 @@ export default async function ListingDetailPage({ params }: PageProps) {
                   Verificado:{" "}
                   <span className="font-medium">{listing.verifiedAt}</span>
                 </p>
+                <div className="mt-4 rounded-2xl bg-[color:var(--surface-2)] p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Dossier</p>
+                  <p className="pt-2 text-xs leading-5 text-slate-600">
+                    Solicita la documentación disponible antes de reservar o formalizar una oferta.
+                  </p>
+                </div>
                 <div className="pt-4 flex gap-2">
                   <Link
                     href="/verificacion"
@@ -292,11 +335,27 @@ export default async function ListingDetailPage({ params }: PageProps) {
                   />
                   <button
                     type="submit"
-                    className="mt-1 inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-medium text-white hover:bg-[#0F2742]"
+                    className="mt-1 inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-semibold text-white hover:bg-[#0F2742]"
                   >
-                    Enviar
+                    Solicitar contacto
                   </button>
+                  <p className="text-xs leading-5 text-slate-500">
+                    Trazabilidad desde el primer contacto: el equipo sabrá qué inmueble, motivo y preferencia has indicado.
+                  </p>
                 </form>
+              </div>
+
+              <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+                <p className="text-sm font-semibold">Área comprador</p>
+                <p className="pt-2 text-sm leading-6 text-slate-600">
+                  Si avanzas con este inmueble, podrás consultar solicitudes, visitas, ofertas y documentación desde tu espacio privado.
+                </p>
+                <Link
+                  href="/compradores"
+                  className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm font-semibold hover:bg-[color:var(--surface-2)]"
+                >
+                  Ver experiencia comprador
+                </Link>
               </div>
             </div>
           </aside>
@@ -318,6 +377,23 @@ export default async function ListingDetailPage({ params }: PageProps) {
       />
       <ViewTracker listingId={listing.id} />
       <PublicFooter />
+    </div>
+  );
+}
+
+function DecisionSignal({ text }: { text: string }) {
+  return (
+    <span className="rounded-2xl bg-[color:var(--surface-2)] px-3 py-2">
+      {text}
+    </span>
+  );
+}
+
+function HeroTrust({ title, desc }: { title: string; desc: string }) {
+  return (
+    <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-4">
+      <p className="text-sm font-semibold tracking-tight">{title}</p>
+      <p className="pt-2 text-xs leading-5 text-slate-600">{desc}</p>
     </div>
   );
 }
