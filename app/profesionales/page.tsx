@@ -18,6 +18,32 @@ const links = {
   crm: "https://crm.verifika2.com",
 };
 
+const professionalBundles = [
+  {
+    title: "Captación y cartera",
+    desc: "Alta de inmuebles, propietarios, documentación, estado comercial y publicación controlada.",
+  },
+  {
+    title: "Leads y compradores",
+    desc: "Cada contacto del portal entra como comprador vinculado al inmueble, con intención y contexto.",
+  },
+  {
+    title: "Agenda y operación",
+    desc: "Citas, visitas, ofertas, seguimiento y próximos pasos visibles para el equipo y el propietario.",
+  },
+  {
+    title: "Imagen premium",
+    desc: "Anuncios verificados, sello Grupo Modernia, dossier visual y experiencia diferenciada del portal tradicional.",
+  },
+];
+
+const onboardingSteps = [
+  ["01", "Workspace", "Creamos el espacio de la inmobiliaria con permisos y módulos activos."],
+  ["02", "Cartera inicial", "Cargamos inmuebles reales, fotos, propietarios y documentación disponible."],
+  ["03", "Publicación", "Se activan anuncios verificados y se conecta la captación de leads."],
+  ["04", "Piloto comercial", "La agencia prueba leads, citas, propietarios y seguimiento con casos reales."],
+];
+
 export default function ProfessionalsPage() {
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
@@ -150,6 +176,45 @@ export default function ProfessionalsPage() {
             </p>
           </aside>
         </div>
+
+        <section className="border-y border-[color:var(--border)] bg-[color:var(--surface-2)]">
+          <div className="mx-auto w-full max-w-6xl px-6 py-12">
+            <div className="mb-8">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Plan profesional
+              </p>
+              <h2 className="mt-3 max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">
+                Lo que necesita una inmobiliaria para usarlo como producto comercial.
+              </h2>
+            </div>
+            <div className="grid gap-4 md:grid-cols-4">
+              {professionalBundles.map((item) => (
+                <BundleCard key={item.title} {...item} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-[color:var(--surface)]">
+          <div className="mx-auto grid w-full max-w-6xl gap-8 px-6 py-12 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Implantación comercial
+              </p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
+                Piloto preparado para vender sin prometer una migración compleja.
+              </h2>
+              <p className="mt-4 text-sm leading-6 text-slate-600">
+                La entrada comercial debe ser sencilla: cargar una cartera limitada, publicar con verificación y medir respuesta real de compradores y propietarios.
+              </p>
+            </div>
+            <div className="grid gap-3">
+              {onboardingSteps.map(([index, title, desc]) => (
+                <OnboardingRow key={index} index={index} title={title} desc={desc} />
+              ))}
+            </div>
+          </div>
+        </section>
       </main>
       <PublicFooter />
     </div>
@@ -170,6 +235,30 @@ function Card({ title, desc }: { title: string; desc: string }) {
     <div className="rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface)] p-5">
       <p className="text-sm font-semibold tracking-tight">{title}</p>
       <p className="pt-2 text-sm leading-6 text-slate-600">{desc}</p>
+    </div>
+  );
+}
+
+function BundleCard({ title, desc }: { title: string; desc: string }) {
+  return (
+    <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-sm">
+      <div className="mb-4 h-1.5 w-10 rounded-full bg-[#F2C14E]" />
+      <p className="text-base font-semibold tracking-tight">{title}</p>
+      <p className="mt-3 text-sm leading-6 text-slate-600">{desc}</p>
+    </div>
+  );
+}
+
+function OnboardingRow({ index, title, desc }: { index: string; title: string; desc: string }) {
+  return (
+    <div className="grid gap-4 rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-sm sm:grid-cols-[64px_1fr]">
+      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0B1D33] text-sm font-semibold text-white">
+        {index}
+      </span>
+      <div>
+        <p className="text-base font-semibold tracking-tight">{title}</p>
+        <p className="mt-2 text-sm leading-6 text-slate-600">{desc}</p>
+      </div>
     </div>
   );
 }

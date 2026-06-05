@@ -18,6 +18,14 @@ const links = {
   owner: "/owner",
 };
 
+const reportRows = [
+  ["Leads recibidos", "Quién pregunta y por qué inmueble"],
+  ["Citas y agenda", "Visitas previstas, realizadas y pendientes"],
+  ["Estado de clientes", "Interesado, visitado, oferta, descartado"],
+  ["Anuncio publicado", "Ficha pública, precio, fotos y mensajes comerciales"],
+  ["Gestión del intermediario", "Próximos pasos y tareas abiertas"],
+];
+
 export default function OwnersPage() {
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
@@ -149,6 +157,30 @@ export default function OwnersPage() {
             </p>
           </aside>
         </div>
+
+        <section className="border-y border-[color:var(--border)] bg-[color:var(--surface-2)]">
+          <div className="mx-auto grid w-full max-w-6xl gap-8 px-6 py-12 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Reporte propietario
+              </p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
+                Nada de la venta debería escaparse.
+              </h2>
+              <p className="mt-4 text-sm leading-6 text-slate-600">
+                El propietario recibe una visión clara de leads, citas, clientes, anuncio y estado de gestión sin depender de llamadas aisladas.
+              </p>
+            </div>
+            <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-sm">
+              <p className="text-sm font-semibold tracking-tight">Ejemplo de panel visible</p>
+              <div className="mt-4 grid gap-2">
+                {reportRows.map(([label, desc]) => (
+                  <ReportRow key={label} label={label} desc={desc} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
       <PublicFooter />
       <ChatWidget scope="owners" defaultPersona="propietario" />
@@ -170,6 +202,15 @@ function Card({ title, desc }: { title: string; desc: string }) {
     <div className="rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface)] p-5">
       <p className="text-sm font-semibold tracking-tight">{title}</p>
       <p className="pt-2 text-sm leading-6 text-slate-600">{desc}</p>
+    </div>
+  );
+}
+
+function ReportRow({ label, desc }: { label: string; desc: string }) {
+  return (
+    <div className="flex flex-col gap-1 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+      <span className="text-sm font-semibold text-slate-800">{label}</span>
+      <span className="text-sm text-slate-600">{desc}</span>
     </div>
   );
 }

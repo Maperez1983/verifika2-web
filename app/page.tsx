@@ -99,6 +99,44 @@ const productStories = [
   },
 ];
 
+const commercialPlans = [
+  {
+    name: "Portal verificado",
+    audience: "Propietarios particulares",
+    price: "Desde verificación",
+    desc: "Publicación controlada del inmueble, revisión documental inicial y entrada al circuito comercial.",
+    features: ["Anuncio verificado", "Solicitud de documentación", "Leads trazables", "Portal propietario"],
+    href: links.publish,
+    cta: "Solicitar publicación",
+  },
+  {
+    name: "Inmobiliaria CRM",
+    audience: "Agencias e inmobiliarias",
+    price: "Plan profesional",
+    desc: "Workspace inmobiliario con cartera, leads, agenda, compradores, propietarios y publicación conectada.",
+    features: ["CRM inmobiliario", "Portal público", "Dashboard propietario", "Chat y leads"],
+    href: links.pros,
+    cta: "Alta profesional",
+  },
+  {
+    name: "Certificación premium",
+    audience: "Operaciones con más exigencia",
+    price: "Por inmueble",
+    desc: "Dossier reforzado para operaciones donde la confianza documental es parte central de la decisión.",
+    features: ["Titularidad", "Registro y cargas", "Evidencias", "Sello premium"],
+    href: "/certificacion",
+    cta: "Ver certificación",
+  },
+];
+
+const launchChecklist = [
+  "Demo comercial con inmuebles reales y fotos cuidadas",
+  "Recorrido completo comprador, propietario e inmobiliaria",
+  "CRM conectado a publicación, leads, citas y ofertas",
+  "Mensajes claros de verificación, límites y próximos pasos",
+  "Datos de contacto y alta profesional visibles en cada recorrido",
+];
+
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
@@ -338,6 +376,56 @@ export default function Home() {
           </div>
         </section>
 
+        <section className="border-b border-[color:var(--border)] bg-[color:var(--surface)]">
+          <div className="mx-auto grid w-full max-w-6xl gap-10 px-6 py-14 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Producto comercializable
+              </p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
+                Preparado para demos, pilotos y primeras altas comerciales.
+              </h2>
+              <p className="mt-4 text-sm leading-6 text-slate-600 md:text-base">
+                Verifika2 se presenta como beta comercial avanzada: suficiente para enseñar valor, captar clientes y validar operaciones reales con control.
+              </p>
+              <div className="mt-6 rounded-[24px] border border-[#ead7a4] bg-[#fff8e5] p-5">
+                <p className="text-sm font-semibold text-[#5a4300]">Mensaje comercial recomendado</p>
+                <p className="mt-2 text-sm leading-6 text-[#5a4300]">
+                  Portal inmobiliario verificado con CRM, IA, trazabilidad de leads y áreas privadas para comprador y propietario.
+                </p>
+              </div>
+            </div>
+            <div className="grid gap-3">
+              {launchChecklist.map((item, index) => (
+                <LaunchItem key={item} index={index + 1} text={item} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="border-b border-[color:var(--border)] bg-[color:var(--surface-2)]">
+          <div className="mx-auto w-full max-w-6xl px-6 py-14">
+            <div className="mb-8 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Monetización
+                </p>
+                <h2 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
+                  Tres líneas comerciales claras desde el primer día.
+                </h2>
+              </div>
+              <Link href={links.publish} className="inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-semibold text-white hover:bg-[#0F2742]">
+                Empezar publicación
+              </Link>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {commercialPlans.map((plan) => (
+                <CommercialPlanCard key={plan.name} {...plan} />
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section className="bg-[color:var(--surface)]">
           <div className="mx-auto w-full max-w-6xl px-6 py-14">
             <div className="overflow-hidden rounded-[28px] border border-[color:var(--border)] bg-[#0B1D33] text-white shadow-[var(--shadow-soft)]">
@@ -393,6 +481,54 @@ function DemoStep({ index, title, desc, href }: { index: string; title: string; 
       <p className="pt-2 text-base font-semibold tracking-tight">{title}</p>
       <p className="pt-2 text-sm leading-6 text-slate-600">{desc}</p>
       <p className="pt-4 text-sm font-semibold group-hover:underline">Ver recorrido</p>
+    </Link>
+  );
+}
+
+function LaunchItem({ index, text }: { index: number; text: string }) {
+  return (
+    <div className="flex items-center gap-4 rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4 shadow-sm">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#0B1D33] text-sm font-semibold text-white">
+        {index}
+      </span>
+      <p className="text-sm font-semibold leading-6 text-slate-800">{text}</p>
+    </div>
+  );
+}
+
+function CommercialPlanCard({
+  name,
+  audience,
+  price,
+  desc,
+  features,
+  href,
+  cta,
+}: {
+  name: string;
+  audience: string;
+  price: string;
+  desc: string;
+  features: string[];
+  href: string;
+  cta: string;
+}) {
+  return (
+    <Link href={href} className="group flex min-h-[360px] flex-col justify-between rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)]">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{audience}</p>
+        <p className="mt-3 text-xl font-semibold tracking-tight">{name}</p>
+        <p className="mt-2 text-sm font-semibold text-[#9a6b00]">{price}</p>
+        <p className="mt-4 text-sm leading-6 text-slate-600">{desc}</p>
+        <div className="mt-5 grid gap-2">
+          {features.map((feature) => (
+            <span key={feature} className="rounded-2xl border border-[#ead7a4] bg-[#fff8e5] px-3 py-2 text-xs font-semibold text-[#5a4300]">
+              {feature}
+            </span>
+          ))}
+        </div>
+      </div>
+      <p className="mt-6 text-sm font-semibold text-[#0B1D33] group-hover:underline">{cta}</p>
     </Link>
   );
 }

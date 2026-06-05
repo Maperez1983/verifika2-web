@@ -43,6 +43,21 @@ const steps = [
   ["03", "Accede a tu área privada", "Consulta estado, visitas, documentación y próximos pasos."],
 ];
 
+const buyerWorkspace = [
+  {
+    title: "Inmuebles guardados",
+    desc: "Comparativa de fichas consultadas, visitas solicitadas y operaciones activas.",
+  },
+  {
+    title: "Documentación solicitada",
+    desc: "Peticiones de nota simple, verificación adicional, condiciones o aclaraciones.",
+  },
+  {
+    title: "Agenda y ofertas",
+    desc: "Visitas, disponibilidad, ofertas enviadas y estado de respuesta del equipo.",
+  },
+];
+
 export default function BuyersLandingPage() {
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
@@ -144,6 +159,27 @@ export default function BuyersLandingPage() {
           </div>
         </section>
 
+        <section className="border-b border-[color:var(--border)] bg-[color:var(--surface)]">
+          <div className="mx-auto grid w-full max-w-6xl gap-8 px-6 py-14 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Área privada comprador
+              </p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
+                Tu búsqueda deja de estar dispersa entre llamadas y mensajes.
+              </h2>
+              <p className="mt-4 text-sm leading-6 text-slate-600 md:text-base">
+                Cuando el comprador interactúa con un inmueble, Verifika2 crea contexto: qué ha consultado, qué documentación necesita, qué visita pidió y en qué estado está.
+              </p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {buyerWorkspace.map((item) => (
+                <WorkspaceCard key={item.title} {...item} />
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section className="bg-[color:var(--surface)]">
           <div className="mx-auto w-full max-w-6xl px-6 py-14">
             <div className="rounded-[28px] border border-[color:var(--border)] bg-[#0B1D33] p-6 text-white shadow-[var(--shadow-soft)] md:p-8">
@@ -184,6 +220,16 @@ function PreviewRow({ label, value }: { label: string; value: string }) {
 }
 
 function BenefitCard({ title, desc }: { title: string; desc: string }) {
+  return (
+    <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-sm">
+      <div className="mb-4 h-1.5 w-10 rounded-full bg-[#F2C14E]" />
+      <p className="text-base font-semibold tracking-tight">{title}</p>
+      <p className="mt-3 text-sm leading-6 text-slate-600">{desc}</p>
+    </div>
+  );
+}
+
+function WorkspaceCard({ title, desc }: { title: string; desc: string }) {
   return (
     <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-sm">
       <div className="mb-4 h-1.5 w-10 rounded-full bg-[#F2C14E]" />

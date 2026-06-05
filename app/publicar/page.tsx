@@ -27,6 +27,24 @@ const links = {
   crmInmo: "https://crm.verifika2.com/?crm=inmo",
 };
 
+const productOptions = [
+  {
+    title: "Publicación verificada",
+    desc: "Para propietarios que quieren presentar el inmueble con control documental y seguimiento.",
+    points: ["Formulario de entrada", "Revisión previa", "Anuncio en portal", "Portal propietario"],
+  },
+  {
+    title: "CRM inmobiliario",
+    desc: "Para agencias que necesitan publicar cartera, recibir leads y operar desde un workspace.",
+    points: ["Cartera", "Leads", "Agenda", "Compradores"],
+  },
+  {
+    title: "Certificación premium",
+    desc: "Para inmuebles donde el dossier documental es una ventaja comercial clave.",
+    points: ["Titularidad", "Registro", "Cargas", "Evidencias"],
+  },
+];
+
 export default async function PublishPage({ searchParams }: PageProps) {
   const params = (await searchParams) || {};
   const sent = normalize(params.sent) === "1";
@@ -159,6 +177,24 @@ export default async function PublishPage({ searchParams }: PageProps) {
               <ProfileCta title="Soy inmobiliaria" desc="Quiero publicar cartera verificada y gestionar leads desde CRM." href={links.pros} cta="Ver solución profesional" />
               <ProfileCta title="Soy propietario" desc="Quiero saber cómo se gestionará mi inmueble y qué podré ver." href={links.owners} cta="Ver portal propietario" />
               <ProfileCta title="Soy comprador" desc="Quiero entender qué aporta comprar con información verificada." href={links.buyers} cta="Ver experiencia comprador" />
+            </div>
+          </div>
+        </section>
+
+        <section className="border-b border-[color:var(--border)] bg-[color:var(--surface)]">
+          <div className="mx-auto w-full max-w-6xl px-6 py-12">
+            <div className="mb-8">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Oferta comercial
+              </p>
+              <h2 className="mt-3 max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">
+                Tres formas de entrar en Verifika2 según el tipo de cliente.
+              </h2>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {productOptions.map((option) => (
+                <ProductOption key={option.title} {...option} />
+              ))}
             </div>
           </div>
         </section>
@@ -309,6 +345,22 @@ function Card({
             {ctaLabel}
           </a>
         )}
+      </div>
+    </div>
+  );
+}
+
+function ProductOption({ title, desc, points }: { title: string; desc: string; points: string[] }) {
+  return (
+    <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+      <p className="text-base font-semibold tracking-tight">{title}</p>
+      <p className="mt-3 text-sm leading-6 text-slate-600">{desc}</p>
+      <div className="mt-5 grid gap-2">
+        {points.map((point) => (
+          <span key={point} className="rounded-2xl border border-[#ead7a4] bg-[#fff8e5] px-3 py-2 text-xs font-semibold text-[#5a4300]">
+            {point}
+          </span>
+        ))}
       </div>
     </div>
   );
