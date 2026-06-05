@@ -4,7 +4,7 @@ import PublicHeader from "@/components/site/PublicHeader";
 import PublicFooter from "@/components/site/PublicFooter";
 
 export const metadata: Metadata = {
-  title: "Publicar",
+  title: "Portal inmobiliario",
   description:
     "Publica inmuebles en Verifika2 con verificación documental obligatoria. Para particulares e inmobiliarias.",
 };
@@ -37,7 +37,7 @@ export default async function PublishPage({ searchParams }: PageProps) {
         <div className="mb-6 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight">Publicar en Verifika2</h1>
+              <h1 className="text-2xl font-semibold tracking-tight">Portal inmobiliario Verifika2</h1>
               <p className="pt-2 max-w-3xl text-sm leading-6 text-slate-600">
                 Aquí no se publica “cualquier cosa”. Para mantener la esencia del portal,{" "}
                 <span className="font-medium">todos los inmuebles</span> deben estar verificados documentalmente.

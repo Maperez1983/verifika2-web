@@ -63,7 +63,7 @@ export default function PublicHeader({
               href={links.publish}
               className="hidden h-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm font-medium text-[color:var(--foreground)] hover:bg-[color:var(--surface-2)] md:inline-flex"
             >
-              Publicar
+              Portal inmobiliario
             </Link>
             <a
               href={links.app}
@@ -96,7 +96,7 @@ export default function PublicHeader({
               Profesionales
             </Link>
             <Link className="hover:underline" href={links.publish}>
-              Publicar
+              Portal inmobiliario
             </Link>
             <a className="hover:underline" href={links.app}>
               Entrar

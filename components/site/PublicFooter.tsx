@@ -30,7 +30,7 @@ export default function PublicFooter() {
                 Certificación
               </Link>
               <Link className="hover:underline" href="/publicar">
-                Publicar
+                Portal inmobiliario
               </Link>
             </div>
           </div>
