@@ -6,7 +6,7 @@ const links = {
   verification: "/verificacion",
   certification: "/certificacion",
   owners: "/propietarios",
-  buyer: "/comprador",
+  buyer: "/compradores",
   pros: "/profesionales",
   publish: "/publicar",
   app: "https://app.verifika2.com",

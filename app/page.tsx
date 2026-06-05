@@ -8,7 +8,8 @@ const links = {
   portal: "/inmuebles",
   owners: "/propietarios",
   ownerAccess: "/owner",
-  buyer: "/comprador",
+  buyer: "/compradores",
+  buyerAccess: "/comprador",
   pros: "/profesionales",
   publish: "/publicar",
   app: "https://app.verifika2.com",
@@ -59,7 +60,7 @@ const audiences = [
     title: "Compradores",
     badge: "Seguridad",
     desc: "Disponen de un portal virtual para gestionar los inmuebles que han consultado o visitado y solicitar información documental.",
-    href: links.portal,
+    href: links.buyer,
     cta: "Ver portal comprador",
     bullets: ["Inmuebles visitados", "Seguimiento", "Solicitar documentación", "Verificación documental"],
   },
@@ -267,7 +268,7 @@ export default function Home() {
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <PrivateDashboard title="Portal vendedor" href={links.ownerAccess} metrics={["Citas", "Agenda", "Intermediario", "Clientes"]} />
-                <PrivateDashboard title="Portal comprador" href={links.buyer} metrics={["Visitados", "Seguimiento", "Documentación", "Verificación"]} />
+                <PrivateDashboard title="Portal comprador" href={links.buyerAccess} metrics={["Visitados", "Seguimiento", "Documentación", "Verificación"]} />
               </div>
             </div>
           </div>
@@ -375,8 +376,8 @@ function JourneySelector() {
       role: "Comprador",
       title: "Quiero comprar o alquilar con seguridad",
       desc: "Explora inmuebles verificados, solicita visita y pide documentación desde tu espacio privado.",
-      href: links.portal,
-      action: "Ver inmuebles",
+      href: links.buyer,
+      action: "Ver experiencia comprador",
     },
     {
       role: "Propietario",

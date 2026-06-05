@@ -23,34 +23,56 @@ export default function ProfessionalsPage() {
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
       <PublicHeader current="pros" showBack backHref={links.home} backLabel="Landing" />
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-12">
-        <div className="mb-6 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <main className="flex-1">
+        <section className="border-b border-[#d8e0ea] bg-[#0B1D33] text-white">
+          <div className="mx-auto grid w-full max-w-6xl gap-8 px-6 py-12 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight">Acceso profesionales</h1>
-              <p className="pt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                Verifika2 es un sistema modular. El portal es la parte pública; el CRM es donde vive la operativa y la documentación
-                que hace posible la verificación.
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">
+                Para inmobiliarias
               </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="pt-4 max-w-3xl text-4xl font-semibold leading-tight tracking-tight md:text-5xl">
+                Publica inmuebles verificados y opera cada lead desde CRM.
+              </h1>
+              <p className="pt-5 max-w-2xl text-sm leading-7 text-white/72 md:text-base">
+                Verifika2 une portal, CRM inmobiliario, documentación, agenda, comprador y propietario en una experiencia
+                comercial preparada para generar confianza desde el primer contacto.
+              </p>
+              <div className="pt-7 flex flex-col gap-3 sm:flex-row">
               <a
                 href={links.appInmo}
-                className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-medium text-white hover:bg-[#0F2742]"
+                className="inline-flex h-12 items-center justify-center rounded-full bg-[#F2C14E] px-6 text-sm font-semibold text-[#0B1D33] hover:bg-[#ffd56f]"
               >
-                Publicar
+                Alta profesional
               </a>
               <Link
                 href={links.portal}
-                className="inline-flex h-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm font-medium hover:bg-[color:var(--surface-2)]"
+                className="inline-flex h-12 items-center justify-center rounded-full border border-white/20 bg-white/10 px-6 text-sm font-semibold text-white hover:bg-white/16"
               >
                 Ver portal
               </Link>
+              </div>
+            </div>
+            <div className="rounded-[28px] border border-white/15 bg-white/10 p-4 shadow-[0_28px_90px_rgba(0,0,0,0.28)]">
+              <div className="rounded-[22px] bg-white p-5 text-[#0B1D33]">
+                <p className="text-sm font-semibold">Workspace inmobiliario</p>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <HeroTile label="Leads" value="CRM" />
+                  <HeroTile label="Agenda" value="Citas" />
+                  <HeroTile label="Documentos" value="Validación" />
+                  <HeroTile label="Propietario" value="Reporte" />
+                </div>
+                <div className="mt-5 rounded-2xl bg-slate-50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Flujo premium</p>
+                  <p className="pt-2 text-sm leading-6 text-slate-700">
+                    Captación → verificación → publicación → lead comprador → seguimiento propietario.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="mx-auto grid w-full max-w-6xl gap-6 px-6 py-12 lg:grid-cols-3">
           <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm lg:col-span-2">
             <p className="text-sm font-semibold tracking-tight">
               Cómo se accede al CRM
@@ -130,6 +152,15 @@ export default function ProfessionalsPage() {
         </div>
       </main>
       <PublicFooter />
+    </div>
+  );
+}
+
+function HeroTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+      <p className="text-xs font-medium text-slate-500">{label}</p>
+      <p className="pt-1 text-lg font-semibold tracking-tight">{value}</p>
     </div>
   );
 }

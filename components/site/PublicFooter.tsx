@@ -49,8 +49,8 @@ export default function PublicFooter() {
               <Link className="hover:underline" href="/owner">
                 Owner Portal
               </Link>
-              <Link className="hover:underline" href="/comprador">
-                Área comprador
+              <Link className="hover:underline" href="/compradores">
+                Compradores
               </Link>
             </div>
           </div>
