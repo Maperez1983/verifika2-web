@@ -92,34 +92,29 @@ export default async function OwnerDashboard() {
 
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[420px] overflow-hidden">
-        <div className="absolute left-1/2 top-[-260px] h-[640px] w-[640px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle_at_center,rgba(242,193,78,0.34),rgba(242,193,78,0)_60%)] blur-2xl" />
-        <div className="absolute right-[-200px] top-[-220px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,rgba(24,24,27,0.12),rgba(24,24,27,0)_60%)] blur-2xl" />
-      </div>
-      <header className="border-b border-[color:var(--border)] bg-[color:var(--surface)]">
-        <div className="mx-auto flex w-full max-w-6xl items-start justify-between gap-6 px-6 py-10">
+      <header className="border-b border-[#d8e0ea] bg-[#0B1D33] text-white">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">
               Portal de propietario
             </p>
-            <h1 className="pt-3 text-3xl font-semibold tracking-tight">
-              Seguimiento del inmueble
+            <h1 className="pt-3 max-w-2xl text-3xl font-semibold tracking-tight">
+              Control comercial y documental de tus inmuebles
             </h1>
-            <p className="pt-3 max-w-2xl text-sm leading-6 text-slate-600">
-              Métricas del anuncio, solicitudes, citas, ofertas, clientes,
-              documentación y trazabilidad de cada inmueble.
+            <p className="pt-3 max-w-2xl text-sm leading-6 text-white/72">
+              Métricas del anuncio, clientes interesados, citas, ofertas, documentación y próximos pasos de cada operación.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Link
               href="/"
-              className="inline-flex h-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm font-medium hover:bg-[color:var(--surface-2)]"
+              className="inline-flex h-10 items-center justify-center rounded-full border border-white/18 bg-white/10 px-4 text-sm font-medium text-white hover:bg-white/16"
             >
               Landing
             </Link>
             <Link
               href="/inmuebles"
-              className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-medium text-white hover:bg-[#0F2742]"
+              className="inline-flex h-10 items-center justify-center rounded-full bg-[#F2C14E] px-4 text-sm font-semibold text-[#0B1D33] hover:bg-[#ffd56f]"
             >
               Ver portal
             </Link>
@@ -128,16 +123,16 @@ export default async function OwnerDashboard() {
       </header>
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
-        <section className="mb-6 overflow-hidden rounded-[28px] border border-[color:var(--border)] bg-[#0B1D33] p-6 text-white shadow-sm">
+        <section className="mb-6 overflow-hidden rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
           <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/64">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                 Dashboard propietario
               </p>
-              <h2 className="pt-3 max-w-2xl text-3xl font-semibold tracking-tight">
+              <h2 className="pt-3 max-w-2xl text-2xl font-semibold tracking-tight">
                 Reporte comercial de tus inmuebles
               </h2>
-              <p className="pt-3 max-w-2xl text-sm leading-6 text-white/72">
+              <p className="pt-3 max-w-2xl text-sm leading-6 text-slate-600">
                 Revisa actividad, solicitudes, citas, ofertas y el estado de los clientes desde una sola pantalla.
               </p>
             </div>
@@ -238,9 +233,9 @@ export default async function OwnerDashboard() {
 
 function HeroStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-3xl border border-white/12 bg-white/10 px-4 py-3">
-      <p className="text-xs font-medium text-white/64">{label}</p>
-      <p className="pt-1 text-2xl font-semibold tracking-tight text-white">{value}</p>
+    <div className="rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] px-4 py-3">
+      <p className="text-xs font-medium text-slate-600">{label}</p>
+      <p className="pt-1 text-2xl font-semibold tracking-tight">{value}</p>
     </div>
   );
 }
