@@ -163,13 +163,33 @@ function createMockServer() {
       const listing = url.searchParams.get("listing_id");
       const subjectType = url.searchParams.get("subject_type");
       const subjectContact = url.searchParams.get("subject_contact");
+      const status = url.searchParams.get("status");
+      const serviceName = url.searchParams.get("service");
       const services = captured.operationServices.filter((service) => {
         if (listing && service.listing_id !== listing) return false;
         if (subjectType && service.subject_type !== subjectType) return false;
         if (subjectContact && service.subject_contact !== subjectContact) return false;
+        if (status && service.status !== status) return false;
+        if (serviceName && service.service !== serviceName) return false;
         return true;
       });
       return json(res, 200, { ok: true, services });
+    }
+
+    if (url.pathname === "/v1/operation_services/summary") {
+      const open = captured.operationServices.filter((service) => ["active", "in_review", "requested"].includes(service.status));
+      return json(res, 200, {
+        ok: true,
+        summary: {
+          total: captured.operationServices.length,
+          open: open.length,
+          tracking_open: open.filter((service) => service.service === "purchase_tracking").length,
+          verification_open: open.filter((service) => String(service.service).startsWith("document_verification")).length,
+          buyer_open: open.filter((service) => service.subject_type === "buyer").length,
+          owner_open: open.filter((service) => service.subject_type === "owner").length,
+        },
+        by_status: [],
+      });
     }
 
     if (url.pathname === "/v1/operation_services" && req.method === "POST") {
@@ -207,6 +227,35 @@ function createMockServer() {
           actor: "admin",
           note: service.note || null,
         })),
+      });
+    }
+
+    if (url.pathname === "/v1/qa/summary") {
+      return json(res, 200, {
+        ok: true,
+        summary: {
+          leads: captured.leads.length,
+          buyers: 1,
+          owners: 1,
+          operation_services: captured.operationServices.length,
+          consents: captured.consents.length,
+        },
+      });
+    }
+
+    if (url.pathname === "/v1/qa/archive" && req.method === "POST") {
+      const body = await readJson(req);
+      if (body?.confirm !== "ARCHIVE_QA") return json(res, 400, { ok: false, error: "missing_confirmation" });
+      const services = captured.operationServices.length;
+      captured.operationServices = captured.operationServices.map((service) => ({ ...service, status: "cancelled", note: "Archivado QA" }));
+      return json(res, 200, {
+        ok: true,
+        archived: {
+          operation_services: services,
+          buyers: 1,
+          owners: 1,
+          leads: captured.leads.length,
+        },
       });
     }
 
@@ -504,8 +553,22 @@ async function main() {
     assert(adminListingHtml.includes("Servicios de operación"), "admin listing should show operation services");
     assert(adminListingHtml.includes("Auditoría de servicios"), "admin listing should show service audit");
 
+    const operationsPage = await get(baseUrl, "/admin/operations", adminCookie);
+    const operationsHtml = await operationsPage.text();
+    assert(operationsPage.status === 200, "admin operations should return 200");
+    assert(operationsHtml.includes("Operaciones y servicios"), "admin operations should render title");
+    assert(operationsHtml.includes("Tracking de compraventa"), "admin operations should list active tracking");
+    assert(operationsHtml.includes("Archivo QA"), "admin operations should expose QA archive tool");
+
+    const qaArchive = await postForm(baseUrl, "/api/admin/qa/archive", {
+      return_to: "/admin/operations",
+      confirm: "ARCHIVE_QA",
+    }, adminCookie);
+    assert(qaArchive.status === 303, "QA archive should redirect");
+    assert((qaArchive.headers.get("location") || "").includes("qa_archived=1"), "QA archive should report success");
+
     console.log("QA smoke passed");
-    console.log(`Validated ${publicRoutes.length + 18} critical checks against mocked CRM/Lead Hub`);
+    console.log(`Validated ${publicRoutes.length + 22} critical checks against mocked CRM/Lead Hub`);
   } finally {
     child.kill("SIGINT");
     mockServer.close();

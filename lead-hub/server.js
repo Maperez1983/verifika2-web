@@ -246,6 +246,9 @@ async function ensureSchema() {
   await pool.query(
     "create index if not exists operation_services_listing_idx on public.operation_services(listing_id, subject_type, subject_contact);",
   );
+  await pool.query(
+    "create index if not exists operation_services_status_idx on public.operation_services(status, updated_at desc);",
+  );
 
   await pool.query(`
     create table if not exists public.service_audit (
@@ -863,6 +866,8 @@ app.get("/v1/operation_services", async (req, res) => {
   const listingId = normalize(req.query.listing_id);
   const subjectContact = normalizeContact(req.query.subject_contact);
   const subjectType = normalize(req.query.subject_type);
+  const status = normalize(req.query.status);
+  const service = normalizeOperationService(req.query.service);
   const where = [];
   const args = [];
   if (listingId) {
@@ -877,7 +882,17 @@ app.get("/v1/operation_services", async (req, res) => {
     args.push(subjectType);
     where.push(`subject_type=$${args.length}`);
   }
-  args.push(120);
+  if (status && ALLOWED_SERVICE_STATUSES.has(status)) {
+    args.push(status);
+    where.push(`status=$${args.length}`);
+  }
+  if (service) {
+    args.push(service);
+    where.push(`service=$${args.length}`);
+  }
+  const limitRaw = Number(req.query.limit || 120);
+  const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(300, limitRaw)) : 120;
+  args.push(limit);
   const sql = `
     select id, created_at, updated_at, listing_id, subject_type, subject_contact, subject_id, service, status, note, activated_by
     from public.operation_services
@@ -887,6 +902,43 @@ app.get("/v1/operation_services", async (req, res) => {
   `;
   const rows = await pool.query(sql, args);
   res.status(200).json({ ok: true, services: rows.rows });
+});
+
+app.get("/v1/operation_services/summary", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  const summary = await pool.query(
+    `
+      select
+        count(*)::int as total,
+        count(*) filter (where status in ('active','in_review','requested'))::int as open,
+        count(*) filter (where service='purchase_tracking' and status in ('active','in_review','requested'))::int as tracking_open,
+        count(*) filter (where service like 'document_verification%' and status in ('active','in_review','requested'))::int as verification_open,
+        count(*) filter (where subject_type='buyer' and status in ('active','in_review','requested'))::int as buyer_open,
+        count(*) filter (where subject_type='owner' and status in ('active','in_review','requested'))::int as owner_open
+      from public.operation_services;
+    `,
+  );
+
+  const byStatus = await pool.query(
+    `
+      select status, count(*)::int as total
+      from public.operation_services
+      group by status
+      order by total desc, status asc;
+    `,
+  );
+
+  res.status(200).json({ ok: true, summary: summary.rows[0], by_status: byStatus.rows });
 });
 
 app.post("/v1/operation_services", async (req, res) => {
@@ -990,6 +1042,104 @@ app.get("/v1/service_audit", async (req, res) => {
     args,
   );
   res.status(200).json({ ok: true, audit: rows.rows });
+});
+
+app.get("/v1/qa/summary", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  const rows = await pool.query(
+    `
+      select
+        (select count(*)::int from public.leads where lower(contact) like 'qa-%@example.com' or lower(coalesce(name,'')) like 'qa %' or lower(coalesce(note,'')) like '%prueba real qa%') as leads,
+        (select count(*)::int from public.buyers where lower(contact) like 'qa-%@example.com' or lower(coalesce(name,'')) like 'qa %') as buyers,
+        (select count(*)::int from public.owners where lower(coalesce(contact,'')) like 'qa-%@example.com' or lower(coalesce(name,'')) like 'qa %') as owners,
+        (select count(*)::int from public.operation_services where lower(coalesce(subject_contact,'')) like 'qa-%@example.com' or lower(coalesce(note,'')) like '%qa%') as operation_services,
+        (select count(*)::int from public.privacy_consents where lower(coalesce(contact,'')) like 'qa-%@example.com' or lower(coalesce(name,'')) like 'qa %') as consents;
+    `,
+  );
+
+  res.status(200).json({ ok: true, summary: rows.rows[0] });
+});
+
+app.post("/v1/qa/archive", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  const confirm = normalize(req.body?.confirm);
+  if (confirm !== "ARCHIVE_QA") {
+    res.status(400).json({ ok: false, error: "missing_confirmation" });
+    return;
+  }
+
+  const actor = normalize(req.body?.actor) || "admin";
+  const operationServices = await pool.query(
+    `
+      update public.operation_services
+      set status='cancelled',
+          note=concat(coalesce(note,''), case when coalesce(note,'') = '' then '' else ' · ' end, 'Archivado QA'),
+          activated_by=$1,
+          updated_at=now()
+      where status <> 'cancelled'
+        and (lower(coalesce(subject_contact,'')) like 'qa-%@example.com' or lower(coalesce(note,'')) like '%qa%')
+      returning listing_id, subject_type, subject_contact, subject_id, service, status;
+    `,
+    [actor],
+  );
+
+  for (const row of operationServices.rows) {
+    await pool.query(
+      `
+        insert into public.service_audit(listing_id, subject_type, subject_contact, subject_id, service, action, status, actor, note, payload)
+        values ($1,$2,$3,$4,$5,'qa_archive','cancelled',$6,'Archivado QA',$7::jsonb);
+      `,
+      [
+        row.listing_id,
+        row.subject_type,
+        row.subject_contact,
+        row.subject_id,
+        row.service,
+        actor,
+        JSON.stringify({ source: "qa_archive" }),
+      ],
+    );
+  }
+
+  const buyers = await pool.query(
+    "update public.buyers set status='archived', updated_at=now() where status <> 'archived' and (lower(contact) like 'qa-%@example.com' or lower(coalesce(name,'')) like 'qa %') returning id;",
+  );
+  const owners = await pool.query(
+    "update public.owners set status='archived' where status <> 'archived' and (lower(coalesce(contact,'')) like 'qa-%@example.com' or lower(coalesce(name,'')) like 'qa %') returning id;",
+  );
+  const leads = await pool.query(
+    "update public.leads set status='rejected', outcome='qa_archive', outcome_note='Archivado QA' where (lower(contact) like 'qa-%@example.com' or lower(coalesce(name,'')) like 'qa %' or lower(coalesce(note,'')) like '%prueba real qa%') returning id;",
+  );
+
+  res.status(200).json({
+    ok: true,
+    archived: {
+      operation_services: operationServices.rowCount,
+      buyers: buyers.rowCount,
+      owners: owners.rowCount,
+      leads: leads.rowCount,
+    },
+  });
 });
 
 app.get("/v1/metrics", async (req, res) => {

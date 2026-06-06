@@ -81,6 +81,12 @@ export default async function AdminPage() {
 
         <div className="grid gap-4 md:grid-cols-3">
           <LinkCard
+            eyebrow="Operaciones"
+            title="Servicios activos"
+            desc="Controla tracking, verificación documental, estados y archivo de pruebas QA."
+            href="/admin/operations"
+          />
+          <LinkCard
             eyebrow="Propietarios"
             title="Códigos de acceso"
             desc="Crea códigos privados y vincúlalos a uno o varios inmuebles."
