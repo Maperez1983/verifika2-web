@@ -24,7 +24,6 @@ function buildNote(parts: Array<string | null | undefined>) {
 function paidServiceLabel(motivo: string) {
   if (motivo === "dossier_basico") return "Servicio cobrable: verificación documental básica";
   if (motivo === "dossier_completo") return "Servicio cobrable: dossier documental completo";
-  if (motivo === "nota_simple") return "Servicio cobrable: nota simple actualizada";
   return "";
 }
 

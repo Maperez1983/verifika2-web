@@ -67,11 +67,11 @@ export default async function DossierPage({ searchParams }: PageProps) {
               <p className="pt-2 text-sm leading-6 text-slate-600">
                 Antes de iniciar el informe, el equipo confirma alcance, plazo y precio definitivo según el inmueble.
               </p>
-              <div className="pt-5 grid gap-4 md:grid-cols-3">
+              <div className="pt-5 grid gap-4 md:grid-cols-2">
                 <Plan
                   title="Verificación básica"
                   price="Desde 49 €"
-                  desc="Titularidad, nota simple, cargas y referencia catastral."
+                  desc="Incluye nota simple actualizada cuando sea necesaria, titularidad, cargas y referencia catastral."
                   href={`${baseHref}&motivo=dossier_basico`}
                   cta="Solicitar básica"
                   highlight
@@ -79,16 +79,9 @@ export default async function DossierPage({ searchParams }: PageProps) {
                 <Plan
                   title="Dossier completo"
                   price="Desde 149 €"
-                  desc="Checklist ampliada, incidencias, documentos disponibles y resumen."
+                  desc="Incluye nota simple, checklist ampliada, incidencias, documentos disponibles y resumen."
                   href={`${baseHref}&motivo=dossier_completo`}
                   cta="Solicitar dossier"
-                />
-                <Plan
-                  title="Nota simple actualizada"
-                  price="Bajo presupuesto"
-                  desc="Solicitud puntual para confirmar situación registral reciente."
-                  href={`${baseHref}&motivo=nota_simple`}
-                  cta="Solicitar nota"
                 />
               </div>
             </div>

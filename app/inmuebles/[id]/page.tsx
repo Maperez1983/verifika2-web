@@ -305,9 +305,8 @@ export default async function ListingDetailPage({ params }: PageProps) {
                 <div className="mt-4 rounded-2xl bg-[color:var(--surface-2)] p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Servicio bajo solicitud</p>
                   <div className="pt-3 grid gap-2">
-                    <DossierPlan title="Verificación básica" price="Desde 49 €" desc="Titularidad, nota simple, cargas y referencia catastral." />
-                    <DossierPlan title="Dossier completo" price="Desde 149 €" desc="Checklist ampliada, incidencias y resumen documental." />
-                    <DossierPlan title="Nota simple actualizada" price="Bajo presupuesto" desc="Solicitud puntual para confirmar situación registral reciente." />
+                    <DossierPlan title="Verificación básica" price="Desde 49 €" desc="Incluye nota simple cuando sea necesaria, titularidad, cargas y referencia catastral." />
+                    <DossierPlan title="Dossier completo" price="Desde 149 €" desc="Incluye nota simple, checklist ampliada, incidencias y resumen documental." />
                   </div>
                 </div>
                 <div className="pt-4 grid gap-2">
