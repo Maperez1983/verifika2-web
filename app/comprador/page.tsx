@@ -453,10 +453,10 @@ function RecommendedListingCard({
             Me interesa
           </Link>
           <Link
-            href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=info&motivo=dossier_basico&next=${encodeURIComponent("/comprador")}`}
+            href={`/dossier-verifika2?listing=${encodeURIComponent(listing.id)}&next=${encodeURIComponent("/comprador")}`}
             className="inline-flex h-10 items-center justify-center rounded-full bg-[#F2C14E] px-4 text-sm font-semibold text-[#0B1D33] hover:bg-[#ffd56f]"
           >
-            Verificar antes de ofertar
+            Ver Dossier
           </Link>
           <div className="grid grid-cols-2 gap-2">
             <Link
@@ -539,10 +539,10 @@ function LeadCard({ lead }: { lead: BuyerLead }) {
           </Link>
           {lead.listing_id ? (
             <Link
-              href={`/interes?listing=${encodeURIComponent(lead.listing_id)}&tipo=info&motivo=dossier_basico&next=${encodeURIComponent("/comprador")}`}
+              href={`/dossier-verifika2?listing=${encodeURIComponent(lead.listing_id)}&next=${encodeURIComponent("/comprador")}`}
               className="inline-flex h-10 items-center justify-center rounded-full bg-[#F2C14E] px-4 text-sm font-semibold text-[#0B1D33] hover:bg-[#ffd56f]"
             >
-              Verificar
+              Ver Dossier
             </Link>
           ) : null}
           <Link

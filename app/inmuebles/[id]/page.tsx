@@ -250,10 +250,10 @@ export default async function ListingDetailPage({ params }: PageProps) {
                   </p>
                 <div className="pt-4 flex flex-col gap-2 sm:flex-row">
                     <Link
-                      href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=info&motivo=dossier_basico&next=${encodeURIComponent(`/inmuebles/${listing.id}`)}`}
+                      href={`/dossier-verifika2?listing=${encodeURIComponent(listing.id)}&next=${encodeURIComponent(`/inmuebles/${listing.id}`)}`}
                       className="inline-flex h-11 items-center justify-center rounded-full bg-[#F2C14E] px-5 text-sm font-semibold text-[#0B1D33] hover:bg-[#ffd56f]"
                     >
-                      Verificar antes de ofertar
+                      Ver Dossier Verifika2
                     </Link>
                     <Link
                       href="/compradores"
@@ -286,7 +286,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
               <div id="documentacion" className="scroll-mt-24 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
                   <p className="text-sm font-semibold">Dossier Verifika2</p>
                   <p className="pt-2 text-sm leading-6 text-slate-600">
-                    Servicio documental para compradores que quieren revisar un inmueble antes de reservar, ofertar o firmar arras. La revisión no sustituye asesoramiento legal personalizado, pero reduce incertidumbre antes de avanzar.
+                    Revisión documental para compradores que quieren entender alcance, precio y documentación antes de reservar, ofertar o firmar arras.
                 </p>
                 <div className="pt-4 space-y-2 text-sm text-slate-700">
                   {(listing.verificationChecks || []).map((check) => (
@@ -303,31 +303,19 @@ export default async function ListingDetailPage({ params }: PageProps) {
                   <span className="font-medium">{listing.verifiedAt}</span>
                 </p>
                 <div className="mt-4 rounded-2xl bg-[color:var(--surface-2)] p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Servicios disponibles</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Servicio bajo solicitud</p>
                   <div className="pt-3 grid gap-2">
-                    <DossierPlan title="Verificación básica" price="49-79 €" desc="Titularidad, nota simple, cargas y referencia catastral." />
-                    <DossierPlan title="Dossier completo" price="149-299 €" desc="Checklist ampliada, incidencias y resumen documental." />
-                    <DossierPlan title="Nota simple actualizada" price="Bajo pedido" desc="Solicitud puntual para confirmar situación registral reciente." />
+                    <DossierPlan title="Verificación básica" price="Desde 49 €" desc="Titularidad, nota simple, cargas y referencia catastral." />
+                    <DossierPlan title="Dossier completo" price="Desde 149 €" desc="Checklist ampliada, incidencias y resumen documental." />
+                    <DossierPlan title="Nota simple actualizada" price="Bajo presupuesto" desc="Solicitud puntual para confirmar situación registral reciente." />
                   </div>
                 </div>
                 <div className="pt-4 grid gap-2">
                   <Link
-                    href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=info&motivo=dossier_basico&next=${encodeURIComponent(`/inmuebles/${listing.id}`)}`}
+                    href={`/dossier-verifika2?listing=${encodeURIComponent(listing.id)}&next=${encodeURIComponent(`/inmuebles/${listing.id}`)}`}
                     className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-semibold text-white hover:bg-[#0F2742]"
                   >
-                    Comprar verificación básica
-                  </Link>
-                  <Link
-                    href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=info&motivo=dossier_completo&next=${encodeURIComponent(`/inmuebles/${listing.id}`)}`}
-                    className="inline-flex h-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm font-medium hover:bg-[color:var(--surface-2)]"
-                  >
-                    Solicitar dossier completo
-                  </Link>
-                  <Link
-                    href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=info&motivo=nota_simple&next=${encodeURIComponent(`/inmuebles/${listing.id}`)}`}
-                    className="inline-flex h-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm font-medium hover:bg-[color:var(--surface-2)]"
-                  >
-                    Pedir nota simple actualizada
+                    Ver servicio y precios
                   </Link>
                 </div>
                 <div className="pt-3 flex gap-2">
@@ -354,7 +342,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
                 <div className="pt-4 grid gap-2">
                   <GuidedAction href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=visita&motivo=visita&next=${encodeURIComponent(`/inmuebles/${listing.id}`)}`} title="Quiero visitar" desc="Indica disponibilidad y teléfono." />
                   <GuidedAction href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=info&motivo=documentacion&next=${encodeURIComponent(`/inmuebles/${listing.id}`)}`} title="Quiero documentación" desc="Solicita dossier o información adicional." />
-                  <GuidedAction href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=info&motivo=dossier_basico&next=${encodeURIComponent(`/inmuebles/${listing.id}`)}`} title="Verificar antes de ofertar" desc="Servicio documental cobrable." />
+                  <GuidedAction href={`/dossier-verifika2?listing=${encodeURIComponent(listing.id)}&next=${encodeURIComponent(`/inmuebles/${listing.id}`)}`} title="Verificar antes de ofertar" desc="Conoce alcance, precios y opciones." />
                   <GuidedAction href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=info&motivo=oferta&next=${encodeURIComponent(`/inmuebles/${listing.id}`)}`} title="Quiero hacer oferta" desc="Deja contexto para que el equipo te contacte." />
                   <GuidedAction href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=contacto&motivo=duda&next=${encodeURIComponent(`/inmuebles/${listing.id}`)}`} title="Tengo una duda" desc="Consulta condiciones, zona o documentación." />
                 </div>
