@@ -702,8 +702,7 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
                   </Link>
                 </div>
                 <p className="pt-4 text-xs leading-5 text-slate-600">
-                  Beta: la firma digital y el timeline completo se activan en la
-                  siguiente fase.
+                  El timeline, la documentación y las solicitudes de firma quedan trazadas para seguimiento interno.
                 </p>
               </div>
             </aside>
@@ -1233,8 +1232,7 @@ function DocumentsSection({
     <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
       <p className="text-sm font-semibold tracking-tight">Documentos</p>
       <p className="pt-2 text-sm leading-6 text-slate-600">
-        Checklist y repositorio documental (beta). En la siguiente fase se
-        almacenará el archivo y se habilitará firma digital.
+        Checklist documental operativo para controlar solicitudes, revisión y estado de cada documento de la operación.
       </p>
 
       {documents.length === 0 ? (
@@ -1533,7 +1531,7 @@ function MilestonesSection({
     <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
       <p className="text-sm font-semibold tracking-tight">Hitos</p>
       <p className="pt-2 text-sm leading-6 text-slate-600">
-        Timeline de la operación (beta): reserva, arras, notaría, entrega de llaves… con estado y trazabilidad.
+        Timeline de la operación: reserva, arras, notaría, entrega de llaves y próximos pasos con estado y trazabilidad.
       </p>
 
       {milestones.length === 0 ? (
@@ -1645,7 +1643,7 @@ function SignaturesSection({
     <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
       <p className="text-sm font-semibold tracking-tight">Firma digital</p>
       <p className="pt-2 text-sm leading-6 text-slate-600">
-        Beta: registra solicitudes de firma (arras, anexos, autorización…) y su estado. En la siguiente fase se integrará el proveedor de firma.
+        Registra solicitudes de firma de arras, anexos o autorizaciones y controla su estado dentro de la operación.
       </p>
 
       <div className="pt-6 rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-5">

@@ -34,6 +34,8 @@ const captured = {
   leads: [],
   buyerVerify: [],
   ownerVerify: [],
+  consents: [],
+  operationServices: [],
 };
 
 function assert(condition, message) {
@@ -80,7 +82,7 @@ function createMockServer() {
       const body = await readJson(req);
       captured.buyerVerify.push(body);
       const ok = body?.contact === "buyer@example.com" && body?.code === "CB-QA-2026";
-      return json(res, ok ? 200 : 403, ok ? { buyer: { id: "buyer-qa", contact: "buyer@example.com" } } : { error: "invalid" });
+      return json(res, ok ? 200 : 403, ok ? { buyer: { id: "buyer-qa", contact: "buyer@example.com", services: [] } } : { error: "invalid" });
     }
 
     if (url.pathname === "/v1/buyers/leads") {
@@ -105,11 +107,107 @@ function createMockServer() {
       });
     }
 
+    if (url.pathname === "/v1/buyers") {
+      return json(res, 200, {
+        buyers: [
+          {
+            id: "buyer-qa",
+            created_at: "2026-06-05T10:00:00Z",
+            updated_at: "2026-06-05T10:00:00Z",
+            name: "Buyer QA",
+            contact: "buyer@example.com",
+            services: [],
+            status: "active",
+          },
+        ],
+      });
+    }
+
     if (url.pathname === "/v1/owners/verify" && req.method === "POST") {
       const body = await readJson(req);
       captured.ownerVerify.push(body);
       const ok = body?.code === "V2-QA-2026";
-      return json(res, ok ? 200 : 403, ok ? { owner: { id: "owner-qa", listing_ids: [listingId] } } : { error: "invalid" });
+      return json(res, ok ? 200 : 403, ok ? { owner: { id: "owner-qa", listing_ids: [listingId], services: [] } } : { error: "invalid" });
+    }
+
+    if (url.pathname === "/v1/owners") {
+      return json(res, 200, {
+        owners: [
+          {
+            id: "owner-qa",
+            created_at: "2026-06-05T10:00:00Z",
+            name: "Owner QA",
+            contact: "owner@example.com",
+            listing_ids: [listingId],
+            services: [],
+            status: "active",
+          },
+        ],
+      });
+    }
+
+    if (url.pathname === "/v1/consents/status") {
+      const persona = url.searchParams.get("persona");
+      const subjectId = url.searchParams.get("subject_id");
+      const accepted = captured.consents.some((item) => item?.persona === persona && item?.subject_id === subjectId);
+      return json(res, 200, { ok: true, accepted, consent: accepted ? { id: "consent-qa" } : null });
+    }
+
+    if (url.pathname === "/v1/consents" && req.method === "POST") {
+      const body = await readJson(req);
+      captured.consents.push(body);
+      return json(res, 200, { ok: true, consent: { id: `consent-${captured.consents.length}`, ...body } });
+    }
+
+    if (url.pathname === "/v1/operation_services" && req.method === "GET") {
+      const listing = url.searchParams.get("listing_id");
+      const subjectType = url.searchParams.get("subject_type");
+      const subjectContact = url.searchParams.get("subject_contact");
+      const services = captured.operationServices.filter((service) => {
+        if (listing && service.listing_id !== listing) return false;
+        if (subjectType && service.subject_type !== subjectType) return false;
+        if (subjectContact && service.subject_contact !== subjectContact) return false;
+        return true;
+      });
+      return json(res, 200, { ok: true, services });
+    }
+
+    if (url.pathname === "/v1/operation_services" && req.method === "POST") {
+      const body = await readJson(req);
+      captured.operationServices = captured.operationServices.filter(
+        (service) =>
+          !(
+            service.listing_id === body?.listing_id &&
+            service.subject_type === body?.subject_type &&
+            service.subject_contact === body?.subject_contact &&
+            service.service === body?.service
+          ),
+      );
+      captured.operationServices.push({
+        id: `svc-${captured.operationServices.length + 1}`,
+        created_at: "2026-06-05T10:00:00Z",
+        updated_at: "2026-06-05T10:00:00Z",
+        ...body,
+      });
+      return json(res, 200, { ok: true, service: captured.operationServices.at(-1) });
+    }
+
+    if (url.pathname === "/v1/service_audit") {
+      return json(res, 200, {
+        ok: true,
+        audit: captured.operationServices.map((service, index) => ({
+          id: `audit-${index + 1}`,
+          created_at: "2026-06-05T10:00:00Z",
+          listing_id: service.listing_id,
+          subject_type: service.subject_type,
+          subject_contact: service.subject_contact,
+          service: service.service,
+          action: "service_status",
+          status: service.status,
+          actor: "admin",
+          note: service.note || null,
+        })),
+      });
     }
 
     if (url.pathname === "/v1/metrics") {
@@ -208,7 +306,7 @@ async function main() {
   const appPort = await freePort();
   const baseUrl = `http://127.0.0.1:${appPort}`;
 
-  const child = spawn("npm", ["run", "dev", "--", "--hostname", "127.0.0.1", "--port", String(appPort)], {
+  const child = spawn("npm", ["run", "start", "--", "--hostname", "127.0.0.1", "--port", String(appPort)], {
     cwd: process.cwd(),
     env: {
       ...process.env,
@@ -330,6 +428,18 @@ async function main() {
     assert(buyerAuth.status === 302, "buyer auth should redirect");
     const buyerCookie = cookieFrom(buyerAuth, "v2_buyer_session");
     assert(buyerCookie, "buyer auth should set buyer session cookie");
+    assert((buyerAuth.headers.get("location") || "").includes("/comprador/tratamiento-datos"), "buyer auth should require consent first");
+    const buyerConsent = await postForm(baseUrl, "/api/buyer-consent", {
+      signer_name: "Buyer QA",
+      signer_id_doc: "00000000T",
+      signature_text: "Buyer QA",
+      accepted_privacy: "1",
+      accepted_operations: "1",
+      accepted_rights: "1",
+      accepted_marketing: "1",
+      next: "/comprador",
+    }, buyerCookie);
+    assert(buyerConsent.status === 302, "buyer consent should redirect");
     const buyerArea = await get(baseUrl, "/comprador", buyerCookie);
     const buyerHtml = await buyerArea.text();
     assert(buyerArea.status === 200, "buyer area should return 200 with session");
@@ -342,13 +452,60 @@ async function main() {
     assert(ownerAuth.status === 302, "owner auth should redirect");
     const ownerCookie = cookieFrom(ownerAuth, "v2_owner_session");
     assert(ownerCookie, "owner auth should set owner session cookie");
+    assert((ownerAuth.headers.get("location") || "").includes("/owner/tratamiento-datos"), "owner auth should require consent first");
+    const ownerConsent = await postForm(baseUrl, "/api/owner-consent", {
+      signer_name: "Owner QA",
+      signer_id_doc: "11111111H",
+      signature_text: "Owner QA",
+      accepted_privacy: "1",
+      accepted_operations: "1",
+      accepted_rights: "1",
+      next: "/owner",
+    }, ownerCookie);
+    assert(ownerConsent.status === 302, "owner consent should redirect");
     const ownerArea = await get(baseUrl, "/owner", ownerCookie);
     const ownerHtml = await ownerArea.text();
     assert(ownerArea.status === 200, "owner area should return 200 with session");
     assert(ownerHtml.includes("Control comercial y documental"), "owner area should render dashboard");
 
+    const adminAuth = await postForm(baseUrl, "/api/admin-auth", {
+      password: adminPassword,
+      next: "/admin",
+    });
+    assert(adminAuth.status === 302, "admin auth should redirect");
+    const adminCookie = cookieFrom(adminAuth, "v2_admin_auth");
+    assert(adminCookie, "admin auth should set admin cookie");
+
+    const adminBuyers = await get(baseUrl, "/admin/buyers", adminCookie);
+    const adminBuyersHtml = await adminBuyers.text();
+    assert(adminBuyers.status === 200, "admin buyers should return 200");
+    assert(adminBuyersHtml.includes("Compradores existentes"), "admin buyers should list existing buyers");
+
+    const activateService = await postForm(baseUrl, "/api/admin/services/activate", {
+      return_to: "/admin/buyers",
+      listing_id: listingId,
+      subject_type: "buyer",
+      subject_contact: "buyer@example.com",
+      subject_id: "buyer-qa",
+      service: "purchase_tracking",
+      status: "active",
+      note: "QA tracking",
+    }, adminCookie);
+    assert(activateService.status === 303, "service activation should redirect");
+    assert(captured.operationServices.some((service) => service.listing_id === listingId && service.subject_contact === "buyer@example.com" && service.service === "purchase_tracking"), "service activation should persist operation service");
+
+    const buyerAreaWithService = await get(baseUrl, "/comprador", buyerCookie);
+    const buyerServiceHtml = await buyerAreaWithService.text();
+    assert(buyerServiceHtml.includes("Tracking activo"), "buyer area should show operation tracking when admin enables it");
+
+    const adminListing = await get(baseUrl, `/admin/listings/${listingId}`, adminCookie);
+    const adminListingHtml = await adminListing.text();
+    assert(adminListing.status === 200, "admin listing should return 200");
+    assert(adminListingHtml.includes("Servicios de operación"), "admin listing should show operation services");
+    assert(adminListingHtml.includes("Auditoría de servicios"), "admin listing should show service audit");
+
     console.log("QA smoke passed");
-    console.log(`Validated ${publicRoutes.length + 10} critical checks against mocked CRM/Lead Hub`);
+    console.log(`Validated ${publicRoutes.length + 18} critical checks against mocked CRM/Lead Hub`);
   } finally {
     child.kill("SIGINT");
     mockServer.close();

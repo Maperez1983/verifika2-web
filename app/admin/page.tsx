@@ -5,7 +5,7 @@ import { leadHubFetch } from "@/lib/leadHub";
 
 export const metadata: Metadata = {
   title: "Admin · Verifika2",
-  description: "Panel interno para gestionar owner codes, leads y checklist (beta).",
+  description: "Panel interno para gestionar accesos, leads, servicios premium y operaciones.",
 };
 
 export const dynamic = "force-dynamic";

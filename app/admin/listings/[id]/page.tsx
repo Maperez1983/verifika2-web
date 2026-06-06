@@ -345,7 +345,7 @@ export default async function AdminListingPage({ params, searchParams }: PagePro
               </div>
             </Panel>
 
-            <Panel title="Firma" subtitle="Solicitudes de firma (placeholder).">
+            <Panel title="Firma" subtitle="Solicitudes de firma vinculadas a la operación.">
               <div className="pt-2 grid gap-2">
                 {signatures.length === 0 ? (
                   <p className="text-sm text-slate-600">Aún no hay solicitudes de firma.</p>

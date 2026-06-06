@@ -383,7 +383,7 @@ export default function Home() {
                 Preparado para demos, pilotos y primeras altas comerciales.
               </h2>
               <p className="mt-4 text-sm leading-6 text-slate-600 md:text-base">
-                Verifika2 se presenta como beta comercial avanzada: suficiente para enseñar valor, captar clientes y validar operaciones reales con control.
+                Verifika2 se presenta como plataforma comercial operativa: portal verificado, CRM conectado, áreas privadas y servicios activables desde administración.
               </p>
               <div className="mt-6 rounded-[24px] border border-[#ead7a4] bg-[#fff8e5] p-5">
                 <p className="text-sm font-semibold text-[#5a4300]">Mensaje comercial recomendado</p>

@@ -4,7 +4,7 @@ import { fetchPortalListings } from "@/lib/crmPortal";
 
 export const metadata: Metadata = {
   title: "Admin · Inmuebles",
-  description: "Listado de inmuebles del CRM para acceso rápido (beta).",
+  description: "Listado operativo de inmuebles sincronizados con el CRM.",
 };
 
 export const dynamic = "force-dynamic";

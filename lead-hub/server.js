@@ -1642,7 +1642,7 @@ app.post("/v1/signatures", async (req, res) => {
 
   try {
     await postToSlack(
-      `Nueva solicitud de firma (beta)\nInmueble: ${listingId}\nDocumento: ${title}`,
+      `Nueva solicitud de firma\nInmueble: ${listingId}\nDocumento: ${title}`,
     );
   } catch (error) {
     // eslint-disable-next-line no-console

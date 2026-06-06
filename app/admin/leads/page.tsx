@@ -4,7 +4,7 @@ import { leadHubFetch } from "@/lib/leadHub";
 
 export const metadata: Metadata = {
   title: "Admin · Leads",
-  description: "Leads recientes del portal (beta).",
+  description: "Leads recientes del portal y activación de servicios por operación.",
 };
 
 export const dynamic = "force-dynamic";

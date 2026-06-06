@@ -5,7 +5,7 @@ import { leadHubFetch } from "@/lib/leadHub";
 
 export const metadata: Metadata = {
   title: "Admin · Owners",
-  description: "Genera códigos de propietario y vincúlalos a inmuebles (beta).",
+  description: "Genera accesos de propietario y vincúlalos a inmuebles reales.",
 };
 
 export const dynamic = "force-dynamic";
