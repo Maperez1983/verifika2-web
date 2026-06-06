@@ -74,6 +74,20 @@ async function getHubConfig(): Promise<HubConfig | null> {
   }
 }
 
+function operationStage(leads: number, visits: number, offers: number) {
+  if (offers > 0) return "Oferta / negociación";
+  if (visits > 0) return "Visitas activas";
+  if (leads > 0) return "Captación de interesados";
+  return "Publicado";
+}
+
+function nextOwnerAction(leads: number, visits: number, offers: number) {
+  if (offers > 0) return "Revisar oferta y preparar documentación de decisión";
+  if (visits > 0) return "Actualizar resultado de visitas y perfilar clientes calientes";
+  if (leads > 0) return "Contactar leads y convertirlos en visita";
+  return "Impulsar anuncio y revisar posicionamiento comercial";
+}
+
 export default async function OwnerDashboard() {
   const session = await getOwnerSession();
   if (!session) redirect("/owner/acceso");
@@ -96,6 +110,9 @@ export default async function OwnerDashboard() {
     },
     { views: 0, leads: 0, visits: 0, offers: 0 },
   );
+  const hotListings = summaries.filter((summary) => (summary?.counts?.leads_oferta ?? 0) > 0).length;
+  const activeListings = summaries.filter((summary) => (summary?.counts?.leads_total ?? 0) > 0).length;
+  const globalAction = nextOwnerAction(totals.leads, totals.visits, totals.offers);
 
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
@@ -152,6 +169,18 @@ export default async function OwnerDashboard() {
           </div>
         </section>
 
+        <section className="mb-6 grid gap-4 lg:grid-cols-12">
+          <div className="rounded-[28px] border border-[#bfdbfe] bg-[#eff6ff] p-5 text-[#102a56] lg:col-span-7">
+            <p className="text-sm font-semibold tracking-tight">Recomendación operativa</p>
+            <p className="pt-2 text-sm leading-6">{globalAction}.</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3 lg:col-span-5">
+            <HeroStat label="Activos" value={activeListings} />
+            <HeroStat label="En oferta" value={hotListings} />
+            <HeroStat label="Inmuebles" value={listings.length} />
+          </div>
+        </section>
+
         {!anySummaryOk ? (
           <div className="mb-6 rounded-[28px] border border-amber-200 bg-amber-50 px-6 py-5 text-sm text-amber-900">
             <p className="font-semibold">No se pueden cargar las métricas.</p>
@@ -202,6 +231,7 @@ export default async function OwnerDashboard() {
                 : leads > 0
                   ? "Actualizar clientes"
                   : "Impulsar anuncio";
+            const stage = operationStage(leads, visits, offers);
             return (
               <Link
                 key={listing.id}
@@ -216,7 +246,7 @@ export default async function OwnerDashboard() {
                     <p className="pt-2 text-sm text-slate-600">{listing.city}</p>
                   </div>
                   <div className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
-                    Verificado
+                    {stage}
                   </div>
                 </div>
                 <div className="pt-5 grid gap-2 text-sm text-slate-700">
@@ -242,12 +272,36 @@ export default async function OwnerDashboard() {
                 <p className="pt-5 text-sm font-medium text-[color:var(--foreground)] group-hover:underline">
                   {nextAction}
                 </p>
+                <div className="pt-4">
+                  <OwnerProgress leads={leads} visits={visits} offers={offers} />
+                </div>
               </Link>
             );
           })}
         </div>
         )}
       </main>
+    </div>
+  );
+}
+
+function OwnerProgress({ leads, visits, offers }: { leads: number; visits: number; offers: number }) {
+  const steps = [
+    { label: "Publicado", active: true },
+    { label: "Leads", active: leads > 0 },
+    { label: "Visitas", active: visits > 0 },
+    { label: "Oferta", active: offers > 0 },
+  ];
+  return (
+    <div className="flex flex-wrap gap-2">
+      {steps.map((step) => (
+        <span
+          key={step.label}
+          className={`rounded-full px-3 py-1 text-xs font-medium ${step.active ? "bg-[#0B1D33] text-white" : "bg-[color:var(--surface-2)] text-slate-500"}`}
+        >
+          {step.label}
+        </span>
+      ))}
     </div>
   );
 }

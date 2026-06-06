@@ -92,6 +92,44 @@ type TimeseriesPoint = {
 
 const normalize = (value: unknown) => String(value ?? "").trim();
 
+function leadStatusLabel(status: string) {
+  if (status === "contacted") return "Contactado";
+  if (status === "scheduled") return "Cita";
+  if (status === "done") return "Finalizado";
+  if (status === "rejected") return "Descartado";
+  return "Nuevo";
+}
+
+function commercialStage(leads: number, visits: number, offers: number, scheduledClients: number) {
+  if (offers > 0) return "Oferta / negociación";
+  if (scheduledClients > 0) return "Visitas programadas";
+  if (visits > 0) return "Visitas solicitadas";
+  if (leads > 0) return "Captación activa";
+  return "Publicado";
+}
+
+function ownerNextStep(leads: number, visits: number, offers: number, scheduledClients: number) {
+  if (offers > 0) return "Revisar oferta, solvencia y documentación antes de avanzar.";
+  if (scheduledClients > 0) return "Confirmar visitas y registrar resultado tras cada cita.";
+  if (visits > 0) return "Cerrar fecha/hora de visita con los interesados.";
+  if (leads > 0) return "Contactar interesados y clasificar clientes calientes.";
+  return "Impulsar el anuncio y comprobar que la ficha comercial está completa.";
+}
+
+function leadTemperature(lead: HubLead) {
+  if (lead.intent === "oferta" || lead.outcome === "oferta") return "Caliente";
+  if (lead.status === "scheduled" || lead.scheduled_at || lead.intent === "visita") return "Templado";
+  if (lead.status === "rejected") return "Frío";
+  return "Nuevo";
+}
+
+function temperatureClass(temp: string) {
+  if (temp === "Caliente") return "bg-emerald-50 text-emerald-800";
+  if (temp === "Templado") return "bg-amber-50 text-amber-800";
+  if (temp === "Frío") return "bg-slate-100 text-slate-600";
+  return "bg-blue-50 text-blue-800";
+}
+
 async function getSummary(listingId: string): Promise<ListingSummary | null> {
   try {
     const res = await leadHubFetch(
@@ -224,6 +262,8 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
   const activeClients = clientLeads.filter((lead) => ["new", "contacted", "scheduled"].includes(lead.status || "new")).length;
   const doneClients = clientLeads.filter((lead) => lead.status === "done").length;
   const conversionRate = views > 0 ? Math.round((leadsTotal / views) * 100) : 0;
+  const stage = commercialStage(leadsTotal, leadsVisits, leadsOffers, scheduledClients);
+  const nextStep = ownerNextStep(leadsTotal, leadsVisits, leadsOffers, scheduledClients);
   const nextAction =
     scheduledClients > 0
       ? "Revisar próximas citas"
@@ -326,6 +366,13 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
                     <p className="pt-3 text-sm leading-6 text-white/72">
                       {listing.priceLabel} · {listing.detailsShort}. El anuncio acumula {views} vistas, {leadsTotal} leads, {leadsVisits} visitas y {leadsOffers} ofertas registradas.
                     </p>
+                    <div className="mt-5 rounded-3xl border border-white/12 bg-white/10 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/60">
+                        Estado de operación
+                      </p>
+                      <p className="pt-2 text-lg font-semibold tracking-tight">{stage}</p>
+                      <p className="pt-2 text-sm leading-6 text-white/72">{nextStep}</p>
+                    </div>
                     <div className="pt-5 grid gap-3 sm:grid-cols-3">
                       <HeroMetric label="Clientes activos" value={activeClients} />
                       <HeroMetric label="Citas" value={scheduledClients} />
@@ -339,6 +386,16 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
                 <SignalCard title="Leads" value={leadsTotal} desc={`${leadsInfo} consultas, ${leadsVisits} visitas y ${leadsOffers} ofertas.`} />
                 <SignalCard title="Clientes" value={activeClients} desc={`${doneClients} cerrados o finalizados. Mantén cada estado actualizado.`} />
                 <SignalCard title="Anuncio" value={listing.certified ? "Premium" : "Activo"} desc="Ficha pública disponible para revisar fotos, precio y descripción." />
+              </div>
+
+              <div className="mt-6 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+                <p className="text-sm font-semibold tracking-tight">Timeline comercial</p>
+                <p className="pt-2 text-sm leading-6 text-slate-600">
+                  Lectura rápida del punto exacto de la operación.
+                </p>
+                <div className="pt-5">
+                  <OperationTimeline leads={leadsTotal} visits={leadsVisits} offers={leadsOffers} scheduled={scheduledClients} />
+                </div>
               </div>
 
               <div className="mt-6 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
@@ -416,6 +473,15 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
                 conversionRate={conversionRate}
                 lastViewAt={summary?.metrics?.last_view_at ?? null}
               />
+              <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+                <p className="text-sm font-semibold tracking-tight">Qué hace ahora el equipo</p>
+                <div className="pt-4 grid gap-3">
+                  <ActionLine done={leadsTotal > 0} text="Revisar cada lead y clasificar interés real." />
+                  <ActionLine done={scheduledClients > 0} text="Confirmar citas y registrar resultado." />
+                  <ActionLine done={leadsOffers > 0} text="Preparar oferta, documentación y siguiente hito." />
+                  <ActionLine done={listing.certified} text="Mantener anuncio y verificación documental visibles." />
+                </div>
+              </div>
               <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
                 <p className="text-sm font-semibold tracking-tight">Acciones rápidas</p>
                 <div className="pt-4 grid gap-2">
@@ -612,6 +678,50 @@ function Tab({ href, active, children }: { href: string; active: boolean; childr
     >
       {children}
     </Link>
+  );
+}
+
+function OperationTimeline({
+  leads,
+  visits,
+  offers,
+  scheduled,
+}: {
+  leads: number;
+  visits: number;
+  offers: number;
+  scheduled: number;
+}) {
+  const steps = [
+    { label: "Publicado", desc: "Ficha visible", active: true },
+    { label: "Leads", desc: `${leads} solicitudes`, active: leads > 0 },
+    { label: "Visitas", desc: scheduled > 0 ? `${scheduled} citas` : `${visits} solicitudes`, active: visits > 0 || scheduled > 0 },
+    { label: "Oferta", desc: `${offers} ofertas`, active: offers > 0 },
+    { label: "Cierre", desc: "Pendiente", active: false },
+  ];
+  return (
+    <div className="grid gap-3 sm:grid-cols-5">
+      {steps.map((step) => (
+        <div
+          key={step.label}
+          className={`rounded-3xl border p-4 ${step.active ? "border-[#0B1D33] bg-[#0B1D33] text-white" : "border-[color:var(--border)] bg-[color:var(--surface-2)] text-slate-600"}`}
+        >
+          <p className="text-sm font-semibold tracking-tight">{step.label}</p>
+          <p className={`pt-2 text-xs leading-5 ${step.active ? "text-white/70" : "text-slate-500"}`}>{step.desc}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ActionLine({ done, text }: { done: boolean; text: string }) {
+  return (
+    <div className="flex items-start gap-3 rounded-2xl bg-[color:var(--surface-2)] px-4 py-3">
+      <span className={`mt-0.5 h-5 w-5 rounded-full text-center text-xs font-semibold leading-5 ${done ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-600"}`}>
+        {done ? "✓" : "·"}
+      </span>
+      <p className="text-sm leading-6 text-slate-700">{text}</p>
+    </div>
   );
 }
 
@@ -974,19 +1084,28 @@ function LeadCard({
   returnTo: string;
   showVisitFields?: boolean;
 }) {
+  const temperature = leadTemperature(lead);
+  const next =
+    temperature === "Caliente"
+      ? "Preparar documentación y negociación."
+      : temperature === "Templado"
+        ? "Confirmar visita y registrar feedback."
+        : lead.status === "rejected"
+          ? "Mantener como descartado o reabrir si cambia el contexto."
+          : "Contactar y clasificar interés real.";
   return (
     <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <span className={`rounded-full px-3 py-1 text-xs font-medium ${pill(lead.status)}`}>
-              {lead.status}
+              {leadStatusLabel(lead.status)}
             </span>
             <span className="rounded-full bg-[color:var(--surface-2)] px-3 py-1 text-xs font-medium text-slate-700">
               {lead.intent}
             </span>
-            <span className="rounded-full bg-[color:var(--surface-2)] px-3 py-1 text-xs font-medium text-slate-700">
-              {lead.persona}
+            <span className={`rounded-full px-3 py-1 text-xs font-medium ${temperatureClass(temperature)}`}>
+              {temperature}
             </span>
           </div>
           <p className="pt-3 text-sm font-semibold tracking-tight">
@@ -1015,6 +1134,10 @@ function LeadCard({
               {lead.outcome_note ? ` · ${lead.outcome_note}` : ""}
             </p>
           ) : null}
+          <div className="mt-4 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Próxima acción</p>
+            <p className="pt-1 text-sm leading-6 text-slate-700">{next}</p>
+          </div>
         </div>
 
         <form

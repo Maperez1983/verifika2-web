@@ -57,6 +57,36 @@ function pill(status: string) {
   return "bg-slate-100 text-slate-800";
 }
 
+function stageForLead(lead: BuyerLead) {
+  if (lead.status === "rejected") return "Descartado";
+  if (lead.status === "done") return lead.outcome === "oferta" ? "Oferta enviada" : "Seguimiento finalizado";
+  if (lead.outcome === "oferta" || lead.intent === "oferta") return "Oferta / negociación";
+  if (lead.status === "scheduled" || lead.scheduled_at) return "Visita agendada";
+  if (lead.intent === "visita") return "Visita solicitada";
+  if (lead.intent === "info" || lead.intent === "documentacion") return "Documentación solicitada";
+  if (lead.status === "contacted") return "Contactado";
+  return "Solicitado";
+}
+
+function nextActionForLead(lead: BuyerLead) {
+  if (lead.status === "rejected") return "Revisar alternativa o descartar definitivamente.";
+  if (lead.status === "done") return "Consultar resultado y próximos pasos con el equipo.";
+  if (lead.scheduled_at) return "Confirmar asistencia y preparar dudas para la visita.";
+  if (lead.intent === "oferta" || lead.outcome === "oferta") return "Esperar valoración de la oferta y documentación de soporte.";
+  if (lead.intent === "visita") return "Esperar confirmación de fecha u ofrecer nueva disponibilidad.";
+  return "Solicitar documentación o pedir una visita si el inmueble encaja.";
+}
+
+function buyerAlert(leads: BuyerLead[]) {
+  const scheduled = leads.filter((lead) => lead.status === "scheduled" || lead.scheduled_at).length;
+  const docs = leads.filter((lead) => lead.intent === "info" || lead.intent === "documentacion").length;
+  const offers = leads.filter((lead) => lead.intent === "oferta" || lead.outcome === "oferta").length;
+  if (scheduled > 0) return `${scheduled} visita o seguimiento necesita revisión.`;
+  if (offers > 0) return `${offers} operación está en fase de oferta o negociación.`;
+  if (docs > 0) return `${docs} solicitud documental está pendiente de respuesta o seguimiento.`;
+  return "Tu área está preparada para ordenar visitas, documentación y ofertas.";
+}
+
 export default async function BuyerDashboard() {
   const session = await getBuyerSession();
   if (!session) redirect("/comprador/acceso");
@@ -68,6 +98,8 @@ export default async function BuyerDashboard() {
   const offers = leads.filter((lead) => lead.intent === "oferta" || lead.outcome === "oferta");
   const active = leads.filter((lead) => ["new", "contacted", "scheduled"].includes(lead.status || "new"));
   const scheduled = leads.filter((lead) => lead.status === "scheduled" || lead.scheduled_at);
+  const documents = leads.filter((lead) => lead.intent === "info" || lead.intent === "documentacion");
+  const uniqueListings = new Set(leads.map((lead) => lead.listing_id).filter(Boolean)).size;
 
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
@@ -116,6 +148,18 @@ export default async function BuyerDashboard() {
           </div>
         </section>
 
+        <section className="mb-6 grid gap-4 lg:grid-cols-12">
+          <div className="rounded-[28px] border border-[#bfdbfe] bg-[#eff6ff] p-5 text-[#102a56] lg:col-span-7">
+            <p className="text-sm font-semibold tracking-tight">Próxima acción</p>
+            <p className="pt-2 text-sm leading-6">{buyerAlert(leads)}</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3 lg:col-span-5">
+            <HeroStat label="Inmuebles" value={uniqueListings} />
+            <HeroStat label="Documentos" value={documents.length} />
+            <HeroStat label="Pendientes" value={active.length} />
+          </div>
+        </section>
+
         {scheduled.length ? (
           <section className="mb-6 rounded-[28px] border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-950">
             <p className="font-semibold">Tienes {scheduled.length} visita o seguimiento agendado.</p>
@@ -150,6 +194,41 @@ export default async function BuyerDashboard() {
             leads.map((lead) => <LeadCard key={lead.id} lead={lead} />)
           )}
         </div>
+
+        {leads.length > 1 ? (
+          <section className="mt-6 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+            <p className="text-sm font-semibold tracking-tight">Comparativa rápida</p>
+            <p className="pt-2 text-sm leading-6 text-slate-600">
+              Resumen de inmuebles consultados para decidir con menos ruido.
+            </p>
+            <div className="mt-5 overflow-x-auto">
+              <table className="w-full min-w-[720px] text-left text-sm">
+                <thead className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                  <tr>
+                    <th className="border-b border-[color:var(--border)] py-3 pr-4">Inmueble</th>
+                    <th className="border-b border-[color:var(--border)] py-3 pr-4">Estado</th>
+                    <th className="border-b border-[color:var(--border)] py-3 pr-4">Próximo paso</th>
+                    <th className="border-b border-[color:var(--border)] py-3 pr-4">Fecha</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {leads.slice(0, 8).map((lead) => (
+                    <tr key={lead.id}>
+                      <td className="border-b border-[color:var(--border)] py-3 pr-4 font-medium">
+                        {lead.listing_title || "Inmueble solicitado"}
+                      </td>
+                      <td className="border-b border-[color:var(--border)] py-3 pr-4">{stageForLead(lead)}</td>
+                      <td className="border-b border-[color:var(--border)] py-3 pr-4 text-slate-600">{nextActionForLead(lead)}</td>
+                      <td className="border-b border-[color:var(--border)] py-3 pr-4 text-slate-600">
+                        {new Date(lead.created_at).toLocaleDateString("es-ES")}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        ) : null}
       </main>
     </div>
   );
@@ -174,6 +253,8 @@ function HeroStat({ label, value }: { label: string; value: number }) {
 }
 
 function LeadCard({ lead }: { lead: BuyerLead }) {
+  const stage = stageForLead(lead);
+  const nextAction = nextActionForLead(lead);
   return (
     <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm transition hover:border-slate-300">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
@@ -208,6 +289,12 @@ function LeadCard({ lead }: { lead: BuyerLead }) {
               {lead.note}
             </p>
           ) : null}
+          <div className="mt-4 grid gap-3 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-4 sm:grid-cols-3">
+            <BuyerSignal label="Fase" value={stage} />
+            <BuyerSignal label="Seguridad" value="Verificación documental" />
+            <BuyerSignal label="Próximo paso" value={nextAction} />
+          </div>
+          <BuyerTimeline lead={lead} />
         </div>
         <div className="flex shrink-0 flex-col gap-2 sm:w-[180px]">
           {lead.listing_id ? (
@@ -222,10 +309,47 @@ function LeadCard({ lead }: { lead: BuyerLead }) {
             href={`/interes${lead.listing_id ? `?listing=${encodeURIComponent(lead.listing_id)}&tipo=info` : ""}`}
             className="inline-flex h-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm font-medium hover:bg-[color:var(--surface-2)]"
           >
-            Contactar
+            Documentación
+          </Link>
+          <Link
+            href={`/interes${lead.listing_id ? `?listing=${encodeURIComponent(lead.listing_id)}&tipo=visita` : ""}`}
+            className="inline-flex h-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm font-medium hover:bg-[color:var(--surface-2)]"
+          >
+            Nueva visita
           </Link>
         </div>
       </div>
+    </div>
+  );
+}
+
+function BuyerSignal({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">{label}</p>
+      <p className="pt-1 text-sm font-medium leading-5 text-slate-800">{value}</p>
+    </div>
+  );
+}
+
+function BuyerTimeline({ lead }: { lead: BuyerLead }) {
+  const steps = [
+    { label: "Solicitado", active: true },
+    { label: "Contactado", active: ["contacted", "scheduled", "done"].includes(lead.status) },
+    { label: "Visita / docs", active: Boolean(lead.scheduled_at) || lead.intent === "visita" || lead.intent === "info" || lead.intent === "documentacion" },
+    { label: "Oferta", active: lead.intent === "oferta" || lead.outcome === "oferta" },
+    { label: "Cierre", active: lead.status === "done" },
+  ];
+  return (
+    <div className="mt-4 flex flex-wrap gap-2">
+      {steps.map((step) => (
+        <span
+          key={step.label}
+          className={`rounded-full px-3 py-1 text-xs font-medium ${step.active ? "bg-[#0B1D33] text-white" : "bg-[color:var(--surface-2)] text-slate-500"}`}
+        >
+          {step.label}
+        </span>
+      ))}
     </div>
   );
 }
