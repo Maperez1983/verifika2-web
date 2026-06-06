@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { fetchPortalListing } from "@/lib/crmPortal";
@@ -148,6 +149,13 @@ function efficiencyInsight(views: number, leads: number, visits: number, offers:
   return "Aún falta volumen para leer la eficiencia comercial con fiabilidad.";
 }
 
+function propertyScore(leads: number, visits: number, offers: number, scheduledClients: number) {
+  const score = Math.min(96, 40 + Math.min(leads, 10) * 3 + Math.min(visits, 6) * 6 + Math.min(offers, 3) * 10 + Math.min(scheduledClients, 4) * 4);
+  if (score >= 78) return { value: score, label: "Alta", tone: "good" as const };
+  if (score >= 60) return { value: score, label: "Media", tone: "warning" as const };
+  return { value: score, label: "A impulsar", tone: "alert" as const };
+}
+
 async function getSummary(listingId: string): Promise<ListingSummary | null> {
   try {
     const res = await leadHubFetch(
@@ -282,6 +290,7 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
   const conversionRate = views > 0 ? Math.round((leadsTotal / views) * 100) : 0;
   const stage = commercialStage(leadsTotal, leadsVisits, leadsOffers, scheduledClients);
   const nextStep = ownerNextStep(leadsTotal, leadsVisits, leadsOffers, scheduledClients);
+  const score = propertyScore(leadsTotal, leadsVisits, leadsOffers, scheduledClients);
   const nextAction =
     scheduledClients > 0
       ? "Revisar próximas citas"
@@ -304,6 +313,7 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
             >
               ← Volver al panel
             </Link>
+            <BrandPill dark />
             <h1 className="pt-3 text-2xl font-semibold tracking-tight">
               {listing.title}
             </h1>
@@ -375,15 +385,21 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
                     />
                   </div>
                   <div className="p-6 lg:col-span-7">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/64">
-                      Reporte propietario
-                    </p>
-                    <h2 className="pt-3 text-2xl font-semibold tracking-tight">
-                      {nextAction}
-                    </h2>
-                    <p className="pt-3 text-sm leading-6 text-white/72">
-                      {listing.priceLabel} · {listing.detailsShort}. El anuncio acumula {views} vistas, {leadsTotal} leads, {leadsVisits} visitas y {leadsOffers} ofertas registradas.
-                    </p>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <BrandPill />
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/64">
+                          Reporte propietario
+                        </p>
+                        <h2 className="pt-3 text-2xl font-semibold tracking-tight">
+                          {nextAction}
+                        </h2>
+                        <p className="pt-3 text-sm leading-6 text-white/72">
+                          {listing.priceLabel} · {listing.detailsShort}. El anuncio acumula {views} vistas, {leadsTotal} leads, {leadsVisits} visitas y {leadsOffers} ofertas registradas.
+                        </p>
+                      </div>
+                      <ScoreDial value={score.value} label={score.label} tone={score.tone} />
+                    </div>
                     <div className="mt-5 rounded-3xl border border-white/12 bg-white/10 p-4">
                       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/60">
                         Estado de operación
@@ -610,6 +626,41 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
           <AnnouncementSection listing={listing} />
         ) : null}
       </main>
+    </div>
+  );
+}
+
+function BrandPill({ dark = false }: { dark?: boolean }) {
+  return (
+    <div className={`mb-4 inline-flex items-center gap-2 rounded-2xl border px-3 py-2 ${dark ? "border-slate-200 bg-white" : "border-white/14 bg-white/10"}`}>
+      <Image
+        src={dark ? "/brand/verifika2_wordmark_traced_dark.svg" : "/brand/verifika2_wordmark_traced.svg"}
+        alt="Verifika²"
+        width={96}
+        height={24}
+        className="h-5 w-auto"
+      />
+      <span className={`text-[10px] font-semibold uppercase tracking-[0.14em] ${dark ? "text-slate-500" : "text-white/64"}`}>
+        Reporte privado
+      </span>
+    </div>
+  );
+}
+
+function ScoreDial({ value, label, tone }: { value: number; label: string; tone: "good" | "warning" | "alert" }) {
+  const color = tone === "good" ? "#22c55e" : tone === "warning" ? "#f2c14e" : "#fb7185";
+  return (
+    <div
+      className="grid h-[82px] w-[82px] shrink-0 place-items-center rounded-full border border-white/16 text-center shadow-[inset_0_0_0_6px_rgba(255,255,255,0.04)]"
+      style={{
+        background: `radial-gradient(circle at center, #0B1D33 0 55%, transparent 56%), conic-gradient(${color} ${value}%, rgba(255,255,255,0.14) 0)`,
+      }}
+      aria-label={`Índice comercial ${value}. ${label}`}
+    >
+      <div>
+        <p className="text-xl font-semibold leading-none text-white">{value}</p>
+        <p className="pt-1 text-[9px] font-semibold uppercase tracking-[0.08em] text-white/62">{label}</p>
+      </div>
     </div>
   );
 }

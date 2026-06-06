@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { fetchPortalListing } from "@/lib/crmPortal";
 import { leadHubFetch } from "@/lib/leadHub";
@@ -106,6 +107,13 @@ function efficiencyInsight(views: number, leads: number, visits: number, offers:
   return "Aún falta volumen para leer la eficiencia comercial.";
 }
 
+function ownerScore(leads: number, visits: number, offers: number, activeListings: number) {
+  const score = Math.min(96, 42 + Math.min(leads, 12) * 3 + Math.min(visits, 8) * 5 + Math.min(offers, 4) * 8 + Math.min(activeListings, 4) * 3);
+  if (score >= 78) return { value: score, label: "Alta actividad", tone: "good" as const };
+  if (score >= 60) return { value: score, label: "En progreso", tone: "warning" as const };
+  return { value: score, label: "A impulsar", tone: "alert" as const };
+}
+
 export default async function OwnerDashboard() {
   const session = await getOwnerSession();
   if (!session) redirect("/owner/acceso");
@@ -131,12 +139,14 @@ export default async function OwnerDashboard() {
   const hotListings = summaries.filter((summary) => (summary?.counts?.leads_oferta ?? 0) > 0).length;
   const activeListings = summaries.filter((summary) => (summary?.counts?.leads_total ?? 0) > 0).length;
   const globalAction = nextOwnerAction(totals.leads, totals.visits, totals.offers);
+  const score = ownerScore(totals.leads, totals.visits, totals.offers, activeListings);
 
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
       <header className="border-b border-[#d8e0ea] bg-[#0B1D33] text-white">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10 lg:flex-row lg:items-end lg:justify-between">
           <div>
+            <BrandPill compact={false} />
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">
               Portal de propietario
             </p>
@@ -168,6 +178,7 @@ export default async function OwnerDashboard() {
         <section className="mb-6 overflow-hidden rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
           <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
             <div>
+              <BrandPill dark />
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                 Dashboard propietario
               </p>
@@ -178,11 +189,26 @@ export default async function OwnerDashboard() {
                 Revisa actividad, solicitudes, citas, ofertas y el estado de los clientes desde una sola pantalla.
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:min-w-[520px]">
-              <HeroStat label="Vistas" value={totals.views} />
-              <HeroStat label="Leads" value={totals.leads} />
-              <HeroStat label="Citas" value={totals.visits} />
-              <HeroStat label="Ofertas" value={totals.offers} />
+            <div className="grid gap-3 lg:min-w-[560px]">
+              <div className="rounded-[24px] border border-[#0B1D33]/10 bg-[#0B1D33] p-4 text-white">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/58">
+                      Índice comercial
+                    </p>
+                    <p className="pt-2 text-sm leading-6 text-white/72">
+                      Lectura global de actividad, citas y propuestas.
+                    </p>
+                  </div>
+                  <ScoreDial value={score.value} label={score.label} tone={score.tone} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <HeroStat label="Vistas" value={totals.views} />
+                <HeroStat label="Leads" value={totals.leads} />
+                <HeroStat label="Citas" value={totals.visits} />
+                <HeroStat label="Ofertas" value={totals.offers} />
+              </div>
             </div>
           </div>
         </section>
@@ -343,6 +369,41 @@ function OwnerProgress({ leads, visits, offers }: { leads: number; visits: numbe
           {step.label}
         </span>
       ))}
+    </div>
+  );
+}
+
+function BrandPill({ dark = false, compact = true }: { dark?: boolean; compact?: boolean }) {
+  return (
+    <div className={`mb-4 inline-flex items-center gap-2 rounded-2xl border px-3 py-2 ${dark ? "border-slate-200 bg-white" : "border-white/14 bg-white/10"}`}>
+      <Image
+        src={dark ? "/brand/verifika2_wordmark_traced_dark.svg" : "/brand/verifika2_wordmark_traced.svg"}
+        alt="Verifika²"
+        width={compact ? 92 : 112}
+        height={24}
+        className="h-5 w-auto"
+      />
+      <span className={`text-[10px] font-semibold uppercase tracking-[0.14em] ${dark ? "text-slate-500" : "text-white/64"}`}>
+        Reporte privado
+      </span>
+    </div>
+  );
+}
+
+function ScoreDial({ value, label, tone }: { value: number; label: string; tone: "good" | "warning" | "alert" }) {
+  const color = tone === "good" ? "#22c55e" : tone === "warning" ? "#f2c14e" : "#fb7185";
+  return (
+    <div
+      className="grid h-[82px] w-[82px] shrink-0 place-items-center rounded-full border border-white/16 text-center shadow-[inset_0_0_0_6px_rgba(255,255,255,0.04)]"
+      style={{
+        background: `radial-gradient(circle at center, #0B1D33 0 55%, transparent 56%), conic-gradient(${color} ${value}%, rgba(255,255,255,0.14) 0)`,
+      }}
+      aria-label={`Índice comercial ${value}. ${label}`}
+    >
+      <div>
+        <p className="text-xl font-semibold leading-none text-white">{value}</p>
+        <p className="pt-1 text-[9px] font-semibold uppercase tracking-[0.08em] text-white/62">{label}</p>
+      </div>
     </div>
   );
 }
