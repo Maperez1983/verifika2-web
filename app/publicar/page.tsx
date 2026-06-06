@@ -23,8 +23,6 @@ const links = {
   buyers: "/compradores",
   owners: "/propietarios",
   pros: "/profesionales",
-  app: "https://app.verifika2.com",
-  crmInmo: "https://crm.verifika2.com/?crm=inmo",
 };
 
 const productOptions = [
@@ -75,12 +73,12 @@ export default async function PublishPage({ searchParams }: PageProps) {
               >
                 Ver inmuebles
               </Link>
-              <a
-                href={links.crmInmo}
+              <Link
+                href={links.pros}
                 className="inline-flex h-12 items-center justify-center rounded-full border border-white/20 bg-white/10 px-6 text-sm font-semibold text-white hover:bg-white/16"
               >
-                Publicar desde CRM
-              </a>
+                Solución profesional
+              </Link>
               </div>
               <p className="pt-3 text-xs leading-5 text-white/56">
                 Sin publicar inmuebles sin revisar. Trazabilidad desde el primer contacto.
@@ -134,8 +132,8 @@ export default async function PublishPage({ searchParams }: PageProps) {
               <Card
                 title="Inmobiliarias"
                 desc="Gestiona cartera, pipeline y publicación desde tu workspace. El portal solo muestra lo publicado."
-                ctaLabel="Publicar desde el CRM"
-                ctaHref={links.crmInmo}
+                ctaLabel="Ver solución profesional"
+                ctaHref={links.pros}
                 variant="primary"
               />
             </div>
@@ -174,11 +172,10 @@ export default async function PublishPage({ searchParams }: PageProps) {
         <section className="border-y border-[color:var(--border)] bg-[color:var(--surface-2)]">
           <div className="mx-auto w-full max-w-6xl px-6 py-12">
             <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
-              <p className="text-sm font-semibold tracking-tight">Cómo se activa en la práctica</p>
+              <p className="text-sm font-semibold tracking-tight">Publicación revisada</p>
               <p className="pt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                El comprador se activa desde sus solicitudes en la web. Si el inmueble lo gestiona una agencia,
-                el acceso del propietario lo habilita la propia agencia desde su operativa. Si el propietario
-                publica directamente, el equipo Verifika2 valida la solicitud antes de activar el seguimiento.
+                Verifika2 prioriza inmuebles con información clara, documentación controlada y trazabilidad comercial
+                desde la entrada del encargo hasta la gestión de interesados.
               </p>
             </div>
           </div>

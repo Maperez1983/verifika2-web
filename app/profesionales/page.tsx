@@ -4,18 +4,16 @@ import PublicHeader from "@/components/site/PublicHeader";
 import PublicFooter from "@/components/site/PublicFooter";
 
 export const metadata: Metadata = {
-  title: "Acceso profesionales",
+  title: "Profesionales",
   description:
-    "Acceso profesional a Verifika2. La parte interna (CRM modular) que hace posible el portal, la verificación y el seguimiento de operaciones.",
+    "Solución profesional de Verifika2: CRM modular, portal, verificación y seguimiento de operaciones inmobiliarias.",
 };
 
 const links = {
   home: "/",
   portal: "/inmuebles",
   owners: "/propietarios",
-  app: "https://app.verifika2.com",
-  appInmo: "https://app.verifika2.com/?crm=inmo",
-  crm: "https://crm.verifika2.com",
+  publish: "/publicar",
 };
 
 const professionalBundles = [
@@ -32,7 +30,7 @@ const professionalBundles = [
     desc: "Citas, visitas, ofertas, seguimiento y próximos pasos visibles para el equipo y el propietario.",
   },
   {
-    title: "Acceso propietario",
+    title: "Portal propietario gestionado",
     desc: "La agencia habilita el portal del propietario cuando gestiona el inmueble y decide qué información compartir.",
   },
   {
@@ -68,12 +66,12 @@ export default function ProfessionalsPage() {
                 comercial preparada para generar confianza desde el primer contacto.
               </p>
               <div className="pt-7 flex flex-col gap-3 sm:flex-row">
-              <a
-                href={links.appInmo}
+              <Link
+                href={links.publish}
                 className="inline-flex h-12 items-center justify-center rounded-full bg-[#F2C14E] px-6 text-sm font-semibold text-[#0B1D33] hover:bg-[#ffd56f]"
               >
-                Alta profesional
-              </a>
+                Solicitar publicación
+              </Link>
               <Link
                 href={links.portal}
                 className="inline-flex h-12 items-center justify-center rounded-full border border-white/20 bg-white/10 px-6 text-sm font-semibold text-white hover:bg-white/16"
@@ -146,26 +144,14 @@ export default function ProfessionalsPage() {
 
           <aside className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
             <p className="text-sm font-semibold tracking-tight">
-              Links rápidos
+              Operativa profesional
             </p>
             <div className="pt-4 flex flex-col gap-2">
-              <a
-                href={links.appInmo}
+              <Link
+                href={links.publish}
                 className="inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-medium text-white hover:bg-[#0F2742]"
               >
-                Publicar (Inmobiliaria)
-              </a>
-              <a
-                href={links.crm}
-                className="inline-flex h-11 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-5 text-sm font-medium hover:bg-[color:var(--surface-2)]"
-              >
-                Abrir CRM
-              </a>
-              <Link
-                href={links.owners}
-                className="inline-flex h-11 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-5 text-sm font-medium hover:bg-[color:var(--surface-2)]"
-              >
-                Portal propietario
+                Solicitar publicación
               </Link>
               <Link
                 href={links.portal}
@@ -175,8 +161,7 @@ export default function ProfessionalsPage() {
               </Link>
             </div>
             <p className="pt-5 text-xs leading-5 text-slate-600">
-              Consejo: para el público, usa el portal. Para operativa y
-              publicación, usa el acceso profesional.
+              Gestión documental, publicación, leads, citas y propietarios conectados en una operativa profesional.
             </p>
           </aside>
         </div>

@@ -7,14 +7,11 @@ import PublicHeader from "@/components/site/PublicHeader";
 const links = {
   portal: "/inmuebles",
   owners: "/propietarios",
-  ownerAccess: "/owner",
   buyer: "/compradores",
-  buyerAccess: "/comprador",
+  buyerAccess: "/comprador/acceso",
   pros: "/profesionales",
   publish: "/publicar",
   how: "/como-funciona",
-  app: "https://app.verifika2.com",
-  crm: "https://crm.verifika2.com",
 };
 
 const advantages = [
@@ -116,7 +113,7 @@ const commercialPlans = [
     desc: "Workspace inmobiliario con cartera, leads, agenda, compradores, propietarios y publicación conectada.",
     features: ["CRM inmobiliario", "Portal público", "Dashboard propietario", "Chat y leads"],
     href: links.pros,
-    cta: "Alta profesional",
+    cta: "Ver solución profesional",
   },
   {
     name: "Certificación premium",
@@ -313,11 +310,11 @@ export default function Home() {
                 registrar intención y activar seguimiento comercial.
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
-                <a className="inline-flex h-11 items-center justify-center rounded-full bg-[#F2C14E] px-5 text-sm font-semibold text-[#1A1A1A] hover:bg-[#F6CD68]" href={links.crm}>
-                  Ver CRM
-                </a>
+                <Link className="inline-flex h-11 items-center justify-center rounded-full bg-[#F2C14E] px-5 text-sm font-semibold text-[#1A1A1A] hover:bg-[#F6CD68]" href={links.pros}>
+                  Ver solución profesional
+                </Link>
                 <Link className="inline-flex h-11 items-center justify-center rounded-full border border-white/20 bg-white/10 px-5 text-sm font-semibold text-white hover:bg-white/20" href={links.pros}>
-                  Alta inmobiliaria
+                  Cómo se opera
                 </Link>
               </div>
             </div>
@@ -369,7 +366,7 @@ export default function Home() {
                 </p>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
-                <PrivateDashboard title="Portal vendedor" href={links.ownerAccess} metrics={["Citas", "Agenda", "Intermediario", "Clientes"]} />
+                <PrivateDashboard title="Portal vendedor" href={links.owners} metrics={["Citas", "Agenda", "Intermediario", "Clientes"]} />
                 <PrivateDashboard title="Portal comprador" href={links.buyerAccess} metrics={["Visitados", "Seguimiento", "Documentación", "Verificación"]} />
               </div>
             </div>
@@ -615,7 +612,7 @@ function JourneySelector() {
       title: "Quiero publicar y operar con CRM",
       desc: "Convierte leads en compradores, coordina visitas, controla documentación y muestra un producto premium.",
       href: links.pros,
-      action: "Alta profesional",
+      action: "Ver solución profesional",
     },
   ];
 

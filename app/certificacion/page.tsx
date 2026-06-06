@@ -14,7 +14,7 @@ const links = {
   portal: "/inmuebles",
   verification: "/verificacion",
   publish: "/publicar",
-  app: "https://app.verifika2.com",
+  buyerAccess: "/comprador/acceso",
 };
 
 export default function CertificationPage() {
@@ -137,12 +137,12 @@ export default function CertificationPage() {
               >
                 Leer verificación
               </Link>
-              <a
-                href={links.app}
+              <Link
+                href={links.buyerAccess}
                 className="inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-medium text-white hover:bg-[#0F2742]"
               >
-                Acceso
-              </a>
+                Área comprador
+              </Link>
             </div>
           </aside>
         </div>

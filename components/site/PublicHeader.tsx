@@ -10,7 +10,7 @@ const links = {
   buyer: "/compradores",
   pros: "/profesionales",
   publish: "/publicar",
-  app: "https://app.verifika2.com",
+  buyerAccess: "/comprador/acceso",
 };
 
 export default function PublicHeader({
@@ -69,12 +69,12 @@ export default function PublicHeader({
             >
               Portal inmobiliario
             </Link>
-            <a
-              href={links.app}
+            <Link
+              href={links.buyerAccess}
               className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-medium text-white shadow-sm hover:bg-[#0F2742]"
             >
               Entrar
-            </a>
+            </Link>
           </div>
         </div>
 
@@ -105,9 +105,9 @@ export default function PublicHeader({
             <Link className="hover:underline" href={links.publish}>
               Portal inmobiliario
             </Link>
-            <a className="hover:underline" href={links.app}>
+            <Link className="hover:underline" href={links.buyerAccess}>
               Entrar
-            </a>
+            </Link>
           </div>
         </details>
       </div>

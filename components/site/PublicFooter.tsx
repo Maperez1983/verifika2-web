@@ -46,14 +46,8 @@ export default function PublicFooter() {
               Accesos
             </p>
             <div className="pt-3 grid gap-2 text-sm text-slate-700">
-              <a className="hover:underline" href="https://app.verifika2.com">
-                Acceso
-              </a>
-              <a className="hover:underline" href="https://crm.verifika2.com">
-                CRM
-              </a>
-              <Link className="hover:underline" href="/owner">
-                Owner Portal
+              <Link className="hover:underline" href="/comprador/acceso">
+                Área comprador
               </Link>
               <Link className="hover:underline" href="/compradores">
                 Compradores
