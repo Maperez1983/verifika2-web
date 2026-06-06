@@ -14,7 +14,7 @@ import {
 
 export const metadata: Metadata = {
   title: "Área comprador",
-  description: "Panel privado del comprador para solicitudes, visitas y ofertas.",
+  description: "Panel privado del comprador para sus solicitudes, visitas y ofertas.",
 };
 
 export const dynamic = "force-dynamic";
@@ -55,10 +55,10 @@ async function getBuyerLeads(contact: string): Promise<BuyerLead[]> {
 
 function statusLabel(status: string) {
   if (status === "contacted") return "Contactado";
-  if (status === "scheduled") return "Cita";
-  if (status === "done") return "Finalizado";
+  if (status === "scheduled") return "Tu cita";
+  if (status === "done") return "Solicitud finalizada";
   if (status === "rejected") return "Descartado";
-  return "Nuevo";
+  return "Nueva solicitud";
 }
 
 function pill(status: string) {
@@ -69,20 +69,20 @@ function pill(status: string) {
 
 function stageForLead(lead: BuyerLead) {
   if (lead.status === "rejected") return "Descartado";
-  if (lead.status === "done") return lead.outcome === "oferta" ? "Oferta enviada" : "Seguimiento finalizado";
-  if (lead.outcome === "oferta" || lead.intent === "oferta") return "Oferta / negociación";
-  if (lead.status === "scheduled" || lead.scheduled_at) return "Visita agendada";
-  if (lead.intent === "visita") return "Visita solicitada";
-  if (lead.intent === "info" || lead.intent === "documentacion") return "Documentación solicitada";
-  if (lead.status === "contacted") return "Contactado";
-  return "Solicitado";
+  if (lead.status === "done") return lead.outcome === "oferta" ? "Tu oferta enviada" : "Tu solicitud finalizada";
+  if (lead.outcome === "oferta" || lead.intent === "oferta") return "Tu oferta";
+  if (lead.status === "scheduled" || lead.scheduled_at) return "Tu visita agendada";
+  if (lead.intent === "visita") return "Tu visita solicitada";
+  if (lead.intent === "info" || lead.intent === "documentacion") return "Tu documentación solicitada";
+  if (lead.status === "contacted") return "Tu solicitud contactada";
+  return "Tu solicitud enviada";
 }
 
 function nextActionForLead(lead: BuyerLead) {
   if (lead.status === "rejected") return "Revisar alternativa o descartar definitivamente.";
   if (lead.status === "done") return "Consultar resultado y próximos pasos con el equipo.";
   if (lead.scheduled_at) return "Confirmar asistencia y preparar dudas para la visita.";
-  if (lead.intent === "oferta" || lead.outcome === "oferta") return "Esperar valoración de la oferta y documentación de soporte.";
+  if (lead.intent === "oferta" || lead.outcome === "oferta") return "Esperar valoración de tu oferta y documentación de soporte.";
   if (lead.intent === "visita") return "Esperar confirmación de fecha u ofrecer nueva disponibilidad.";
   return "Solicitar documentación o pedir una visita si el inmueble encaja.";
 }
@@ -91,10 +91,10 @@ function buyerAlert(leads: BuyerLead[]) {
   const scheduled = leads.filter((lead) => lead.status === "scheduled" || lead.scheduled_at).length;
   const docs = leads.filter((lead) => lead.intent === "info" || lead.intent === "documentacion").length;
   const offers = leads.filter((lead) => lead.intent === "oferta" || lead.outcome === "oferta").length;
-  if (scheduled > 0) return `${scheduled} visita o seguimiento necesita revisión.`;
-  if (offers > 0) return `${offers} operación está en fase de oferta o negociación.`;
-  if (docs > 0) return `${docs} solicitud documental está pendiente de respuesta o seguimiento.`;
-  return "Tu área está preparada para ordenar visitas, documentación y ofertas.";
+  if (scheduled > 0) return `${scheduled} visita tuya necesita revisión.`;
+  if (offers > 0) return `${offers} oferta tuya está pendiente de seguimiento.`;
+  if (docs > 0) return `${docs} solicitud documental tuya está pendiente de respuesta o seguimiento.`;
+  return "Tu área está preparada para ordenar tus visitas, documentación y ofertas.";
 }
 
 async function getRecommendedListings(leads: BuyerLead[]) {
@@ -186,7 +186,7 @@ export default async function BuyerDashboard() {
               Seguimiento privado de tu búsqueda
             </h1>
             <p className="pt-3 max-w-2xl text-sm leading-6 text-white/72">
-              Consulta inmuebles visitados, solicitudes, visitas, ofertas y documentación pendiente antes de decidir.
+              Consulta tus inmuebles visitados, tus solicitudes, tus visitas, tus ofertas y la documentación que hayas pedido.
             </p>
           </div>
           <Link
@@ -209,14 +209,14 @@ export default async function BuyerDashboard() {
                 Tus operaciones inmobiliarias en un solo lugar
               </h2>
               <p className="pt-3 max-w-2xl text-sm leading-6 text-slate-600">
-                Cada consulta queda ordenada para que puedas comparar, pedir documentación y seguir el estado comercial.
+                Cada consulta queda ordenada para que puedas comparar, pedir documentación y seguir tus propios pasos.
               </p>
             </div>
           <div className="grid gap-3 sm:grid-cols-4 lg:min-w-[520px]">
             <HeroStat label="Solicitudes" value={leads.length} />
             <HeroStat label="Activas" value={active.length} />
-            <HeroStat label="Visitas" value={visits.length} />
-            <HeroStat label="Ofertas" value={offers.length} />
+            <HeroStat label="Tus visitas" value={visits.length} />
+            <HeroStat label="Tus ofertas" value={offers.length} />
           </div>
           </div>
         </section>
@@ -228,7 +228,7 @@ export default async function BuyerDashboard() {
             </p>
             <h2 className="pt-3 text-2xl font-semibold tracking-tight">Mi búsqueda activa</h2>
             <p className="pt-3 text-sm leading-6 text-white/72">
-              Perfil inferido a partir de tus solicitudes para recomendar inmuebles publicados que encajan con tu interés.
+              Perfil inferido a partir de tus solicitudes. No se muestran métricas, citas ni actividad de otros interesados.
             </p>
             <div className="pt-5 grid gap-3 sm:grid-cols-3">
               <ProfileMetric label="Preferencia" value={preferenceLabel(preferences)} />
@@ -241,7 +241,7 @@ export default async function BuyerDashboard() {
             <div className="pt-4 grid gap-3">
               <ActionItem active={scheduled.length > 0} text="Confirmar o preparar visitas agendadas." />
               <ActionItem active={documents.length > 0} text="Revisar documentación solicitada." />
-              <ActionItem active={offers.length > 0} text="Seguir ofertas o negociación abierta." />
+              <ActionItem active={offers.length > 0} text="Seguir tus ofertas abiertas." />
             </div>
           </div>
         </section>
@@ -262,7 +262,7 @@ export default async function BuyerDashboard() {
           <section className="mb-6 rounded-[28px] border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-950">
             <p className="font-semibold">Tienes {scheduled.length} visita o seguimiento agendado.</p>
             <p className="pt-2 leading-6">
-              Revisa las fichas para confirmar hora, inmueble y próximos pasos.
+              Revisa tus fichas para confirmar hora, inmueble y próximos pasos de tu solicitud.
             </p>
           </section>
         ) : null}
@@ -272,12 +272,12 @@ export default async function BuyerDashboard() {
             <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-8 text-center shadow-sm">
               <p className="text-lg font-semibold tracking-tight">Sin solicitudes todavía</p>
               <p className="mx-auto max-w-xl pt-3 text-sm leading-6 text-slate-600">
-                Cuando solicites información, documentación, una visita u oferta desde el portal, aparecerá aquí con su estado y próximos pasos.
+                Cuando solicites información, documentación, una visita u oferta desde el portal, aparecerá aquí el estado de tu solicitud.
               </p>
               <div className="mx-auto mt-5 grid max-w-2xl gap-3 text-left sm:grid-cols-3">
                 <EmptyBenefit title="Visitados" desc="Inmuebles consultados y vistos." />
                 <EmptyBenefit title="Documentación" desc="Solicitudes y respuesta del equipo." />
-                <EmptyBenefit title="Seguimiento" desc="Visitas, ofertas y estado comercial." />
+                <EmptyBenefit title="Seguimiento" desc="Tus visitas, ofertas y solicitudes." />
               </div>
               <div className="pt-5">
                 <Link
@@ -324,16 +324,16 @@ export default async function BuyerDashboard() {
         {leads.length > 1 ? (
           <section className="mt-6 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
             <p className="text-sm font-semibold tracking-tight">Comparativa rápida</p>
-            <p className="pt-2 text-sm leading-6 text-slate-600">
-              Resumen de inmuebles consultados para decidir con menos ruido.
-            </p>
+              <p className="pt-2 text-sm leading-6 text-slate-600">
+                Resumen de tus inmuebles consultados para decidir con menos ruido.
+              </p>
             <div className="mt-5 overflow-x-auto">
               <table className="w-full min-w-[720px] text-left text-sm">
                 <thead className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
                   <tr>
                     <th className="border-b border-[color:var(--border)] py-3 pr-4">Inmueble</th>
-                    <th className="border-b border-[color:var(--border)] py-3 pr-4">Estado</th>
-                    <th className="border-b border-[color:var(--border)] py-3 pr-4">Próximo paso</th>
+                    <th className="border-b border-[color:var(--border)] py-3 pr-4">Estado de tu solicitud</th>
+                    <th className="border-b border-[color:var(--border)] py-3 pr-4">Tu próximo paso</th>
                     <th className="border-b border-[color:var(--border)] py-3 pr-4">Fecha</th>
                   </tr>
                 </thead>
@@ -495,12 +495,12 @@ function LeadCard({ lead }: { lead: BuyerLead }) {
           </p>
           {lead.scheduled_at ? (
             <p className="pt-3 text-sm text-slate-700">
-              Cita: <span className="font-medium">{new Date(lead.scheduled_at).toLocaleString("es-ES")}</span>
+              Tu cita: <span className="font-medium">{new Date(lead.scheduled_at).toLocaleString("es-ES")}</span>
             </p>
           ) : null}
           {lead.outcome || lead.outcome_note ? (
             <p className="pt-2 text-sm text-slate-700">
-              Resultado: <span className="font-medium">{lead.outcome || "Pendiente"}</span>
+              Respuesta sobre tu solicitud: <span className="font-medium">{lead.outcome || "Pendiente"}</span>
               {lead.outcome_note ? ` · ${lead.outcome_note}` : ""}
             </p>
           ) : null}
@@ -510,9 +510,9 @@ function LeadCard({ lead }: { lead: BuyerLead }) {
             </p>
           ) : null}
           <div className="mt-4 grid gap-3 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-4 sm:grid-cols-3">
-            <BuyerSignal label="Fase" value={stage} />
+            <BuyerSignal label="Tu fase" value={stage} />
             <BuyerSignal label="Seguridad" value="Verificación documental" />
-            <BuyerSignal label="Próximo paso" value={nextAction} />
+            <BuyerSignal label="Tu próximo paso" value={nextAction} />
           </div>
           <BuyerTimeline lead={lead} />
         </div>
@@ -556,9 +556,9 @@ function BuyerTimeline({ lead }: { lead: BuyerLead }) {
   const steps = [
     { label: "Solicitado", active: true },
     { label: "Contactado", active: ["contacted", "scheduled", "done"].includes(lead.status) },
-    { label: "Visita / docs", active: Boolean(lead.scheduled_at) || lead.intent === "visita" || lead.intent === "info" || lead.intent === "documentacion" },
-    { label: "Oferta", active: lead.intent === "oferta" || lead.outcome === "oferta" },
-    { label: "Cierre", active: lead.status === "done" },
+    { label: "Tu visita / docs", active: Boolean(lead.scheduled_at) || lead.intent === "visita" || lead.intent === "info" || lead.intent === "documentacion" },
+    { label: "Tu oferta", active: lead.intent === "oferta" || lead.outcome === "oferta" },
+    { label: "Finalizado", active: lead.status === "done" },
   ];
   return (
     <div className="mt-4 flex flex-wrap gap-2">
