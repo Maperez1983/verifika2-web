@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     return NextResponse.redirect(url, 302);
   }
 
-  let owner: { id: string; listing_ids: unknown } | null = null;
+  let owner: { id: string; listing_ids: unknown; services?: unknown } | null = null;
   try {
     const res = await leadHubFetch("/v1/owners/verify", {
       method: "POST",
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     if (!res.ok) owner = null;
     else {
       const data = await res.json().catch(() => null);
-      owner = data?.owner ? (data.owner as { id: string; listing_ids: unknown }) : null;
+      owner = data?.owner ? (data.owner as { id: string; listing_ids: unknown; services?: unknown }) : null;
     }
   } catch {
     owner = null;
@@ -52,6 +52,9 @@ export async function POST(request: Request) {
   const ownerId = owner?.id ? String(owner.id) : "";
   const listingIds = Array.isArray(owner?.listing_ids)
     ? owner!.listing_ids.map((v) => String(v)).filter(Boolean)
+    : [];
+  const services = Array.isArray(owner?.services)
+    ? owner.services.map((v) => String(v)).filter(Boolean)
     : [];
 
   if (!ownerId || listingIds.length === 0) {
@@ -65,13 +68,14 @@ export async function POST(request: Request) {
     {
       ownerId,
       listingIds,
+      services,
     },
     sessionSecret,
     DEFAULT_TTL_SECONDS,
   );
   const secure = process.env.NODE_ENV === "production";
 
-  const accepted = await hasPrivacyConsent("propietario", consentSubjectForOwner({ ownerId, listingIds }));
+  const accepted = await hasPrivacyConsent("propietario", consentSubjectForOwner({ ownerId, listingIds, services }));
   const redirectPath = accepted
     ? next
     : `/owner/tratamiento-datos?next=${encodeURIComponent(next)}`;

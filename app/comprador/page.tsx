@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import ListingCover from "@/components/listings/ListingCover";
 import PurchaseItinerary, { type ItineraryStep } from "@/components/operations/PurchaseItinerary";
 import { fetchPortalListings } from "@/lib/crmPortal";
+import { hasBuyerService } from "@/lib/buyerAuth";
 import { getBuyerSession } from "@/lib/buyerSessionServer";
 import { leadHubFetch } from "@/lib/leadHub";
 import type { Listing } from "@/lib/listings";
@@ -253,6 +254,7 @@ export default async function BuyerDashboard() {
   const documents = leads.filter((lead) => lead.intent === "info" || lead.intent === "documentacion");
   const uniqueListings = new Set(leads.map((lead) => lead.listing_id).filter(Boolean)).size;
   const { preferences, recommendations } = await getRecommendedListings(leads);
+  const purchaseTrackingEnabled = hasBuyerService(session, "purchase_tracking");
 
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
@@ -369,7 +371,7 @@ export default async function BuyerDashboard() {
               </div>
             </div>
           ) : (
-            leads.map((lead) => <LeadCard key={lead.id} lead={lead} />)
+            leads.map((lead) => <LeadCard key={lead.id} lead={lead} purchaseTrackingEnabled={purchaseTrackingEnabled} />)
           )}
         </div>
 
@@ -558,7 +560,7 @@ function RecommendedListingCard({
   );
 }
 
-function LeadCard({ lead }: { lead: BuyerLead }) {
+function LeadCard({ lead, purchaseTrackingEnabled }: { lead: BuyerLead; purchaseTrackingEnabled: boolean }) {
   const stage = stageForLead(lead);
   const nextAction = nextActionForLead(lead);
   return (
@@ -601,6 +603,7 @@ function LeadCard({ lead }: { lead: BuyerLead }) {
             <BuyerSignal label="Tu próximo paso" value={nextAction} />
           </div>
           <div className="mt-4">
+            {purchaseTrackingEnabled ? (
             <PurchaseItinerary
               title="Itinerario de compraventa"
               subtitle="Ruta completa si avanzas desde interés hasta reserva, arras, financiación y notaría."
@@ -608,6 +611,12 @@ function LeadCard({ lead }: { lead: BuyerLead }) {
               nextAction={nextAction}
               compact
             />
+            ) : (
+              <PaidServiceCard
+                title="Tracking de compraventa"
+                desc="Servicio opcional de pago para seguir reserva, verificación, financiación, arras, notaría y entrega de llaves desde tu área privada."
+              />
+            )}
           </div>
         </div>
         <div className="flex shrink-0 flex-col gap-2 sm:w-[180px]">
@@ -640,6 +649,21 @@ function LeadCard({ lead }: { lead: BuyerLead }) {
             Nueva visita
           </Link>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function PaidServiceCard({ title, desc }: { title: string; desc: string }) {
+  return (
+    <div className="rounded-[28px] border border-amber-200 bg-amber-50 p-5 text-amber-950">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-800/70">Servicio opcional</p>
+          <h3 className="pt-2 text-lg font-semibold tracking-tight">{title}</h3>
+          <p className="pt-2 text-sm leading-6 text-amber-900/90">{desc}</p>
+        </div>
+        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-amber-900">De pago</span>
       </div>
     </div>
   );

@@ -27,6 +27,10 @@ export async function POST(request: Request) {
 
   const name = normalize(form.get("name"));
   const contact = normalize(form.get("contact"));
+  const services = form
+    .getAll("services")
+    .map((v) => normalize(v))
+    .filter((v) => v === "purchase_tracking");
   const listingIds = [
     ...form
     .getAll("listing_ids")
@@ -47,6 +51,7 @@ export async function POST(request: Request) {
         name: name || undefined,
         contact: contact || undefined,
         listing_ids: listingIds,
+        services,
       }),
     });
     const data = await res.json().catch(() => null);

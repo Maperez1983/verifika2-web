@@ -14,7 +14,9 @@ export async function getOwnerSession(): Promise<OwnerSession | null> {
   const listingIds = Array.isArray(payload.listingIds)
     ? payload.listingIds.map((v) => String(v)).filter(Boolean)
     : [];
+  const services = Array.isArray(payload.services)
+    ? payload.services.map((v) => String(v)).filter(Boolean)
+    : [];
   if (!ownerId || listingIds.length === 0) return null;
-  return { ownerId, listingIds };
+  return { ownerId, listingIds, services };
 }
-

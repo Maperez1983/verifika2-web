@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     return NextResponse.redirect(url, 302);
   }
 
-  let buyer: { id: string; contact: string } | null = null;
+  let buyer: { id: string; contact: string; services?: unknown } | null = null;
   try {
     const res = await leadHubFetch("/v1/buyers/verify", {
       method: "POST",
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     });
     if (res.ok) {
       const data = await res.json().catch(() => null);
-      buyer = data?.buyer ? (data.buyer as { id: string; contact: string }) : null;
+      buyer = data?.buyer ? (data.buyer as { id: string; contact: string; services?: unknown }) : null;
     }
   } catch {
     buyer = null;
@@ -44,6 +44,9 @@ export async function POST(request: Request) {
 
   const buyerId = buyer?.id ? String(buyer.id) : "";
   const buyerContact = buyer?.contact ? String(buyer.contact).toLowerCase() : "";
+  const services = Array.isArray(buyer?.services)
+    ? buyer.services.map((v) => String(v)).filter(Boolean)
+    : [];
   if (!buyerId || !buyerContact) {
     const url = new URL("/comprador/acceso", origin);
     url.searchParams.set("error", "1");
@@ -51,9 +54,9 @@ export async function POST(request: Request) {
     return NextResponse.redirect(url, 302);
   }
 
-  const token = signSession({ buyerId, contact: buyerContact }, sessionSecret, DEFAULT_TTL_SECONDS);
+  const token = signSession({ buyerId, contact: buyerContact, services }, sessionSecret, DEFAULT_TTL_SECONDS);
   const secure = process.env.NODE_ENV === "production";
-  const accepted = await hasPrivacyConsent("comprador", consentSubjectForBuyer({ buyerId, contact: buyerContact }));
+  const accepted = await hasPrivacyConsent("comprador", consentSubjectForBuyer({ buyerId, contact: buyerContact, services }));
   const redirectPath = accepted
     ? next
     : `/comprador/tratamiento-datos?next=${encodeURIComponent(next)}`;

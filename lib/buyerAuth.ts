@@ -6,14 +6,22 @@ export const BUYER_SESSION_COOKIE = "v2_buyer_session";
 export type BuyerSession = {
   buyerId: string;
   contact: string;
+  services: string[];
 };
+
+export function hasBuyerService(session: BuyerSession | null, service: string) {
+  return Boolean(session?.services?.includes(service));
+}
 
 function payloadToBuyerSession(payload: SessionPayload | null): BuyerSession | null {
   if (!payload) return null;
   const buyerId = String(payload.buyerId ?? "").trim();
   const contact = String(payload.contact ?? "").trim().toLowerCase();
+  const services = Array.isArray(payload.services)
+    ? payload.services.map((v) => String(v)).filter(Boolean)
+    : [];
   if (!buyerId || !contact) return null;
-  return { buyerId, contact };
+  return { buyerId, contact, services };
 }
 
 export function getBuyerSessionFromRequest(request: NextRequest): BuyerSession | null {

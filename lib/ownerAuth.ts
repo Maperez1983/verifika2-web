@@ -6,7 +6,12 @@ export const OWNER_SESSION_COOKIE = "v2_owner_session";
 export type OwnerSession = {
   ownerId: string;
   listingIds: string[];
+  services: string[];
 };
+
+export function hasOwnerService(session: OwnerSession | null, service: string) {
+  return Boolean(session?.services?.includes(service));
+}
 
 function payloadToOwnerSession(payload: SessionPayload | null): OwnerSession | null {
   if (!payload) return null;
@@ -14,8 +19,11 @@ function payloadToOwnerSession(payload: SessionPayload | null): OwnerSession | n
   const listingIds = Array.isArray(payload.listingIds)
     ? payload.listingIds.map((v) => String(v)).filter(Boolean)
     : [];
+  const services = Array.isArray(payload.services)
+    ? payload.services.map((v) => String(v)).filter(Boolean)
+    : [];
   if (!ownerId || listingIds.length === 0) return null;
-  return { ownerId, listingIds };
+  return { ownerId, listingIds, services };
 }
 
 export function getOwnerSessionFromRequest(request: NextRequest): OwnerSession | null {

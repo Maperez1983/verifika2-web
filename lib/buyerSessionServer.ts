@@ -12,6 +12,9 @@ export async function getBuyerSession(): Promise<BuyerSession | null> {
   if (!payload) return null;
   const buyerId = String(payload.buyerId ?? "").trim();
   const contact = String(payload.contact ?? "").trim().toLowerCase();
+  const services = Array.isArray(payload.services)
+    ? payload.services.map((v) => String(v)).filter(Boolean)
+    : [];
   if (!buyerId || !contact) return null;
-  return { buyerId, contact };
+  return { buyerId, contact, services };
 }

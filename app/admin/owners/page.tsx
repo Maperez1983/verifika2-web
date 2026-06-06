@@ -106,6 +106,15 @@ export default async function OwnersAdminPage({ searchParams }: PageProps) {
                   placeholder="Contacto (email/teléfono) (opcional)"
                   className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
                 />
+                <label className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+                  <input type="checkbox" name="services" value="purchase_tracking" className="mt-1" />
+                  <span>
+                    <span className="block font-semibold">Añadir tracking de compraventa</span>
+                    <span className="block pt-1 text-xs leading-5 text-amber-900/80">
+                      Servicio opcional de pago: reserva, documentación, financiación, arras, notaría y cierre.
+                    </span>
+                  </span>
+                </label>
                 <button
                   type="submit"
                   className="mt-1 inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-medium text-white hover:bg-[#0F2742]"
@@ -165,6 +174,15 @@ export default async function OwnersAdminPage({ searchParams }: PageProps) {
                     className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm outline-none focus:border-slate-400"
                   />
                 </div>
+                <label className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+                  <input type="checkbox" name="services" value="purchase_tracking" className="mt-1" />
+                  <span>
+                    <span className="block font-semibold">Añadir tracking de compraventa</span>
+                    <span className="block pt-1 text-xs leading-5 text-amber-900/80">
+                      Servicio opcional de pago. Solo aparece en el portal si se activa al usuario.
+                    </span>
+                  </span>
+                </label>
                 <button
                   type="submit"
                   className="mt-1 inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D33] px-5 text-sm font-medium text-white hover:bg-[#0F2742]"

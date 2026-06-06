@@ -28,6 +28,13 @@ const pool = new Pool({
   ssl: DATABASE_URL ? { rejectUnauthorized: false } : undefined,
 });
 
+const ALLOWED_USER_SERVICES = new Set(["purchase_tracking"]);
+
+function normalizeServices(value) {
+  const raw = Array.isArray(value) ? value : [];
+  return [...new Set(raw.map((item) => String(item || "").trim()).filter((item) => ALLOWED_USER_SERVICES.has(item)))];
+}
+
 async function ensureSchema() {
   await pool.query(`
     create table if not exists public.leads (
@@ -106,9 +113,11 @@ async function ensureSchema() {
       contact text,
       code_hash text not null unique,
       listing_ids jsonb not null default '[]'::jsonb,
+      services jsonb not null default '[]'::jsonb,
       status text not null default 'active'
     );
   `);
+  await pool.query("alter table public.owners add column if not exists services jsonb not null default '[]'::jsonb;");
 
   await pool.query(`
     create table if not exists public.buyers (
@@ -118,9 +127,11 @@ async function ensureSchema() {
       name text,
       contact text not null unique,
       code_hash text not null,
+      services jsonb not null default '[]'::jsonb,
       status text not null default 'active'
     );
   `);
+  await pool.query("alter table public.buyers add column if not exists services jsonb not null default '[]'::jsonb;");
   await pool.query(
     "create index if not exists buyers_contact_idx on public.buyers(contact);",
   );
@@ -348,6 +359,7 @@ app.post("/v1/owners", async (req, res) => {
   const contact = normalize(req.body?.contact);
   const code = normalize(req.body?.code);
   const listingIds = Array.isArray(req.body?.listing_ids) ? req.body.listing_ids : [];
+  const services = normalizeServices(req.body?.services);
 
   if (!code || listingIds.length === 0) {
     res.status(400).json({ ok: false, error: "missing_fields" });
@@ -357,16 +369,17 @@ app.post("/v1/owners", async (req, res) => {
   const codeHash = hashOwnerCode(code);
   const insert = await pool.query(
     `
-      insert into public.owners(name, contact, code_hash, listing_ids)
-      values (nullif($1,''), nullif($2,''), $3, $4::jsonb)
+      insert into public.owners(name, contact, code_hash, listing_ids, services)
+      values (nullif($1,''), nullif($2,''), $3, $4::jsonb, $5::jsonb)
       on conflict (code_hash) do update set
         name=excluded.name,
         contact=excluded.contact,
         listing_ids=excluded.listing_ids,
+        services=excluded.services,
         status='active'
-      returning id, created_at, name, contact, listing_ids, status;
+      returning id, created_at, name, contact, listing_ids, services, status;
     `,
-    [name, contact, codeHash, JSON.stringify(listingIds)],
+    [name, contact, codeHash, JSON.stringify(listingIds), JSON.stringify(services)],
   );
 
   res.status(200).json({ ok: true, owner: insert.rows[0] });
@@ -392,6 +405,7 @@ app.post("/v1/owners/create_code", async (req, res) => {
   const name = normalize(req.body?.name);
   const contact = normalize(req.body?.contact);
   const listingIds = Array.isArray(req.body?.listing_ids) ? req.body.listing_ids : [];
+  const services = normalizeServices(req.body?.services);
   if (listingIds.length === 0) {
     res.status(400).json({ ok: false, error: "missing_listing_ids" });
     return;
@@ -405,16 +419,17 @@ app.post("/v1/owners/create_code", async (req, res) => {
     try {
       const insert = await pool.query(
         `
-          insert into public.owners(name, contact, code_hash, listing_ids)
-          values (nullif($1,''), nullif($2,''), $3, $4::jsonb)
+          insert into public.owners(name, contact, code_hash, listing_ids, services)
+          values (nullif($1,''), nullif($2,''), $3, $4::jsonb, $5::jsonb)
           on conflict (code_hash) do update set
             name=excluded.name,
             contact=excluded.contact,
             listing_ids=excluded.listing_ids,
+            services=excluded.services,
             status='active'
-          returning id, created_at, name, contact, listing_ids, status;
+          returning id, created_at, name, contact, listing_ids, services, status;
         `,
-        [name, contact, codeHash, JSON.stringify(listingIds)],
+        [name, contact, codeHash, JSON.stringify(listingIds), JSON.stringify(services)],
       );
       res.status(200).json({ ok: true, code, owner: insert.rows[0] });
       return;
@@ -451,7 +466,7 @@ app.post("/v1/owners/verify", async (req, res) => {
   }
 
   const owner = await pool.query(
-    "select id, name, contact, listing_ids, status from public.owners where code_hash=$1 limit 1;",
+    "select id, name, contact, listing_ids, services, status from public.owners where code_hash=$1 limit 1;",
     [codeHash],
   );
   const row = owner.rows[0];
@@ -487,6 +502,7 @@ app.post("/v1/buyers/create_code", async (req, res) => {
 
   const contact = normalizeContact(req.body.contact);
   const name = normalize(req.body.name);
+  const services = normalizeServices(req.body.services);
   if (!contact) {
     res.status(400).json({ ok: false, error: "missing_contact" });
     return;
@@ -496,13 +512,13 @@ app.post("/v1/buyers/create_code", async (req, res) => {
   const codeHash = hashBuyerCode(code);
   const buyer = await pool.query(
     `
-      insert into public.buyers(name, contact, code_hash)
-      values ($1, $2, $3)
+      insert into public.buyers(name, contact, code_hash, services)
+      values ($1, $2, $3, $4::jsonb)
       on conflict (contact)
-      do update set name=coalesce(nullif($1,''), public.buyers.name), code_hash=$3, updated_at=now(), status='active'
-      returning id, name, contact, status, updated_at;
+      do update set name=coalesce(nullif($1,''), public.buyers.name), code_hash=$3, services=$4::jsonb, updated_at=now(), status='active'
+      returning id, name, contact, services, status, updated_at;
     `,
-    [name || null, contact, codeHash],
+    [name || null, contact, codeHash, JSON.stringify(services)],
   );
 
   res.status(200).json({ ok: true, code, buyer: buyer.rows[0] });
@@ -538,7 +554,7 @@ app.post("/v1/buyers/verify", async (req, res) => {
   }
 
   const buyer = await pool.query(
-    "select id, name, contact, status from public.buyers where contact=$1 and code_hash=$2 and status='active' limit 1;",
+    "select id, name, contact, services, status from public.buyers where contact=$1 and code_hash=$2 and status='active' limit 1;",
     [contact, codeHash],
   );
   const row = buyer.rows[0];

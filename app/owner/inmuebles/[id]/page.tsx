@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { fetchPortalListing } from "@/lib/crmPortal";
 import { leadHubFetch } from "@/lib/leadHub";
+import { hasOwnerService } from "@/lib/ownerAuth";
 import { getOwnerSession } from "@/lib/ownerSessionServer";
 import { redirect } from "next/navigation";
 import Sparkline from "@/components/charts/Sparkline";
@@ -390,6 +391,7 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
   const stage = commercialStage(leadsTotal, leadsVisits, leadsOffers, scheduledClients);
   const nextStep = ownerNextStep(leadsTotal, leadsVisits, leadsOffers, scheduledClients);
   const score = propertyScore(leadsTotal, leadsVisits, leadsOffers, scheduledClients);
+  const purchaseTrackingEnabled = hasOwnerService(session, "purchase_tracking");
   const nextAction =
     scheduledClients > 0
       ? "Revisar próximas citas"
@@ -522,19 +524,26 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
               </div>
 
               <div className="mt-6">
-                <PurchaseItinerary
-                  title="Itinerario de compraventa"
-                  subtitle="Ruta operativa visible para el propietario: interesados, visitas, oferta, reserva, documentación, financiación, arras, notaría y cierre."
-                  steps={ownerPurchaseSteps({
-                    leads: leadsTotal,
-                    visits: leadsVisits,
-                    offers: leadsOffers,
-                    scheduledClients,
-                    docs: documents,
-                    milestones,
-                  })}
-                  nextAction={nextStep}
-                />
+                {purchaseTrackingEnabled ? (
+                  <PurchaseItinerary
+                    title="Itinerario de compraventa"
+                    subtitle="Ruta operativa visible para el propietario: interesados, visitas, oferta, reserva, documentación, financiación, arras, notaría y cierre."
+                    steps={ownerPurchaseSteps({
+                      leads: leadsTotal,
+                      visits: leadsVisits,
+                      offers: leadsOffers,
+                      scheduledClients,
+                      docs: documents,
+                      milestones,
+                    })}
+                    nextAction={nextStep}
+                  />
+                ) : (
+                  <PaidServiceCard
+                    title="Tracking de compraventa"
+                    desc="Servicio opcional de pago para que el propietario siga reserva, documentación, financiación del comprador, arras, notaría y cierre."
+                  />
+                )}
               </div>
 
               <div className="mt-6 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
@@ -741,6 +750,21 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
           <AnnouncementSection listing={listing} />
         ) : null}
       </main>
+    </div>
+  );
+}
+
+function PaidServiceCard({ title, desc }: { title: string; desc: string }) {
+  return (
+    <div className="rounded-[28px] border border-amber-200 bg-amber-50 p-5 text-amber-950 shadow-sm">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-800/70">Servicio opcional</p>
+          <h3 className="pt-2 text-lg font-semibold tracking-tight">{title}</h3>
+          <p className="pt-2 text-sm leading-6 text-amber-900/90">{desc}</p>
+        </div>
+        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-amber-900">De pago</span>
+      </div>
     </div>
   );
 }
