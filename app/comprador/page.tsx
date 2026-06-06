@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import ListingCover from "@/components/listings/ListingCover";
+import { fetchPortalListings } from "@/lib/crmPortal";
 import { getBuyerSession } from "@/lib/buyerSessionServer";
 import { leadHubFetch } from "@/lib/leadHub";
+import type { Listing } from "@/lib/listings";
 import {
   consentRedirect,
   consentSubjectForBuyer,
@@ -30,6 +33,13 @@ type BuyerLead = {
   scheduled_at: string | null;
   outcome: string | null;
   outcome_note: string | null;
+};
+
+type BuyerPreferences = {
+  operation: Listing["operation"] | "";
+  city: string;
+  propertyType: Listing["propertyType"] | "";
+  maxPrice: number;
 };
 
 async function getBuyerLeads(contact: string): Promise<BuyerLead[]> {
@@ -87,6 +97,68 @@ function buyerAlert(leads: BuyerLead[]) {
   return "Tu área está preparada para ordenar visitas, documentación y ofertas.";
 }
 
+async function getRecommendedListings(leads: BuyerLead[]) {
+  const preferences = inferBuyerPreferences(leads);
+  const all = await fetchPortalListings({
+    operacion: preferences.operation || undefined,
+    ciudad: preferences.city || undefined,
+    limit: 24,
+  }).catch(() => []);
+  const interestedIds = new Set(leads.map((lead) => lead.listing_id).filter(Boolean));
+  const scored = all
+    .filter((listing) => !interestedIds.has(listing.id))
+    .map((listing) => ({ listing, score: recommendationScore(listing, preferences) }))
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 6);
+  return { preferences, recommendations: scored };
+}
+
+function mostCommon<T extends string>(values: T[]): T | "" {
+  const counts = new Map<T, number>();
+  for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
+  let best: T | "" = "";
+  let bestCount = 0;
+  for (const [value, count] of counts) {
+    if (count > bestCount) {
+      best = value;
+      bestCount = count;
+    }
+  }
+  return best;
+}
+
+function inferBuyerPreferences(leads: BuyerLead[]): BuyerPreferences {
+  const text = `${leads.map((lead) => `${lead.listing_title ?? ""} ${lead.note ?? ""}`).join(" ")}`.toLowerCase();
+  const operation: Listing["operation"] | "" = text.includes("alquiler") ? "alquiler" : "venta";
+  const city = mostCommon(leads.map((lead) => String(lead.listing_city ?? "").trim()).filter(Boolean));
+  return {
+    operation,
+    city,
+    propertyType: "",
+    maxPrice: 0,
+  };
+}
+
+function recommendationScore(listing: Listing, preferences: BuyerPreferences) {
+  let score = 45;
+  if (preferences.operation && listing.operation === preferences.operation) score += 20;
+  if (preferences.city && listing.city.toLowerCase().includes(preferences.city.toLowerCase())) score += 20;
+  if (preferences.propertyType && listing.propertyType === preferences.propertyType) score += 10;
+  if (listing.certified) score += 10;
+  if (preferences.maxPrice > 0 && listing.priceValue <= preferences.maxPrice) score += 10;
+  return Math.min(98, score);
+}
+
+function preferenceLabel(preferences: BuyerPreferences) {
+  const parts = [
+    preferences.operation ? (preferences.operation === "alquiler" ? "Alquiler" : "Compra") : "Compra",
+    preferences.city || "zona abierta",
+    preferences.propertyType || "todo tipo",
+  ];
+  return parts.join(" · ");
+}
+
 export default async function BuyerDashboard() {
   const session = await getBuyerSession();
   if (!session) redirect("/comprador/acceso");
@@ -100,6 +172,7 @@ export default async function BuyerDashboard() {
   const scheduled = leads.filter((lead) => lead.status === "scheduled" || lead.scheduled_at);
   const documents = leads.filter((lead) => lead.intent === "info" || lead.intent === "documentacion");
   const uniqueListings = new Set(leads.map((lead) => lead.listing_id).filter(Boolean)).size;
+  const { preferences, recommendations } = await getRecommendedListings(leads);
 
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
@@ -145,6 +218,31 @@ export default async function BuyerDashboard() {
             <HeroStat label="Visitas" value={visits.length} />
             <HeroStat label="Ofertas" value={offers.length} />
           </div>
+          </div>
+        </section>
+
+        <section className="mb-6 grid gap-4 lg:grid-cols-12">
+          <div className="rounded-[28px] border border-[color:var(--border)] bg-[#0B1D33] p-6 text-white shadow-sm lg:col-span-7">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">
+              Ficha comprador
+            </p>
+            <h2 className="pt-3 text-2xl font-semibold tracking-tight">Mi búsqueda activa</h2>
+            <p className="pt-3 text-sm leading-6 text-white/72">
+              Perfil inferido a partir de tus solicitudes para recomendar inmuebles publicados que encajan con tu interés.
+            </p>
+            <div className="pt-5 grid gap-3 sm:grid-cols-3">
+              <ProfileMetric label="Preferencia" value={preferenceLabel(preferences)} />
+              <ProfileMetric label="Alta" value="Activa y firmada" />
+              <ProfileMetric label="Seguimiento" value={`${uniqueListings} inmuebles`} />
+            </div>
+          </div>
+          <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm lg:col-span-5">
+            <p className="text-sm font-semibold tracking-tight">Acciones pendientes</p>
+            <div className="pt-4 grid gap-3">
+              <ActionItem active={scheduled.length > 0} text="Confirmar o preparar visitas agendadas." />
+              <ActionItem active={documents.length > 0} text="Revisar documentación solicitada." />
+              <ActionItem active={offers.length > 0} text="Seguir ofertas o negociación abierta." />
+            </div>
           </div>
         </section>
 
@@ -195,6 +293,34 @@ export default async function BuyerDashboard() {
           )}
         </div>
 
+        <section className="mt-6 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+          <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+            <div>
+              <p className="text-sm font-semibold tracking-tight">Nuevos inmuebles que encajan contigo</p>
+              <p className="pt-2 text-sm leading-6 text-slate-600">
+                Recomendaciones generadas con inmuebles reales publicados y tu historial de interés.
+              </p>
+            </div>
+            <Link
+              href="/inmuebles"
+              className="inline-flex h-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm font-medium hover:bg-[color:var(--surface-2)]"
+            >
+              Ver todos
+            </Link>
+          </div>
+          <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {recommendations.length === 0 ? (
+              <div className="rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-5 text-sm leading-6 text-slate-700 md:col-span-2 lg:col-span-3">
+                Aún no hay recomendaciones suficientes. Cuando se publiquen inmuebles compatibles con tu búsqueda aparecerán aquí.
+              </div>
+            ) : (
+              recommendations.map(({ listing, score }) => (
+                <RecommendedListingCard key={listing.id} listing={listing} score={score} preferences={preferences} />
+              ))
+            )}
+          </div>
+        </section>
+
         {leads.length > 1 ? (
           <section className="mt-6 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
             <p className="text-sm font-semibold tracking-tight">Comparativa rápida</p>
@@ -234,6 +360,26 @@ export default async function BuyerDashboard() {
   );
 }
 
+function ProfileMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-3xl border border-white/12 bg-white/10 px-4 py-3">
+      <p className="text-xs font-medium text-white/60">{label}</p>
+      <p className="pt-1 text-sm font-semibold leading-5 text-white">{value}</p>
+    </div>
+  );
+}
+
+function ActionItem({ active, text }: { active: boolean; text: string }) {
+  return (
+    <div className="flex items-start gap-3 rounded-2xl bg-[color:var(--surface-2)] px-4 py-3">
+      <span className={`mt-0.5 h-5 w-5 rounded-full text-center text-xs font-semibold leading-5 ${active ? "bg-[#0B1D33] text-white" : "bg-slate-200 text-slate-600"}`}>
+        {active ? "!" : "·"}
+      </span>
+      <p className="text-sm leading-6 text-slate-700">{text}</p>
+    </div>
+  );
+}
+
 function EmptyBenefit({ title, desc }: { title: string; desc: string }) {
   return (
     <div className="rounded-2xl bg-[color:var(--surface-2)] px-4 py-3">
@@ -248,6 +394,80 @@ function HeroStat({ label, value }: { label: string; value: number }) {
     <div className="rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] px-4 py-3">
       <p className="text-xs font-medium text-slate-600">{label}</p>
       <p className="pt-1 text-2xl font-semibold tracking-tight">{value}</p>
+    </div>
+  );
+}
+
+function matchReasons(listing: Listing, preferences: BuyerPreferences) {
+  const reasons: string[] = [];
+  if (preferences.operation && listing.operation === preferences.operation) reasons.push("misma operación");
+  if (preferences.city && listing.city.toLowerCase().includes(preferences.city.toLowerCase())) reasons.push("zona compatible");
+  if (listing.certified) reasons.push("verificación reforzada");
+  if (listing.propertyType) reasons.push(listing.propertyType);
+  return reasons.slice(0, 3);
+}
+
+function RecommendedListingCard({
+  listing,
+  score,
+  preferences,
+}: {
+  listing: Listing;
+  score: number;
+  preferences: BuyerPreferences;
+}) {
+  const reasons = matchReasons(listing, preferences);
+  return (
+    <div className="overflow-hidden rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] shadow-sm">
+      <ListingCover
+        id={listing.id}
+        src={listing.photo}
+        title={listing.title}
+        location={listing.city}
+        label={`${score}% encaje`}
+      />
+      <div className="p-5">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-full bg-[#0B1D33] px-3 py-1 text-xs font-medium text-white">
+            Recomendado
+          </span>
+          <span className="rounded-full bg-[color:var(--surface-2)] px-3 py-1 text-xs font-medium text-slate-700">
+            {listing.operation === "alquiler" ? "Alquiler" : "Venta"} · {listing.propertyType}
+          </span>
+        </div>
+        <h3 className="pt-4 text-base font-semibold tracking-tight">{listing.title}</h3>
+        <p className="pt-2 text-sm text-slate-600">{listing.city}</p>
+        <p className="pt-3 text-xl font-semibold tracking-tight">{listing.priceLabel}</p>
+        <div className="pt-4 flex flex-wrap gap-2">
+          {reasons.map((reason) => (
+            <span key={reason} className="rounded-full bg-[color:var(--surface-2)] px-3 py-1 text-xs font-medium text-slate-700">
+              {reason}
+            </span>
+          ))}
+        </div>
+        <div className="pt-5 grid gap-2">
+          <Link
+            href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=info&motivo=documentacion&next=${encodeURIComponent("/comprador")}`}
+            className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-medium text-white hover:bg-[#0F2742]"
+          >
+            Me interesa
+          </Link>
+          <div className="grid grid-cols-2 gap-2">
+            <Link
+              href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=visita&next=${encodeURIComponent("/comprador")}`}
+              className="inline-flex h-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-3 text-sm font-medium hover:bg-[color:var(--surface-2)]"
+            >
+              Visita
+            </Link>
+            <Link
+              href={`/inmuebles/${encodeURIComponent(listing.id)}`}
+              className="inline-flex h-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-3 text-sm font-medium hover:bg-[color:var(--surface-2)]"
+            >
+              Anuncio
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
