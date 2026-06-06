@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { fetchPortalListings } from "@/lib/crmPortal";
+import { leadHubFetch } from "@/lib/leadHub";
 
 export const metadata: Metadata = {
   title: "Admin · Owners",
@@ -15,13 +16,40 @@ type PageProps = {
 
 const normalize = (value: unknown) => String(value ?? "").trim();
 
+type AdminOwner = {
+  id: string;
+  created_at: string;
+  name: string | null;
+  contact: string | null;
+  listing_ids: string[];
+  services: string[];
+  status: string;
+};
+
+async function getOwners(q: string): Promise<AdminOwner[]> {
+  try {
+    const path = `/v1/owners?limit=80${q ? `&q=${encodeURIComponent(q)}` : ""}`;
+    const res = await leadHubFetch(path);
+    if (!res.ok) return [];
+    const data = (await res.json()) as { owners?: AdminOwner[] };
+    return Array.isArray(data.owners) ? data.owners : [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function OwnersAdminPage({ searchParams }: PageProps) {
   const params = (await searchParams) || {};
   const created = normalize(params.created) === "1";
   const code = normalize(params.code);
   const error = normalize(params.error);
+  const q = normalize(params.q);
 
-  const listings = await fetchPortalListings({ limit: 120 }).catch(() => []);
+  const [listings, owners] = await Promise.all([
+    fetchPortalListings({ limit: 120 }).catch(() => []),
+    getOwners(q),
+  ]);
+  const listingById = new Map(listings.map((listing) => [listing.id, listing]));
 
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
@@ -193,6 +221,35 @@ export default async function OwnersAdminPage({ searchParams }: PageProps) {
             </div>
           </aside>
         </div>
+
+        <section className="mt-6 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+          <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-end">
+            <div>
+              <p className="text-sm font-semibold tracking-tight">Propietarios existentes</p>
+              <p className="pt-2 text-sm leading-6 text-slate-600">
+                Revisa accesos ya creados, inmuebles asignados y activa tracking por operación.
+              </p>
+            </div>
+            <form className="flex gap-2" action="/admin/owners">
+              <input
+                name="q"
+                defaultValue={q}
+                placeholder="Buscar propietario/contacto"
+                className="h-10 w-full min-w-0 rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm outline-none focus:border-slate-400 sm:w-72"
+              />
+              <button className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-medium text-white hover:bg-[#0F2742]">
+                Buscar
+              </button>
+            </form>
+          </div>
+          <div className="pt-5 grid gap-3">
+            {owners.length === 0 ? (
+              <p className="text-sm text-slate-600">No hay propietarios para esta búsqueda.</p>
+            ) : (
+              owners.map((owner) => <OwnerRow key={owner.id} owner={owner} listingById={listingById} />)
+            )}
+          </div>
+        </section>
       </main>
     </div>
   );
@@ -204,6 +261,78 @@ function OwnerStep({ index, title, desc }: { index: string; title: string; desc:
       <p className="text-xs font-semibold text-[#9a6b00]">{index}</p>
       <p className="pt-2 text-sm font-semibold tracking-tight">{title}</p>
       <p className="pt-2 text-sm leading-6 text-slate-600">{desc}</p>
+    </div>
+  );
+}
+
+function OwnerRow({
+  owner,
+  listingById,
+}: {
+  owner: AdminOwner;
+  listingById: Map<string, { id: string; title: string; city?: string; priceLabel?: string }>;
+}) {
+  const listingIds = Array.isArray(owner.listing_ids) ? owner.listing_ids : [];
+  return (
+    <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-4 text-sm">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="font-semibold">{owner.name || "Propietario sin nombre"}</p>
+            <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700">{owner.status}</span>
+          </div>
+          <p className="pt-1 text-slate-600">{owner.contact || "Sin contacto registrado"}</p>
+          <div className="pt-2 grid gap-1 text-xs text-slate-600">
+            {listingIds.map((id) => {
+              const listing = listingById.get(id);
+              return (
+                <span key={id}>
+                  {listing ? listing.title : id}
+                  {listing?.city ? ` · ${listing.city}` : ""}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+
+        <form method="post" action="/api/admin/services/activate" className="grid gap-2 lg:min-w-[390px]">
+          <input type="hidden" name="return_to" value="/admin/owners" />
+          <input type="hidden" name="subject_type" value="owner" />
+          <input type="hidden" name="subject_id" value={owner.id} />
+          <input type="hidden" name="subject_contact" value={owner.contact || ""} />
+          <div className="grid gap-2 sm:grid-cols-2">
+            <select name="listing_id" required className="h-10 rounded-full border border-[color:var(--border)] bg-white px-3 text-xs outline-none">
+              <option value="">Inmueble asignado</option>
+              {listingIds.map((id) => {
+                const listing = listingById.get(id);
+                return (
+                  <option key={id} value={id}>
+                    {listing ? listing.title : id}
+                  </option>
+                );
+              })}
+            </select>
+            <select name="status" className="h-10 rounded-full border border-[color:var(--border)] bg-white px-3 text-xs outline-none">
+              <option value="active">Tracking activo</option>
+              <option value="in_review">En seguimiento</option>
+              <option value="delivered">Cierre entregado</option>
+              <option value="paused">Pausado</option>
+              <option value="cancelled">Cancelado</option>
+            </select>
+          </div>
+          <input type="hidden" name="service" value="purchase_tracking" />
+          <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+            <input
+              name="note"
+              placeholder="Nota interna opcional"
+              className="h-10 rounded-full border border-[color:var(--border)] bg-white px-3 text-xs outline-none"
+            />
+            <button className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-xs font-semibold text-white hover:bg-[#0F2742]">
+              Activar
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

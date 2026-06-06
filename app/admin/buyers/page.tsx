@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { fetchPortalListings } from "@/lib/crmPortal";
+import { leadHubFetch } from "@/lib/leadHub";
 
 export const metadata: Metadata = {
   title: "Admin · Compradores",
@@ -10,8 +12,30 @@ type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
+type AdminBuyer = {
+  id: string;
+  created_at: string;
+  updated_at: string | null;
+  name: string | null;
+  contact: string;
+  services: string[];
+  status: string;
+};
+
 function normalize(value: unknown) {
   return String(Array.isArray(value) ? value[0] : value ?? "").trim();
+}
+
+async function getBuyers(q: string): Promise<AdminBuyer[]> {
+  try {
+    const path = `/v1/buyers?limit=80${q ? `&q=${encodeURIComponent(q)}` : ""}`;
+    const res = await leadHubFetch(path);
+    if (!res.ok) return [];
+    const data = (await res.json()) as { buyers?: AdminBuyer[] };
+    return Array.isArray(data.buyers) ? data.buyers : [];
+  } catch {
+    return [];
+  }
 }
 
 export default async function BuyersAdminPage({ searchParams }: PageProps) {
@@ -20,6 +44,11 @@ export default async function BuyersAdminPage({ searchParams }: PageProps) {
   const code = normalize(params.code);
   const contact = normalize(params.contact);
   const error = normalize(params.error);
+  const q = normalize(params.q);
+  const [buyers, listings] = await Promise.all([
+    getBuyers(q),
+    fetchPortalListings({ limit: 80 }).catch(() => []),
+  ]);
 
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
@@ -70,7 +99,7 @@ export default async function BuyersAdminPage({ searchParams }: PageProps) {
         ) : null}
 
         <div className="grid gap-6 lg:grid-cols-12">
-          <section className="lg:col-span-7">
+          <section className="lg:col-span-5">
             <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
               <p className="text-sm font-semibold tracking-tight">Alta o actualización</p>
               <p className="pt-2 text-sm leading-6 text-slate-600">
@@ -117,7 +146,7 @@ export default async function BuyersAdminPage({ searchParams }: PageProps) {
             </div>
           </section>
 
-          <aside className="lg:col-span-5">
+          <aside className="lg:col-span-7">
             <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
               <p className="text-sm font-semibold tracking-tight">Funcionamiento</p>
               <div className="pt-4 grid gap-3 text-sm leading-6 text-slate-700">
@@ -134,6 +163,38 @@ export default async function BuyersAdminPage({ searchParams }: PageProps) {
             </div>
           </aside>
         </div>
+
+        <section className="mt-6 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+          <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-end">
+            <div>
+              <p className="text-sm font-semibold tracking-tight">Compradores existentes</p>
+              <p className="pt-2 text-sm leading-6 text-slate-600">
+                Busca compradores, revisa servicios globales y activa servicios por inmueble concreto.
+              </p>
+            </div>
+            <form className="flex gap-2" action="/admin/buyers">
+              <input
+                name="q"
+                defaultValue={q}
+                placeholder="Buscar nombre, email o teléfono"
+                className="h-10 w-full min-w-0 rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm outline-none focus:border-slate-400 sm:w-72"
+              />
+              <button className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-sm font-medium text-white hover:bg-[#0F2742]">
+                Buscar
+              </button>
+            </form>
+          </div>
+
+          <div className="pt-5 grid gap-3">
+            {buyers.length === 0 ? (
+              <p className="text-sm text-slate-600">No hay compradores para esta búsqueda.</p>
+            ) : (
+              buyers.map((buyer) => (
+                <BuyerRow key={buyer.id} buyer={buyer} listings={listings} />
+              ))
+            )}
+          </div>
+        </section>
       </main>
     </div>
   );
@@ -149,4 +210,85 @@ function ServiceCheck({ value, title, desc }: { value: string; title: string; de
       </span>
     </label>
   );
+}
+
+function BuyerRow({
+  buyer,
+  listings,
+}: {
+  buyer: AdminBuyer;
+  listings: Array<{ id: string; title: string; city?: string; priceLabel?: string }>;
+}) {
+  return (
+    <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-4 text-sm">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="font-semibold">{buyer.name || "Comprador sin nombre"}</p>
+            <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700">{buyer.status}</span>
+          </div>
+          <p className="pt-1 text-slate-600">{buyer.contact}</p>
+          <div className="pt-2 flex flex-wrap gap-2">
+            {buyer.services?.length ? (
+              buyer.services.map((service) => <ServicePill key={service} value={service} />)
+            ) : (
+              <span className="text-xs text-slate-500">Sin servicios globales activos</span>
+            )}
+          </div>
+        </div>
+
+        <form method="post" action="/api/admin/services/activate" className="grid gap-2 lg:min-w-[430px]">
+          <input type="hidden" name="return_to" value="/admin/buyers" />
+          <input type="hidden" name="subject_type" value="buyer" />
+          <input type="hidden" name="subject_id" value={buyer.id} />
+          <input type="hidden" name="subject_contact" value={buyer.contact} />
+          <div className="grid gap-2 sm:grid-cols-2">
+            <select name="listing_id" required className="h-10 rounded-full border border-[color:var(--border)] bg-white px-3 text-xs outline-none">
+              <option value="">Inmueble/operación</option>
+              {listings.map((listing) => (
+                <option key={listing.id} value={listing.id}>
+                  {listing.title}
+                </option>
+              ))}
+            </select>
+            <select name="service" required className="h-10 rounded-full border border-[color:var(--border)] bg-white px-3 text-xs outline-none">
+              <option value="purchase_tracking">Tracking compraventa</option>
+              <option value="document_verification_basic">Verificación básica</option>
+              <option value="document_verification_full">Dossier completo</option>
+            </select>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+            <select name="status" className="h-10 rounded-full border border-[color:var(--border)] bg-white px-3 text-xs outline-none">
+              <option value="active">Activo</option>
+              <option value="requested">Solicitado</option>
+              <option value="in_review">En revisión</option>
+              <option value="delivered">Entregado</option>
+              <option value="paused">Pausado</option>
+              <option value="cancelled">Cancelado</option>
+            </select>
+            <button className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-xs font-semibold text-white hover:bg-[#0F2742]">
+              Activar
+            </button>
+          </div>
+          <input
+            name="note"
+            placeholder="Nota interna opcional"
+            className="h-10 rounded-full border border-[color:var(--border)] bg-white px-3 text-xs outline-none"
+          />
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function ServicePill({ value }: { value: string }) {
+  const label =
+    value === "purchase_tracking"
+      ? "Tracking"
+      : value === "document_verification_basic"
+        ? "Verificación básica"
+        : value === "document_verification_full"
+          ? "Dossier completo"
+          : value;
+  return <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700">{label}</span>;
 }

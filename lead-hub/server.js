@@ -34,9 +34,34 @@ const ALLOWED_USER_SERVICES = new Set([
   "document_verification_full",
 ]);
 
+const ALLOWED_OPERATION_SERVICES = new Set([
+  "purchase_tracking",
+  "document_verification_basic",
+  "document_verification_full",
+]);
+
+const ALLOWED_SERVICE_STATUSES = new Set([
+  "requested",
+  "active",
+  "in_review",
+  "delivered",
+  "paused",
+  "cancelled",
+]);
+
 function normalizeServices(value) {
   const raw = Array.isArray(value) ? value : [];
   return [...new Set(raw.map((item) => String(item || "").trim()).filter((item) => ALLOWED_USER_SERVICES.has(item)))];
+}
+
+function normalizeOperationService(value) {
+  const service = normalize(value);
+  return ALLOWED_OPERATION_SERVICES.has(service) ? service : "";
+}
+
+function normalizeServiceStatus(value) {
+  const status = normalize(value);
+  return ALLOWED_SERVICE_STATUSES.has(status) ? status : "active";
 }
 
 async function ensureSchema() {
@@ -200,6 +225,46 @@ async function ensureSchema() {
   `);
   await pool.query(
     "create index if not exists privacy_consents_subject_idx on public.privacy_consents(persona, subject_id, version, created_at desc);",
+  );
+
+  await pool.query(`
+    create table if not exists public.operation_services (
+      id bigserial primary key,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now(),
+      listing_id text not null,
+      subject_type text not null,
+      subject_contact text,
+      subject_id text,
+      service text not null,
+      status text not null default 'active',
+      note text,
+      activated_by text,
+      unique (listing_id, subject_type, subject_contact, subject_id, service)
+    );
+  `);
+  await pool.query(
+    "create index if not exists operation_services_listing_idx on public.operation_services(listing_id, subject_type, subject_contact);",
+  );
+
+  await pool.query(`
+    create table if not exists public.service_audit (
+      id bigserial primary key,
+      created_at timestamptz not null default now(),
+      listing_id text,
+      subject_type text,
+      subject_contact text,
+      subject_id text,
+      service text,
+      action text not null,
+      status text,
+      actor text,
+      note text,
+      payload jsonb not null default '{}'::jsonb
+    );
+  `);
+  await pool.query(
+    "create index if not exists service_audit_listing_idx on public.service_audit(listing_id, created_at desc);",
   );
 }
 
@@ -720,6 +785,211 @@ app.get("/v1/buyers/leads", async (req, res) => {
   );
 
   res.status(200).json({ ok: true, leads: leads.rows });
+});
+
+app.get("/v1/buyers", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  const query = normalize(req.query.q).toLowerCase();
+  const limitRaw = Number(req.query.limit || 80);
+  const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(150, limitRaw)) : 80;
+  const rows = await pool.query(
+    `
+      select id, created_at, updated_at, name, contact, services, status
+      from public.buyers
+      where ($1 = '' or lower(coalesce(name,'')) like '%' || $1 || '%' or lower(contact) like '%' || $1 || '%')
+      order by updated_at desc nulls last, id desc
+      limit $2;
+    `,
+    [query, limit],
+  );
+
+  res.status(200).json({ ok: true, buyers: rows.rows });
+});
+
+app.get("/v1/owners", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  const query = normalize(req.query.q).toLowerCase();
+  const listingId = normalize(req.query.listing_id);
+  const limitRaw = Number(req.query.limit || 80);
+  const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(150, limitRaw)) : 80;
+  const rows = await pool.query(
+    `
+      select id, created_at, name, contact, listing_ids, services, status
+      from public.owners
+      where
+        ($1 = '' or lower(coalesce(name,'')) like '%' || $1 || '%' or lower(coalesce(contact,'')) like '%' || $1 || '%')
+        and ($2 = '' or listing_ids ? $2)
+      order by id desc
+      limit $3;
+    `,
+    [query, listingId, limit],
+  );
+
+  res.status(200).json({ ok: true, owners: rows.rows });
+});
+
+app.get("/v1/operation_services", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  const listingId = normalize(req.query.listing_id);
+  const subjectContact = normalizeContact(req.query.subject_contact);
+  const subjectType = normalize(req.query.subject_type);
+  const where = [];
+  const args = [];
+  if (listingId) {
+    args.push(listingId);
+    where.push(`listing_id=$${args.length}`);
+  }
+  if (subjectContact) {
+    args.push(subjectContact);
+    where.push(`lower(coalesce(subject_contact,''))=$${args.length}`);
+  }
+  if (subjectType === "buyer" || subjectType === "owner") {
+    args.push(subjectType);
+    where.push(`subject_type=$${args.length}`);
+  }
+  args.push(120);
+  const sql = `
+    select id, created_at, updated_at, listing_id, subject_type, subject_contact, subject_id, service, status, note, activated_by
+    from public.operation_services
+    ${where.length ? `where ${where.join(" and ")}` : ""}
+    order by updated_at desc, id desc
+    limit $${args.length};
+  `;
+  const rows = await pool.query(sql, args);
+  res.status(200).json({ ok: true, services: rows.rows });
+});
+
+app.post("/v1/operation_services", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  if (!isRecord(req.body)) {
+    res.status(400).json({ ok: false, error: "invalid_payload" });
+    return;
+  }
+
+  const listingId = normalize(req.body.listing_id);
+  const subjectType = normalize(req.body.subject_type);
+  const subjectContact = normalizeContact(req.body.subject_contact);
+  const subjectId = normalize(req.body.subject_id);
+  const service = normalizeOperationService(req.body.service);
+  const status = normalizeServiceStatus(req.body.status);
+  const note = normalize(req.body.note);
+  const actor = normalize(req.body.actor) || "admin";
+  if (!listingId || !service || (subjectType !== "buyer" && subjectType !== "owner") || (!subjectContact && !subjectId)) {
+    res.status(400).json({ ok: false, error: "missing_fields" });
+    return;
+  }
+
+  let saved = null;
+  if (subjectContact) {
+    saved = await pool.query(
+      `
+        update public.operation_services
+        set status=$5, note=nullif($6,''), activated_by=$7, subject_id=coalesce(nullif($4,''), subject_id), updated_at=now()
+        where listing_id=$1 and subject_type=$2 and lower(coalesce(subject_contact,''))=$3 and service=$8
+        returning id, created_at, updated_at, listing_id, subject_type, subject_contact, subject_id, service, status, note, activated_by;
+      `,
+      [listingId, subjectType, subjectContact, subjectId, status, note, actor, service],
+    );
+  }
+  if (!saved?.rows?.[0]) {
+    saved = await pool.query(
+      `
+        insert into public.operation_services(
+          listing_id, subject_type, subject_contact, subject_id, service, status, note, activated_by
+        )
+        values ($1,$2,nullif($3,''),nullif($4,''),$5,$6,nullif($7,''),$8)
+        returning id, created_at, updated_at, listing_id, subject_type, subject_contact, subject_id, service, status, note, activated_by;
+      `,
+      [listingId, subjectType, subjectContact, subjectId, service, status, note, actor],
+    );
+  }
+  await pool.query(
+    `
+      insert into public.service_audit(listing_id, subject_type, subject_contact, subject_id, service, action, status, actor, note, payload)
+      values ($1,$2,nullif($3,''),nullif($4,''),$5,'service_status',$6,$7,nullif($8,''),$9::jsonb);
+    `,
+    [listingId, subjectType, subjectContact, subjectId, service, status, actor, note, JSON.stringify({ source: "operation_services" })],
+  );
+
+  res.status(200).json({ ok: true, service: saved.rows[0] });
+});
+
+app.get("/v1/service_audit", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  const listingId = normalize(req.query.listing_id);
+  const subjectContact = normalizeContact(req.query.subject_contact);
+  const where = [];
+  const args = [];
+  if (listingId) {
+    args.push(listingId);
+    where.push(`listing_id=$${args.length}`);
+  }
+  if (subjectContact) {
+    args.push(subjectContact);
+    where.push(`lower(coalesce(subject_contact,''))=$${args.length}`);
+  }
+  args.push(80);
+  const rows = await pool.query(
+    `
+      select id, created_at, listing_id, subject_type, subject_contact, subject_id, service, action, status, actor, note
+      from public.service_audit
+      ${where.length ? `where ${where.join(" and ")}` : ""}
+      order by id desc
+      limit $${args.length};
+    `,
+    args,
+  );
+  res.status(200).json({ ok: true, audit: rows.rows });
 });
 
 app.get("/v1/metrics", async (req, res) => {

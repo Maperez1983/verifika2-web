@@ -44,6 +44,14 @@ type BuyerPreferences = {
   maxPrice: number;
 };
 
+type OperationService = {
+  listing_id: string;
+  subject_type: string;
+  subject_contact: string | null;
+  service: string;
+  status: string;
+};
+
 async function getBuyerLeads(contact: string): Promise<BuyerLead[]> {
   try {
     const res = await leadHubFetch(`/v1/buyers/leads?contact=${encodeURIComponent(contact)}`);
@@ -53,6 +61,22 @@ async function getBuyerLeads(contact: string): Promise<BuyerLead[]> {
   } catch {
     return [];
   }
+}
+
+async function getBuyerOperationServices(contact: string): Promise<OperationService[]> {
+  try {
+    const res = await leadHubFetch(`/v1/operation_services?subject_type=buyer&subject_contact=${encodeURIComponent(contact)}`);
+    if (!res.ok) return [];
+    const data = (await res.json()) as { services?: OperationService[] };
+    return Array.isArray(data.services) ? data.services : [];
+  } catch {
+    return [];
+  }
+}
+
+function hasOperationService(services: OperationService[], listingId: string | null, service: string) {
+  if (!listingId) return false;
+  return services.some((item) => item.listing_id === listingId && item.service === service && !["cancelled", "paused"].includes(item.status));
 }
 
 function statusLabel(status: string) {
@@ -246,7 +270,10 @@ export default async function BuyerDashboard() {
   const accepted = await hasPrivacyConsent("comprador", consentSubjectForBuyer(session));
   if (!accepted) redirect(consentRedirect("/comprador/tratamiento-datos", "/comprador"));
 
-  const leads = await getBuyerLeads(session.contact);
+  const [leads, operationServices] = await Promise.all([
+    getBuyerLeads(session.contact),
+    getBuyerOperationServices(session.contact),
+  ]);
   const visits = leads.filter((lead) => lead.intent === "visita");
   const offers = leads.filter((lead) => lead.intent === "oferta" || lead.outcome === "oferta");
   const active = leads.filter((lead) => ["new", "contacted", "scheduled"].includes(lead.status || "new"));
@@ -262,6 +289,7 @@ export default async function BuyerDashboard() {
     basicVerificationEnabled ? "Verificación documental básica" : "",
     fullVerificationEnabled ? "Dossier documental completo" : "",
   ].filter(Boolean);
+  const operationServiceCount = operationServices.filter((service) => !["cancelled", "paused"].includes(service.status)).length;
 
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
@@ -322,7 +350,7 @@ export default async function BuyerDashboard() {
             <div className="pt-5 grid gap-3 sm:grid-cols-3">
               <ProfileMetric label="Preferencia" value={preferenceLabel(preferences)} />
               <ProfileMetric label="Alta" value="Activa y firmada" />
-              <ProfileMetric label="Seguimiento" value={`${uniqueListings} inmuebles`} />
+              <ProfileMetric label="Servicios operación" value={`${operationServiceCount} activos`} />
             </div>
           </div>
           <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm lg:col-span-5">
@@ -391,7 +419,15 @@ export default async function BuyerDashboard() {
               </div>
             </div>
           ) : (
-            leads.map((lead) => <LeadCard key={lead.id} lead={lead} purchaseTrackingEnabled={purchaseTrackingEnabled} />)
+            leads.map((lead) => (
+              <LeadCard
+                key={lead.id}
+                lead={lead}
+                purchaseTrackingEnabled={purchaseTrackingEnabled || hasOperationService(operationServices, lead.listing_id, "purchase_tracking")}
+                basicVerificationEnabled={basicVerificationEnabled || hasOperationService(operationServices, lead.listing_id, "document_verification_basic")}
+                fullVerificationEnabled={fullVerificationEnabled || hasOperationService(operationServices, lead.listing_id, "document_verification_full")}
+              />
+            ))
           )}
         </div>
 
@@ -580,9 +616,24 @@ function RecommendedListingCard({
   );
 }
 
-function LeadCard({ lead, purchaseTrackingEnabled }: { lead: BuyerLead; purchaseTrackingEnabled: boolean }) {
+function LeadCard({
+  lead,
+  purchaseTrackingEnabled,
+  basicVerificationEnabled,
+  fullVerificationEnabled,
+}: {
+  lead: BuyerLead;
+  purchaseTrackingEnabled: boolean;
+  basicVerificationEnabled: boolean;
+  fullVerificationEnabled: boolean;
+}) {
   const stage = stageForLead(lead);
   const nextAction = nextActionForLead(lead);
+  const serviceBadges = [
+    purchaseTrackingEnabled ? "Tracking activo" : "",
+    basicVerificationEnabled ? "Verificación básica" : "",
+    fullVerificationEnabled ? "Dossier completo" : "",
+  ].filter(Boolean);
   return (
     <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm transition hover:border-slate-300">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
@@ -616,6 +667,15 @@ function LeadCard({ lead, purchaseTrackingEnabled }: { lead: BuyerLead; purchase
             <p className="pt-3 max-w-3xl whitespace-pre-line text-sm leading-6 text-slate-600">
               {lead.note}
             </p>
+          ) : null}
+          {serviceBadges.length ? (
+            <div className="pt-3 flex flex-wrap gap-2">
+              {serviceBadges.map((badge) => (
+                <span key={badge} className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
+                  {badge}
+                </span>
+              ))}
+            </div>
           ) : null}
           <div className="mt-4 grid gap-3 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-4 sm:grid-cols-3">
             <BuyerSignal label="Tu fase" value={stage} />

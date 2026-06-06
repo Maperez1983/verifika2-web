@@ -166,6 +166,31 @@ function LeadRow({ lead }: { lead: HubLead }) {
           </form>
         </div>
       ) : null}
+      {lead.persona === "comprador" && lead.listing_id ? (
+        <form method="post" action="/api/admin/services/activate" className="mt-3 grid gap-2 rounded-2xl border border-[color:var(--border)] bg-white p-3">
+          <input type="hidden" name="return_to" value="/admin/leads" />
+          <input type="hidden" name="listing_id" value={lead.listing_id} />
+          <input type="hidden" name="subject_type" value="buyer" />
+          <input type="hidden" name="subject_id" value={lead.id} />
+          <input type="hidden" name="subject_contact" value={lead.contact} />
+          <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+            <select name="service" className="h-9 rounded-full border border-[color:var(--border)] bg-white px-3 text-xs outline-none">
+              <option value="purchase_tracking">Tracking</option>
+              <option value="document_verification_basic">Verificación básica</option>
+              <option value="document_verification_full">Dossier completo</option>
+            </select>
+            <select name="status" className="h-9 rounded-full border border-[color:var(--border)] bg-white px-3 text-xs outline-none">
+              <option value="active">Activo</option>
+              <option value="requested">Solicitado</option>
+              <option value="in_review">En revisión</option>
+              <option value="delivered">Entregado</option>
+            </select>
+            <button className="inline-flex h-9 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-xs font-medium text-white hover:bg-[#0F2742]">
+              Activar
+            </button>
+          </div>
+        </form>
+      ) : null}
     </div>
   );
 }

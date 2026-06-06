@@ -22,6 +22,9 @@ type HubCounts = { leads_total: number; leads_info: number; leads_visita: number
 type HubDoc = { id: string; title: string; status: string; note: string | null; created_at: string; updated_at: string };
 type HubMilestone = { id: string; key: string; title: string; status: string; due_at: string | null; completed_at: string | null; note: string | null; created_at: string; updated_at: string };
 type HubSignature = { id: string; title: string; status: string; provider: string | null; external_url: string | null; note: string | null; created_at: string; updated_at: string };
+type HubLead = { id: string; created_at: string; persona: string; intent: string; contact: string; name: string | null; status: string; scheduled_at: string | null; outcome: string | null; outcome_note: string | null };
+type OperationService = { id: string; created_at: string; updated_at: string; listing_id: string; subject_type: string; subject_contact: string | null; subject_id: string | null; service: string; status: string; note: string | null; activated_by: string | null };
+type ServiceAudit = { id: string; created_at: string; listing_id: string | null; subject_type: string | null; subject_contact: string | null; service: string | null; action: string; status: string | null; actor: string | null; note: string | null };
 
 async function getMetrics(listingId: string): Promise<{ metrics: HubMetrics; counts: HubCounts } | null> {
   try {
@@ -67,6 +70,39 @@ async function getSignatures(listingId: string): Promise<HubSignature[]> {
   }
 }
 
+async function getListingLeads(listingId: string): Promise<HubLead[]> {
+  try {
+    const res = await leadHubFetch(`/v1/leads/search?listing_id=${encodeURIComponent(listingId)}&limit=80`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data.leads) ? (data.leads as HubLead[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+async function getOperationServices(listingId: string): Promise<OperationService[]> {
+  try {
+    const res = await leadHubFetch(`/v1/operation_services?listing_id=${encodeURIComponent(listingId)}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data.services) ? (data.services as OperationService[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+async function getServiceAudit(listingId: string): Promise<ServiceAudit[]> {
+  try {
+    const res = await leadHubFetch(`/v1/service_audit?listing_id=${encodeURIComponent(listingId)}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data.audit) ? (data.audit as ServiceAudit[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 const normalize = (value: unknown) => String(value ?? "").trim();
 
 export default async function AdminListingPage({ params, searchParams }: PageProps) {
@@ -79,11 +115,15 @@ export default async function AdminListingPage({ params, searchParams }: PagePro
   const published = Boolean((listing as { published?: boolean }).published);
 
   const metrics = await getMetrics(listing.id);
-  const [documents, milestones, signatures] = await Promise.all([
+  const [documents, milestones, signatures, leads, operationServices, serviceAudit] = await Promise.all([
     getDocs(listing.id),
     getMilestones(listing.id),
     getSignatures(listing.id),
+    getListingLeads(listing.id),
+    getOperationServices(listing.id),
+    getServiceAudit(listing.id),
   ]);
+  const buyerLeads = leads.filter((lead) => lead.persona === "comprador");
 
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
@@ -204,9 +244,72 @@ export default async function AdminListingPage({ params, searchParams }: PagePro
                 )}
               </div>
             </Panel>
+
+            <Panel title="Servicios de operación" subtitle="Servicios premium activados para esta compraventa o alquiler.">
+              <div className="grid gap-2">
+                {operationServices.length === 0 ? (
+                  <p className="text-sm text-slate-600">No hay servicios activados para esta operación.</p>
+                ) : (
+                  operationServices.map((service) => (
+                    <div key={service.id} className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] px-4 py-3 text-sm">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="font-medium">{serviceLabel(service.service)}</span>
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700">{statusLabel(service.status)}</span>
+                      </div>
+                      <p className="pt-1 text-xs text-slate-600">
+                        {service.subject_type === "buyer" ? "Comprador" : "Propietario"} · {service.subject_contact || service.subject_id || "sin contacto"}
+                      </p>
+                      {service.note ? <p className="pt-1 text-xs text-slate-600">{service.note}</p> : null}
+                    </div>
+                  ))
+                )}
+              </div>
+            </Panel>
           </section>
 
           <section className="lg:col-span-6 space-y-6">
+            <Panel title="Compradores interesados" subtitle="Leads vinculados al inmueble y activación directa de servicios.">
+              <div className="grid gap-2">
+                {buyerLeads.length === 0 ? (
+                  <p className="text-sm text-slate-600">Aún no hay compradores interesados.</p>
+                ) : (
+                  buyerLeads.map((lead) => (
+                    <div key={lead.id} className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-4 text-sm">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="font-medium">{lead.name || lead.contact}</span>
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700">{lead.intent}</span>
+                      </div>
+                      <p className="pt-1 text-xs text-slate-600">{lead.contact} · {new Date(lead.created_at).toLocaleString("es-ES")}</p>
+                      <form method="post" action="/api/admin/services/activate" className="pt-3 grid gap-2">
+                        <input type="hidden" name="return_to" value={`/admin/listings/${encodeURIComponent(listing.id)}`} />
+                        <input type="hidden" name="listing_id" value={listing.id} />
+                        <input type="hidden" name="subject_type" value="buyer" />
+                        <input type="hidden" name="subject_contact" value={lead.contact} />
+                        <input type="hidden" name="subject_id" value={lead.id} />
+                        <div className="grid gap-2 sm:grid-cols-3">
+                          <select name="service" className="h-10 rounded-full border border-[color:var(--border)] bg-white px-3 text-xs outline-none">
+                            <option value="purchase_tracking">Tracking</option>
+                            <option value="document_verification_basic">Verificación básica</option>
+                            <option value="document_verification_full">Dossier completo</option>
+                          </select>
+                          <select name="status" className="h-10 rounded-full border border-[color:var(--border)] bg-white px-3 text-xs outline-none">
+                            <option value="active">Activo</option>
+                            <option value="requested">Solicitado</option>
+                            <option value="in_review">En revisión</option>
+                            <option value="delivered">Entregado</option>
+                          </select>
+                          <button className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D33] px-4 text-xs font-semibold text-white hover:bg-[#0F2742]">
+                            Activar servicio
+                          </button>
+                        </div>
+                        <input name="note" placeholder="Nota interna" className="h-10 rounded-full border border-[color:var(--border)] bg-white px-3 text-xs outline-none" />
+                      </form>
+                    </div>
+                  ))
+                )}
+              </div>
+            </Panel>
+
             <Panel title="Hitos" subtitle="Timeline operativo (reserva, arras, firma...).">
               <form method="post" action="/api/admin/milestones/seed" className="flex gap-2">
                 <input type="hidden" name="listing_id" value={listing.id} />
@@ -266,11 +369,49 @@ export default async function AdminListingPage({ params, searchParams }: PagePro
                 )}
               </div>
             </Panel>
+
+            <Panel title="Auditoría de servicios" subtitle="Historial de activación y cambios de estado.">
+              <div className="grid gap-2">
+                {serviceAudit.length === 0 ? (
+                  <p className="text-sm text-slate-600">Aún no hay auditoría de servicios.</p>
+                ) : (
+                  serviceAudit.map((item) => (
+                    <div key={item.id} className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] px-4 py-3 text-sm">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="font-medium">{serviceLabel(item.service || "")}</span>
+                        <span className="text-xs text-slate-500">{new Date(item.created_at).toLocaleString("es-ES")}</span>
+                      </div>
+                      <p className="pt-1 text-xs text-slate-600">
+                        {statusLabel(item.status || "")} · {item.actor || "admin"} · {item.subject_contact || "sin contacto"}
+                      </p>
+                      {item.note ? <p className="pt-1 text-xs text-slate-600">{item.note}</p> : null}
+                    </div>
+                  ))
+                )}
+              </div>
+            </Panel>
           </section>
         </div>
       </main>
     </div>
   );
+}
+
+function serviceLabel(value: string) {
+  if (value === "purchase_tracking") return "Tracking de compraventa";
+  if (value === "document_verification_basic") return "Verificación documental básica";
+  if (value === "document_verification_full") return "Dossier documental completo";
+  return value || "Servicio";
+}
+
+function statusLabel(value: string) {
+  if (value === "requested") return "Solicitado";
+  if (value === "active") return "Activo";
+  if (value === "in_review") return "En revisión";
+  if (value === "delivered") return "Entregado";
+  if (value === "paused") return "Pausado";
+  if (value === "cancelled") return "Cancelado";
+  return value || "Sin estado";
 }
 
 function Panel({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {

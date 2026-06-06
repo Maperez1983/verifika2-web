@@ -93,6 +93,15 @@ type TimeseriesPoint = {
   offers?: number;
 };
 
+type OperationService = {
+  listing_id: string;
+  subject_type: string;
+  subject_contact: string | null;
+  subject_id: string | null;
+  service: string;
+  status: string;
+};
+
 const normalize = (value: unknown) => String(value ?? "").trim();
 
 function leadStatusLabel(status: string) {
@@ -341,6 +350,18 @@ async function getSignatures(listingId: string): Promise<HubSignature[]> {
   }
 }
 
+async function getOwnerOperationServices(listingId: string, session: { ownerId: string; services: string[] }): Promise<OperationService[]> {
+  try {
+    const res = await leadHubFetch(`/v1/operation_services?listing_id=${encodeURIComponent(listingId)}&subject_type=owner`);
+    if (!res.ok) return [];
+    const data = (await res.json()) as { services?: OperationService[] };
+    const services = Array.isArray(data.services) ? data.services : [];
+    return services.filter((service) => !service.subject_id || service.subject_id === session.ownerId);
+  } catch {
+    return [];
+  }
+}
+
 export default async function OwnerListingPage({ params, searchParams }: PageProps) {
   const session = await getOwnerSession();
   if (!session) redirect("/owner/acceso");
@@ -368,6 +389,7 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
   const documents = tab === "resumen" || tab === "docs" ? await getDocuments(listing.id) : [];
   const milestones = tab === "resumen" || tab === "hitos" ? await getMilestones(listing.id) : [];
   const signatures = tab === "firma" ? await getSignatures(listing.id) : [];
+  const operationServices = tab === "resumen" ? await getOwnerOperationServices(listing.id, session) : [];
 
   const views = summary?.metrics?.views ?? 0;
   const leadsTotal = summary?.counts?.leads_total ?? 0;
@@ -391,7 +413,9 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
   const stage = commercialStage(leadsTotal, leadsVisits, leadsOffers, scheduledClients);
   const nextStep = ownerNextStep(leadsTotal, leadsVisits, leadsOffers, scheduledClients);
   const score = propertyScore(leadsTotal, leadsVisits, leadsOffers, scheduledClients);
-  const purchaseTrackingEnabled = hasOwnerService(session, "purchase_tracking");
+  const purchaseTrackingEnabled =
+    hasOwnerService(session, "purchase_tracking") ||
+    operationServices.some((service) => service.service === "purchase_tracking" && !["cancelled", "paused"].includes(service.status));
   const nextAction =
     scheduledClients > 0
       ? "Revisar próximas citas"
