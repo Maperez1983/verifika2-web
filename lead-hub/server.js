@@ -256,19 +256,38 @@ async function pushToCrm(leadRow) {
   const payload = isRecord(leadRow?.payload)
     ? { hub_lead_id: String(leadRow.id), ...leadRow.payload }
     : { hub_lead_id: String(leadRow.id), payload: leadRow?.payload ?? null };
-  const res = await fetch(CRM_LEADS_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      ...(CRM_TOKEN ? { authorization: `Bearer ${CRM_TOKEN}` } : {}),
-    },
-    body: JSON.stringify(payload),
-  });
 
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`crm_failed:${res.status}:${body.slice(0, 200)}`);
+  const buildFallbackEndpoints = () => {
+    const endpoints = [CRM_LEADS_ENDPOINT];
+    try {
+      const configured = new URL(CRM_LEADS_ENDPOINT);
+      for (const path of ["/api/leads", "/api/portal_leads", "/api/portal_lead"]) {
+        const candidate = new URL(path, configured.origin).toString();
+        if (!endpoints.includes(candidate)) endpoints.push(candidate);
+      }
+    } catch {
+      // Relative or malformed endpoints are handled by the primary fetch error.
+    }
+    return endpoints;
+  };
+
+  let res = null;
+  let body = "";
+  for (const endpoint of buildFallbackEndpoints()) {
+    res = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        ...(CRM_TOKEN ? { authorization: `Bearer ${CRM_TOKEN}` } : {}),
+      },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) return;
+    body = await res.text().catch(() => "");
+    if (res.status !== 404) break;
   }
+
+  throw new Error(`crm_failed:${res?.status || 0}:${body.slice(0, 200)}`);
 }
 
 app.get("/healthz", async (_req, res) => {
