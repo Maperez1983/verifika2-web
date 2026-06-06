@@ -42,8 +42,8 @@ export default function OwnersPage() {
                 Control 360 de la venta de tu inmueble en tiempo real.
               </h1>
               <p className="pt-5 max-w-2xl text-sm leading-7 text-white/72 md:text-base">
-                No dependas de llamadas sueltas para saber qué ocurre. En Verifika2 puedes seguir citas, interesados,
-                agenda, estado documental, anuncio publicado y gestión del intermediario desde tu portal privado.
+                No dependas de llamadas sueltas para saber qué ocurre. Si tu inmueble se gestiona en Verifika2,
+                podrás seguir citas, interesados, agenda, estado documental, anuncio publicado y gestión del intermediario desde tu portal privado.
               </p>
               <div className="pt-7 flex flex-col gap-3 sm:flex-row">
               <Link
@@ -134,8 +134,8 @@ export default function OwnersPage() {
           <aside className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
             <p className="text-sm font-semibold tracking-tight">Acceso</p>
             <p className="pt-2 text-sm leading-6 text-slate-600">
-              El portal del propietario se accede desde la misma puerta de
-              entrada, pero con permisos de propietario/cliente.
+              El portal del propietario se activa desde la operativa que gestiona el inmueble. Si lo publica una agencia,
+              la agencia te facilita el acceso. Si lo publicas directamente, Verifika2 lo activa tras validar la solicitud.
             </p>
             <div className="pt-4 flex flex-col gap-2">
               <a
@@ -152,8 +152,7 @@ export default function OwnersPage() {
               </Link>
             </div>
             <p className="pt-5 text-xs leading-5 text-slate-600">
-              Si tu inmobiliaria aún no te dio acceso, lo habilitará desde su
-              workspace en Verifika2.
+              El acceso no se crea como un registro abierto: queda vinculado al inmueble y a quien lo gestiona.
             </p>
           </aside>
         </div>

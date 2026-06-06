@@ -351,7 +351,7 @@ export default async function ListingsPage({ searchParams }: PageProps) {
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link href="/compradores" className="inline-flex h-11 items-center justify-center rounded-full bg-[#F2C14E] px-5 text-sm font-semibold text-[#0B1D33] hover:bg-[#ffd56f]">
-                Soy comprador
+                Experiencia comprador
               </Link>
               <Link href="/publicar" className="inline-flex h-11 items-center justify-center rounded-full border border-white/20 bg-white/10 px-5 text-sm font-semibold text-white hover:bg-white/16">
                 Publicar inmueble

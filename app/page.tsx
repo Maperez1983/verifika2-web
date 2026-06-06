@@ -77,7 +77,7 @@ const crmRows = [
 const aiExamples = [
   "¿Este inmueble está verificado?",
   "Quiero visitar esta semana",
-  "Soy propietario y quiero publicar",
+  "Tengo un inmueble para publicar",
   "Prepara un resumen comercial",
 ];
 
@@ -169,13 +169,13 @@ export default function Home() {
 
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link className="inline-flex h-12 items-center justify-center rounded-full bg-[#F2C14E] px-6 text-sm font-semibold text-[#1A1A1A] hover:bg-[#F6CD68]" href={links.pros}>
-                  Soy inmobiliaria
+                  Solución profesional
                 </Link>
                 <Link className="inline-flex h-12 items-center justify-center rounded-full border border-white/25 bg-white/10 px-6 text-sm font-semibold text-white hover:bg-white/20" href={links.portal}>
                   Busco inmueble
                 </Link>
                 <Link className="inline-flex h-12 items-center justify-center rounded-full border border-white/25 bg-white px-5 text-sm font-semibold text-[#0B1D33] hover:bg-slate-100" href={links.owners}>
-                  Soy propietario
+                  Portal propietario
                 </Link>
                 <Link className="inline-flex h-12 items-center justify-center rounded-full border border-white/25 bg-white/10 px-5 text-sm font-semibold text-white hover:bg-white/20" href={links.how}>
                   Cómo funciona
@@ -234,12 +234,12 @@ export default function Home() {
                   Para todas las partes
                 </p>
                 <h2 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
-                  La misma operación, tres experiencias que generan confianza.
+                  Una misma operación, roles conectados con información útil.
                 </h2>
                 <p className="mt-4 text-sm leading-6 text-slate-600 md:text-base">
                   La web debe vender una ventaja evidente: cada usuario ve lo
-                  que necesita. La inmobiliaria opera, el vendedor controla el
-                  avance de su propiedad y el comprador decide con más seguridad.
+                  que necesita. La inmobiliaria opera, el vendedor ve el avance
+                  cuando su acceso está habilitado y el comprador decide con más seguridad.
                 </p>
               </div>
 
@@ -436,9 +436,9 @@ export default function Home() {
                   </p>
                   <p className="mt-3 max-w-3xl text-sm leading-6 text-white/72 md:text-base">
                     Para una inmobiliaria es captación y CRM. Para un vendedor,
-                    seguimiento total de su propiedad. Para un comprador,
-                    seguridad. Para todos, menos incertidumbre y una experiencia
-                    más profesional.
+                    seguimiento de su propiedad cuando la operación lo habilita.
+                    Para un comprador, seguridad. Para todos, menos incertidumbre
+                    y una experiencia más profesional.
                   </p>
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row">

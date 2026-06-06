@@ -483,7 +483,7 @@ export default function ChatWidget({ listing, defaultPersona, scope }: Props) {
                     <Quick onClick={() => handleQuick("visita")}>Visita</Quick>
                     <Quick onClick={() => handleQuick("oferta")}>Oferta</Quick>
                     <Quick onClick={() => handleQuick("info")}>Info</Quick>
-                    <Quick onClick={() => handleQuick("propietario")}>Soy propietario</Quick>
+                    <Quick onClick={() => handleQuick("propietario")}>Tengo un inmueble</Quick>
                   </>
                 ) : (
                   <>

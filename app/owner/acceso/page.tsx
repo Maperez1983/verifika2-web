@@ -43,7 +43,7 @@ export default async function OwnerAccessPage({ searchParams }: PageProps) {
             Seguimiento 360 de la venta de tu inmueble
           </h1>
           <p className="pt-3 max-w-2xl text-sm leading-6 text-white/72">
-            Consulta actividad comercial, clientes interesados, citas, documentación e hitos de gestión en tiempo real.
+            Consulta la actividad comercial y documental que la agencia o Verifika2 haya habilitado para tu inmueble.
           </p>
         </div>
       </header>
@@ -53,7 +53,7 @@ export default async function OwnerAccessPage({ searchParams }: PageProps) {
         <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
           <p className="text-sm font-semibold tracking-tight">Código privado</p>
           <p className="pt-2 text-sm leading-6 text-slate-600">
-            Introduce el código que te facilitó tu inmobiliaria o Verifika2 para acceder a tus inmuebles.
+            Introduce el código facilitado por la agencia que gestiona el inmueble o por Verifika2 si la publicación es directa.
           </p>
 
           <form method="post" action="/api/owner-auth" className="pt-6 grid gap-3">
@@ -88,6 +88,9 @@ export default async function OwnerAccessPage({ searchParams }: PageProps) {
               <OwnerValue title="Agenda" desc="Citas previstas y próximos pasos de la operación." />
               <OwnerValue title="Anuncio" desc="Ficha publicada, métricas y estado documental." />
             </div>
+            <p className="pt-5 text-xs leading-5 text-slate-600">
+              Este acceso no es un alta abierta. Está vinculado a inmuebles concretos y a los permisos definidos por quien gestiona la operación.
+            </p>
           </div>
         </aside>
       </main>

@@ -32,6 +32,10 @@ const professionalBundles = [
     desc: "Citas, visitas, ofertas, seguimiento y próximos pasos visibles para el equipo y el propietario.",
   },
   {
+    title: "Acceso propietario",
+    desc: "La agencia habilita el portal del propietario cuando gestiona el inmueble y decide qué información compartir.",
+  },
+  {
     title: "Imagen premium",
     desc: "Anuncios verificados, sello Grupo Modernia, dossier visual y experiencia diferenciada del portal tradicional.",
   },
@@ -187,7 +191,7 @@ export default function ProfessionalsPage() {
                 Lo que necesita una inmobiliaria para usarlo como producto comercial.
               </h2>
             </div>
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
               {professionalBundles.map((item) => (
                 <BundleCard key={item.title} {...item} />
               ))}

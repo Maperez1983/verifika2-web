@@ -173,10 +173,13 @@ export default async function PublishPage({ searchParams }: PageProps) {
 
         <section className="border-y border-[color:var(--border)] bg-[color:var(--surface-2)]">
           <div className="mx-auto w-full max-w-6xl px-6 py-12">
-            <div className="grid gap-4 md:grid-cols-3">
-              <ProfileCta title="Soy inmobiliaria" desc="Quiero publicar cartera verificada y gestionar leads desde CRM." href={links.pros} cta="Ver solución profesional" />
-              <ProfileCta title="Soy propietario" desc="Quiero saber cómo se gestionará mi inmueble y qué podré ver." href={links.owners} cta="Ver portal propietario" />
-              <ProfileCta title="Soy comprador" desc="Quiero entender qué aporta comprar con información verificada." href={links.buyers} cta="Ver experiencia comprador" />
+            <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+              <p className="text-sm font-semibold tracking-tight">Cómo se activa en la práctica</p>
+              <p className="pt-2 max-w-3xl text-sm leading-6 text-slate-600">
+                El comprador se activa desde sus solicitudes en la web. Si el inmueble lo gestiona una agencia,
+                el acceso del propietario lo habilita la propia agencia desde su operativa. Si el propietario
+                publica directamente, el equipo Verifika2 valida la solicitud antes de activar el seguimiento.
+              </p>
             </div>
           </div>
         </section>
@@ -188,7 +191,7 @@ export default async function PublishPage({ searchParams }: PageProps) {
                 Oferta comercial
               </p>
               <h2 className="mt-3 max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">
-                Tres formas de entrar en Verifika2 según el tipo de cliente.
+                Un mismo flujo comercial, activado según quién gestiona el inmueble.
               </h2>
             </div>
             <div className="grid gap-4 md:grid-cols-3">
@@ -297,16 +300,6 @@ function ProofStep({ index, title, desc }: { index: string; title: string; desc:
       <p className="pt-1 text-sm font-semibold tracking-tight">{title}</p>
       <p className="pt-1 text-xs leading-5 text-slate-600">{desc}</p>
     </div>
-  );
-}
-
-function ProfileCta({ title, desc, href, cta }: { title: string; desc: string; href: string; cta: string }) {
-  return (
-    <Link href={href} className="group rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)]">
-      <p className="text-base font-semibold tracking-tight">{title}</p>
-      <p className="mt-3 min-h-[72px] text-sm leading-6 text-slate-600">{desc}</p>
-      <p className="mt-5 text-sm font-semibold text-[#0B1D33] group-hover:underline">{cta}</p>
-    </Link>
   );
 }
 
