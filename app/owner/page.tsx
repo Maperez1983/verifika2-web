@@ -88,6 +88,24 @@ function nextOwnerAction(leads: number, visits: number, offers: number) {
   return "Impulsar anuncio y revisar posicionamiento comercial";
 }
 
+function percent(part: number, total: number) {
+  if (total <= 0) return "0%";
+  return `${Math.round((part / total) * 100)}%`;
+}
+
+function needed(input: number, output: number, inputLabel: string, outputLabel: string) {
+  if (output <= 0) return `Sin ${outputLabel}`;
+  return `${Math.max(1, Math.round(input / output))} ${inputLabel}/${outputLabel}`;
+}
+
+function efficiencyInsight(views: number, leads: number, visits: number, offers: number) {
+  if (views > 20 && leads === 0) return "Muchas vistas sin leads: revisar precio, fotos o llamada a la acción.";
+  if (leads > 0 && visits === 0) return "Hay leads sin citas: reforzar contacto y disponibilidad.";
+  if (visits > 0 && offers === 0) return "Hay visitas sin ofertas: revisar precio, estado o expectativas.";
+  if (offers > 0) return "La operación ya genera propuesta: priorizar negociación y documentación.";
+  return "Aún falta volumen para leer la eficiencia comercial.";
+}
+
 export default async function OwnerDashboard() {
   const session = await getOwnerSession();
   if (!session) redirect("/owner/acceso");
@@ -178,6 +196,29 @@ export default async function OwnerDashboard() {
             <HeroStat label="Activos" value={activeListings} />
             <HeroStat label="En oferta" value={hotListings} />
             <HeroStat label="Inmuebles" value={listings.length} />
+          </div>
+        </section>
+
+        <section className="mb-6 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+          <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Eficiencia comercial
+              </p>
+              <h2 className="pt-3 text-2xl font-semibold tracking-tight">Ratios de conversión</h2>
+              <p className="pt-3 max-w-2xl text-sm leading-6 text-slate-600">
+                No solo importa cuánta actividad hay: importa cuánta actividad se convierte en citas y propuestas.
+              </p>
+            </div>
+            <p className="rounded-2xl bg-[color:var(--surface-2)] px-4 py-3 text-sm leading-6 text-slate-700 lg:max-w-md">
+              {efficiencyInsight(totals.views, totals.leads, totals.visits, totals.offers)}
+            </p>
+          </div>
+          <div className="pt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <RatioCard label="Vistas → lead" value={percent(totals.leads, totals.views)} detail={needed(totals.views, totals.leads, "vistas", "lead")} />
+            <RatioCard label="Lead → cita" value={percent(totals.visits, totals.leads)} detail={needed(totals.leads, totals.visits, "leads", "cita")} />
+            <RatioCard label="Cita → propuesta" value={percent(totals.offers, totals.visits)} detail={needed(totals.visits, totals.offers, "citas", "propuesta")} />
+            <RatioCard label="Lead → propuesta" value={percent(totals.offers, totals.leads)} detail={needed(totals.leads, totals.offers, "leads", "propuesta")} />
           </div>
         </section>
 
@@ -311,6 +352,16 @@ function HeroStat({ label, value }: { label: string; value: number }) {
     <div className="rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] px-4 py-3">
       <p className="text-xs font-medium text-slate-600">{label}</p>
       <p className="pt-1 text-2xl font-semibold tracking-tight">{value}</p>
+    </div>
+  );
+}
+
+function RatioCard({ label, value, detail }: { label: string; value: string; detail: string }) {
+  return (
+    <div className="rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-5">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{label}</p>
+      <p className="pt-3 text-3xl font-semibold tracking-tight">{value}</p>
+      <p className="pt-2 text-sm leading-6 text-slate-600">{detail}</p>
     </div>
   );
 }

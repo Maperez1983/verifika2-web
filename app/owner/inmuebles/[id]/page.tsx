@@ -130,6 +130,24 @@ function temperatureClass(temp: string) {
   return "bg-blue-50 text-blue-800";
 }
 
+function percent(part: number, total: number) {
+  if (total <= 0) return "0%";
+  return `${Math.round((part / total) * 100)}%`;
+}
+
+function needed(input: number, output: number, inputLabel: string, outputLabel: string) {
+  if (output <= 0) return `Sin ${outputLabel}`;
+  return `${Math.max(1, Math.round(input / output))} ${inputLabel}/${outputLabel}`;
+}
+
+function efficiencyInsight(views: number, leads: number, visits: number, offers: number) {
+  if (views > 20 && leads === 0) return "El anuncio atrae vistas pero no convierte: revisar precio, fotos o mensaje comercial.";
+  if (leads > 0 && visits === 0) return "Hay leads sin citas: reforzar contacto, disponibilidad o filtro de comprador.";
+  if (visits > 0 && offers === 0) return "Hay visitas sin propuestas: revisar precio, estado del inmueble o expectativas.";
+  if (offers > 0) return "Hay propuesta sobre la mesa: priorizar negociación, solvencia y documentación.";
+  return "Aún falta volumen para leer la eficiencia comercial con fiabilidad.";
+}
+
 async function getSummary(listingId: string): Promise<ListingSummary | null> {
   try {
     const res = await leadHubFetch(
@@ -399,6 +417,26 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
               </div>
 
               <div className="mt-6 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+                <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+                  <div>
+                    <p className="text-sm font-semibold tracking-tight">Eficiencia comercial</p>
+                    <p className="pt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                      Ratios clave del inmueble: cuántas vistas generan leads, cuántos leads generan citas y cuántas citas generan propuesta.
+                    </p>
+                  </div>
+                  <p className="rounded-2xl bg-[color:var(--surface-2)] px-4 py-3 text-sm leading-6 text-slate-700 lg:max-w-sm">
+                    {efficiencyInsight(views, leadsTotal, leadsVisits, leadsOffers)}
+                  </p>
+                </div>
+                <div className="pt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <RatioCard label="Vistas → lead" value={percent(leadsTotal, views)} detail={needed(views, leadsTotal, "vistas", "lead")} />
+                  <RatioCard label="Lead → cita" value={percent(leadsVisits, leadsTotal)} detail={needed(leadsTotal, leadsVisits, "leads", "cita")} />
+                  <RatioCard label="Cita → propuesta" value={percent(leadsOffers, leadsVisits)} detail={needed(leadsVisits, leadsOffers, "citas", "propuesta")} />
+                  <RatioCard label="Lead → propuesta" value={percent(leadsOffers, leadsTotal)} detail={needed(leadsTotal, leadsOffers, "leads", "propuesta")} />
+                </div>
+              </div>
+
+              <div className="mt-6 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
                 <p className="text-sm font-semibold tracking-tight">
                   Qué ve el propietario
                 </p>
@@ -610,6 +648,16 @@ function SignalCard({
       </p>
       <p className="pt-3 text-3xl font-semibold tracking-tight">{value}</p>
       <p className="pt-2 text-sm leading-6 text-slate-600">{desc}</p>
+    </div>
+  );
+}
+
+function RatioCard({ label, value, detail }: { label: string; value: string; detail: string }) {
+  return (
+    <div className="rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-5">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{label}</p>
+      <p className="pt-3 text-3xl font-semibold tracking-tight">{value}</p>
+      <p className="pt-2 text-sm leading-6 text-slate-600">{detail}</p>
     </div>
   );
 }
