@@ -28,7 +28,11 @@ const pool = new Pool({
   ssl: DATABASE_URL ? { rejectUnauthorized: false } : undefined,
 });
 
-const ALLOWED_USER_SERVICES = new Set(["purchase_tracking"]);
+const ALLOWED_USER_SERVICES = new Set([
+  "purchase_tracking",
+  "document_verification_basic",
+  "document_verification_full",
+]);
 
 function normalizeServices(value) {
   const raw = Array.isArray(value) ? value : [];

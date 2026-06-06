@@ -37,7 +37,7 @@ export default async function DossierPage({ searchParams }: PageProps) {
           </h1>
           <p className="pt-4 max-w-3xl text-sm leading-6 text-white/72">
             Un informe documental para compradores que quieren tomar decisiones con más seguridad: titularidad,
-            situación registral, cargas, referencias y documentación disponible.
+            situación registral, cargas, referencias y documentación disponible. La activación la realiza el equipo tras confirmar alcance.
           </p>
           {listing ? (
             <div className="mt-6 rounded-3xl border border-white/12 bg-white/10 p-5">
@@ -65,7 +65,7 @@ export default async function DossierPage({ searchParams }: PageProps) {
             <div className="mt-6 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
               <p className="text-sm font-semibold tracking-tight">Precios orientativos</p>
               <p className="pt-2 text-sm leading-6 text-slate-600">
-                Antes de iniciar el informe, el equipo confirma alcance, plazo y precio definitivo según el inmueble.
+                Estas opciones no se contratan automáticamente desde la web. El equipo confirma alcance, precio y activa el servicio desde administración.
               </p>
               <div className="pt-5 grid gap-4 md:grid-cols-2">
                 <Plan
@@ -73,7 +73,7 @@ export default async function DossierPage({ searchParams }: PageProps) {
                   price="Desde 49 €"
                   desc="Incluye nota simple actualizada cuando sea necesaria, titularidad, cargas y referencia catastral."
                   href={`${baseHref}&motivo=dossier_basico`}
-                  cta="Solicitar básica"
+                  cta="Solicitar revisión"
                   highlight
                 />
                 <Plan
@@ -81,7 +81,7 @@ export default async function DossierPage({ searchParams }: PageProps) {
                   price="Desde 149 €"
                   desc="Incluye nota simple, checklist ampliada, incidencias, documentos disponibles y resumen."
                   href={`${baseHref}&motivo=dossier_completo`}
-                  cta="Solicitar dossier"
+                  cta="Solicitar revisión"
                 />
               </div>
             </div>
@@ -94,8 +94,8 @@ export default async function DossierPage({ searchParams }: PageProps) {
                 <ol className="pt-4 space-y-3 text-sm leading-6 text-slate-700">
                   <li className="rounded-2xl bg-[color:var(--surface-2)] px-4 py-3">1. Solicitas el informe.</li>
                   <li className="rounded-2xl bg-[color:var(--surface-2)] px-4 py-3">2. Confirmamos alcance y precio.</li>
-                  <li className="rounded-2xl bg-[color:var(--surface-2)] px-4 py-3">3. Se revisa la documentación.</li>
-                  <li className="rounded-2xl bg-[color:var(--surface-2)] px-4 py-3">4. Recibes el resumen documental.</li>
+                  <li className="rounded-2xl bg-[color:var(--surface-2)] px-4 py-3">3. Administración activa el servicio.</li>
+                  <li className="rounded-2xl bg-[color:var(--surface-2)] px-4 py-3">4. Se revisa la documentación y recibes el resumen.</li>
                 </ol>
               </div>
               <div className="rounded-[28px] border border-amber-200 bg-amber-50 p-6 text-amber-950 shadow-sm">

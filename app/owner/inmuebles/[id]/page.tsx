@@ -523,8 +523,8 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
                 <SignalCard title="Anuncio" value={listing.certified ? "Premium" : "Activo"} desc="Ficha pública disponible para revisar fotos, precio y descripción." />
               </div>
 
-              <div className="mt-6">
-                {purchaseTrackingEnabled ? (
+              {purchaseTrackingEnabled ? (
+                <div className="mt-6">
                   <PurchaseItinerary
                     title="Itinerario de compraventa"
                     subtitle="Ruta operativa visible para el propietario: interesados, visitas, oferta, reserva, documentación, financiación, arras, notaría y cierre."
@@ -538,13 +538,8 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
                     })}
                     nextAction={nextStep}
                   />
-                ) : (
-                  <PaidServiceCard
-                    title="Tracking de compraventa"
-                    desc="Servicio opcional de pago para que el propietario siga reserva, documentación, financiación del comprador, arras, notaría y cierre."
-                  />
-                )}
-              </div>
+                </div>
+              ) : null}
 
               <div className="mt-6 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
                 <p className="text-sm font-semibold tracking-tight">Timeline comercial</p>
@@ -750,21 +745,6 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
           <AnnouncementSection listing={listing} />
         ) : null}
       </main>
-    </div>
-  );
-}
-
-function PaidServiceCard({ title, desc }: { title: string; desc: string }) {
-  return (
-    <div className="rounded-[28px] border border-amber-200 bg-amber-50 p-5 text-amber-950 shadow-sm">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-800/70">Servicio opcional</p>
-          <h3 className="pt-2 text-lg font-semibold tracking-tight">{title}</h3>
-          <p className="pt-2 text-sm leading-6 text-amber-900/90">{desc}</p>
-        </div>
-        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-amber-900">De pago</span>
-      </div>
     </div>
   );
 }

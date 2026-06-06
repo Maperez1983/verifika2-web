@@ -255,6 +255,13 @@ export default async function BuyerDashboard() {
   const uniqueListings = new Set(leads.map((lead) => lead.listing_id).filter(Boolean)).size;
   const { preferences, recommendations } = await getRecommendedListings(leads);
   const purchaseTrackingEnabled = hasBuyerService(session, "purchase_tracking");
+  const basicVerificationEnabled = hasBuyerService(session, "document_verification_basic");
+  const fullVerificationEnabled = hasBuyerService(session, "document_verification_full");
+  const enabledServices = [
+    purchaseTrackingEnabled ? "Tracking de compraventa" : "",
+    basicVerificationEnabled ? "Verificación documental básica" : "",
+    fullVerificationEnabled ? "Dossier documental completo" : "",
+  ].filter(Boolean);
 
   return (
     <div className="flex flex-1 flex-col bg-[color:var(--background)] text-[color:var(--foreground)]">
@@ -339,6 +346,19 @@ export default async function BuyerDashboard() {
             <HeroStat label="Pendientes" value={active.length} />
           </div>
         </section>
+
+        {enabledServices.length ? (
+          <section className="mb-6 rounded-[28px] border border-emerald-200 bg-emerald-50 p-5 text-emerald-950">
+            <p className="text-sm font-semibold tracking-tight">Servicios habilitados por administración</p>
+            <div className="pt-3 flex flex-wrap gap-2">
+              {enabledServices.map((service) => (
+                <span key={service} className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-emerald-900">
+                  {service}
+                </span>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         {scheduled.length ? (
           <section className="mb-6 rounded-[28px] border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-950">
@@ -602,22 +622,17 @@ function LeadCard({ lead, purchaseTrackingEnabled }: { lead: BuyerLead; purchase
             <BuyerSignal label="Seguridad" value="Verificación documental" />
             <BuyerSignal label="Tu próximo paso" value={nextAction} />
           </div>
-          <div className="mt-4">
-            {purchaseTrackingEnabled ? (
-            <PurchaseItinerary
-              title="Itinerario de compraventa"
-              subtitle="Ruta completa si avanzas desde interés hasta reserva, arras, financiación y notaría."
-              steps={buyerPurchaseSteps(lead)}
-              nextAction={nextAction}
-              compact
-            />
-            ) : (
-              <PaidServiceCard
-                title="Tracking de compraventa"
-                desc="Servicio opcional de pago para seguir reserva, verificación, financiación, arras, notaría y entrega de llaves desde tu área privada."
+          {purchaseTrackingEnabled ? (
+            <div className="mt-4">
+              <PurchaseItinerary
+                title="Itinerario de compraventa"
+                subtitle="Ruta completa si avanzas desde interés hasta reserva, arras, financiación y notaría."
+                steps={buyerPurchaseSteps(lead)}
+                nextAction={nextAction}
+                compact
               />
-            )}
-          </div>
+            </div>
+          ) : null}
         </div>
         <div className="flex shrink-0 flex-col gap-2 sm:w-[180px]">
           {lead.listing_id ? (
@@ -649,21 +664,6 @@ function LeadCard({ lead, purchaseTrackingEnabled }: { lead: BuyerLead; purchase
             Nueva visita
           </Link>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function PaidServiceCard({ title, desc }: { title: string; desc: string }) {
-  return (
-    <div className="rounded-[28px] border border-amber-200 bg-amber-50 p-5 text-amber-950">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-800/70">Servicio opcional</p>
-          <h3 className="pt-2 text-lg font-semibold tracking-tight">{title}</h3>
-          <p className="pt-2 text-sm leading-6 text-amber-900/90">{desc}</p>
-        </div>
-        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-amber-900">De pago</span>
       </div>
     </div>
   );

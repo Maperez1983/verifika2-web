@@ -93,6 +93,12 @@ export default async function AdminPage() {
             href="/admin/leads"
           />
           <LinkCard
+            eyebrow="Compradores"
+            title="Servicios"
+            desc="Genera accesos y habilita tracking o verificación documental desde administración."
+            href="/admin/buyers"
+          />
+          <LinkCard
             eyebrow="Inventario"
             title="Inmuebles"
             desc="Gestiona publicación, checklist, hitos y firma por ficha."
