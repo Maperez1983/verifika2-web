@@ -3,6 +3,7 @@ import { leadHubFetch } from "@/lib/leadHub";
 import { signSession } from "@/lib/sessionToken";
 import { BUYER_SESSION_COOKIE } from "@/lib/buyerAuth";
 import { publicOrigin, sanitizeRelativePath } from "@/lib/http";
+import { consentSubjectForBuyer, hasPrivacyConsent } from "@/lib/privacyConsent";
 
 const DEFAULT_TTL_SECONDS = 60 * 60 * 24 * 7;
 const DEFAULT_NEXT = "/comprador";
@@ -52,7 +53,11 @@ export async function POST(request: Request) {
 
   const token = signSession({ buyerId, contact: buyerContact }, sessionSecret, DEFAULT_TTL_SECONDS);
   const secure = process.env.NODE_ENV === "production";
-  const response = NextResponse.redirect(new URL(next, origin), 302);
+  const accepted = await hasPrivacyConsent("comprador", consentSubjectForBuyer({ buyerId, contact: buyerContact }));
+  const redirectPath = accepted
+    ? next
+    : `/comprador/tratamiento-datos?next=${encodeURIComponent(next)}`;
+  const response = NextResponse.redirect(new URL(redirectPath, origin), 302);
   response.cookies.set({
     name: BUYER_SESSION_COOKIE,
     value: token,

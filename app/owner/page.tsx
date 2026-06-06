@@ -6,6 +6,11 @@ import { getOwnerSession } from "@/lib/ownerSessionServer";
 import { redirect } from "next/navigation";
 import Sparkline from "@/components/charts/Sparkline";
 import DeltaPill from "@/components/charts/DeltaPill";
+import {
+  consentRedirect,
+  consentSubjectForOwner,
+  hasPrivacyConsent,
+} from "@/lib/privacyConsent";
 
 export const metadata: Metadata = {
   title: "Portal de propietario",
@@ -72,6 +77,8 @@ async function getHubConfig(): Promise<HubConfig | null> {
 export default async function OwnerDashboard() {
   const session = await getOwnerSession();
   if (!session) redirect("/owner/acceso");
+  const accepted = await hasPrivacyConsent("propietario", consentSubjectForOwner(session));
+  if (!accepted) redirect(consentRedirect("/owner/tratamiento-datos", "/owner"));
 
   const listings = (
     await Promise.all(session.listingIds.map((id) => fetchPortalListing(id).catch(() => null)))

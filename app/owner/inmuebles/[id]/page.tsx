@@ -10,6 +10,11 @@ import DeltaPill from "@/components/charts/DeltaPill";
 import MiniFunnel from "@/components/charts/MiniFunnel";
 import ListingCover from "@/components/listings/ListingCover";
 import type { Listing } from "@/lib/listings";
+import {
+  consentRedirect,
+  consentSubjectForOwner,
+  hasPrivacyConsent,
+} from "@/lib/privacyConsent";
 
 export const metadata: Metadata = {
   title: "Seguimiento del inmueble",
@@ -177,6 +182,11 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
   if (!session) redirect("/owner/acceso");
 
   const { id } = await params;
+  const accepted = await hasPrivacyConsent("propietario", consentSubjectForOwner(session));
+  if (!accepted) {
+    redirect(consentRedirect("/owner/tratamiento-datos", `/owner/inmuebles/${encodeURIComponent(id)}`));
+  }
+
   const sp = (await searchParams) || {};
   const tab = normalize(sp.tab) || "resumen";
 

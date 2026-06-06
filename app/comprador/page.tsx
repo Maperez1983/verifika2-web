@@ -3,6 +3,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getBuyerSession } from "@/lib/buyerSessionServer";
 import { leadHubFetch } from "@/lib/leadHub";
+import {
+  consentRedirect,
+  consentSubjectForBuyer,
+  hasPrivacyConsent,
+} from "@/lib/privacyConsent";
 
 export const metadata: Metadata = {
   title: "Área comprador",
@@ -55,6 +60,8 @@ function pill(status: string) {
 export default async function BuyerDashboard() {
   const session = await getBuyerSession();
   if (!session) redirect("/comprador/acceso");
+  const accepted = await hasPrivacyConsent("comprador", consentSubjectForBuyer(session));
+  if (!accepted) redirect(consentRedirect("/comprador/tratamiento-datos", "/comprador"));
 
   const leads = await getBuyerLeads(session.contact);
   const visits = leads.filter((lead) => lead.intent === "visita");

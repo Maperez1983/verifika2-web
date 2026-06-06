@@ -3,6 +3,7 @@ import { leadHubFetch } from "@/lib/leadHub";
 import { signSession } from "@/lib/sessionToken";
 import { OWNER_SESSION_COOKIE } from "@/lib/ownerAuth";
 import { publicOrigin, sanitizeRelativePath } from "@/lib/http";
+import { consentSubjectForOwner, hasPrivacyConsent } from "@/lib/privacyConsent";
 
 const DEFAULT_TTL_SECONDS = 60 * 60 * 24 * 7;
 const DEFAULT_NEXT = "/owner";
@@ -70,7 +71,11 @@ export async function POST(request: Request) {
   );
   const secure = process.env.NODE_ENV === "production";
 
-  const redirectTo = new URL(next, origin);
+  const accepted = await hasPrivacyConsent("propietario", consentSubjectForOwner({ ownerId, listingIds }));
+  const redirectPath = accepted
+    ? next
+    : `/owner/tratamiento-datos?next=${encodeURIComponent(next)}`;
+  const redirectTo = new URL(redirectPath, origin);
   const response = NextResponse.redirect(redirectTo, 302);
   response.cookies.set({
     name: OWNER_SESSION_COOKIE,

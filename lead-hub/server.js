@@ -159,6 +159,33 @@ async function ensureSchema() {
   await pool.query(
     "create index if not exists signatures_listing_id_idx on public.signature_requests(listing_id);",
   );
+
+  await pool.query(`
+    create table if not exists public.privacy_consents (
+      id bigserial primary key,
+      created_at timestamptz not null default now(),
+      persona text not null,
+      subject_id text not null,
+      contact text,
+      name text,
+      listing_ids jsonb not null default '[]'::jsonb,
+      version text not null,
+      accepted_privacy boolean not null default false,
+      accepted_operations boolean not null default false,
+      accepted_rights boolean not null default false,
+      accepted_marketing boolean not null default false,
+      signer_name text not null,
+      signer_id_doc text,
+      signature_text text not null,
+      source_path text,
+      user_agent text,
+      forwarded_for text,
+      payload jsonb not null default '{}'::jsonb
+    );
+  `);
+  await pool.query(
+    "create index if not exists privacy_consents_subject_idx on public.privacy_consents(persona, subject_id, version, created_at desc);",
+  );
 }
 
 function bearerToken(req) {
@@ -521,6 +548,118 @@ app.post("/v1/buyers/verify", async (req, res) => {
   }
 
   res.status(200).json({ ok: true, buyer: row });
+});
+
+app.get("/v1/consents/status", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  const persona = normalize(req.query.persona).toLowerCase();
+  const subjectId = normalize(req.query.subject_id);
+  const version = normalize(req.query.version);
+  if (!persona || !subjectId || !version) {
+    res.status(400).json({ ok: false, error: "missing_fields" });
+    return;
+  }
+
+  const consent = await pool.query(
+    `
+      select id, created_at, persona, subject_id, contact, name, version,
+             accepted_privacy, accepted_operations, accepted_rights, accepted_marketing,
+             signer_name, signer_id_doc
+      from public.privacy_consents
+      where persona=$1 and subject_id=$2 and version=$3
+        and accepted_privacy=true and accepted_operations=true and accepted_rights=true
+      order by created_at desc
+      limit 1;
+    `,
+    [persona, subjectId, version],
+  );
+
+  const row = consent.rows[0] || null;
+  res.status(200).json({ ok: true, accepted: Boolean(row), consent: row });
+});
+
+app.post("/v1/consents", async (req, res) => {
+  if (!HUB_TOKEN) {
+    res.status(500).json({ ok: false, error: "hub_not_configured" });
+    return;
+  }
+
+  const token = bearerToken(req);
+  if (!token || !safeEqual(token, HUB_TOKEN)) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+
+  if (!isRecord(req.body)) {
+    res.status(400).json({ ok: false, error: "invalid_payload" });
+    return;
+  }
+
+  const persona = normalize(req.body.persona).toLowerCase();
+  const subjectId = normalize(req.body.subject_id);
+  const version = normalize(req.body.version);
+  const signerName = normalize(req.body.signer_name);
+  const signatureText = normalize(req.body.signature_text);
+  const acceptedPrivacy = Boolean(req.body.accepted_privacy);
+  const acceptedOperations = Boolean(req.body.accepted_operations);
+  const acceptedRights = Boolean(req.body.accepted_rights);
+  const acceptedMarketing = Boolean(req.body.accepted_marketing);
+  const listingIds = Array.isArray(req.body.listing_ids)
+    ? req.body.listing_ids.map((v) => normalize(v)).filter(Boolean)
+    : [];
+
+  if (!["comprador", "propietario"].includes(persona) || !subjectId || !version) {
+    res.status(400).json({ ok: false, error: "missing_subject" });
+    return;
+  }
+
+  if (!acceptedPrivacy || !acceptedOperations || !acceptedRights || !signerName || !signatureText) {
+    res.status(400).json({ ok: false, error: "missing_acceptance" });
+    return;
+  }
+
+  const inserted = await pool.query(
+    `
+      insert into public.privacy_consents(
+        persona, subject_id, contact, name, listing_ids, version,
+        accepted_privacy, accepted_operations, accepted_rights, accepted_marketing,
+        signer_name, signer_id_doc, signature_text, source_path, user_agent, forwarded_for, payload
+      )
+      values ($1,$2,$3,$4,$5::jsonb,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17::jsonb)
+      returning id, created_at, persona, subject_id, version, signer_name;
+    `,
+    [
+      persona,
+      subjectId,
+      normalize(req.body.contact) || null,
+      normalize(req.body.name) || null,
+      JSON.stringify(listingIds),
+      version,
+      acceptedPrivacy,
+      acceptedOperations,
+      acceptedRights,
+      acceptedMarketing,
+      signerName,
+      normalize(req.body.signer_id_doc) || null,
+      signatureText,
+      normalize(req.body.source_path) || null,
+      normalize(req.headers["user-agent"]) || null,
+      normalize(req.headers["x-forwarded-for"]) || normalize(req.ip) || null,
+      JSON.stringify(req.body.payload && isRecord(req.body.payload) ? req.body.payload : {}),
+    ],
+  );
+
+  res.status(200).json({ ok: true, consent: inserted.rows[0] });
 });
 
 app.get("/v1/buyers/leads", async (req, res) => {
