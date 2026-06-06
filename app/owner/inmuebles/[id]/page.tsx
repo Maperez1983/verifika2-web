@@ -10,6 +10,7 @@ import Sparkline from "@/components/charts/Sparkline";
 import DeltaPill from "@/components/charts/DeltaPill";
 import MiniFunnel from "@/components/charts/MiniFunnel";
 import ListingCover from "@/components/listings/ListingCover";
+import PurchaseItinerary, { type ItineraryStep } from "@/components/operations/PurchaseItinerary";
 import type { Listing } from "@/lib/listings";
 import {
   consentRedirect,
@@ -156,6 +157,104 @@ function propertyScore(leads: number, visits: number, offers: number, scheduledC
   return { value: score, label: "A impulsar", tone: "alert" as const };
 }
 
+function ownerPurchaseSteps({
+  leads,
+  visits,
+  offers,
+  scheduledClients,
+  docs,
+  milestones,
+}: {
+  leads: number;
+  visits: number;
+  offers: number;
+  scheduledClients: number;
+  docs: HubDoc[];
+  milestones: HubMilestone[];
+}): ItineraryStep[] {
+  const text = milestones.map((m) => `${m.title} ${m.status}`).join(" ").toLowerCase();
+  const docApproved = docs.some((doc) => doc.status === "approved" || doc.status === "uploaded");
+  const hasReservation = text.includes("reserva");
+  const hasMortgage = text.includes("hipoteca") || text.includes("financi");
+  const hasArras = text.includes("arras");
+  const hasNotary = text.includes("notar") || text.includes("escritura");
+  const hasKeys = text.includes("llave") || text.includes("entrega");
+  const milestoneDone = (needle: string) => milestones.some((m) => m.title.toLowerCase().includes(needle) && m.status === "done");
+
+  return [
+    {
+      key: "published",
+      title: "Publicado",
+      desc: "Anuncio visible y expediente comercial abierto.",
+      status: "done",
+      detail: "Ficha activa",
+    },
+    {
+      key: "leads",
+      title: "Interesados",
+      desc: "Clientes compradores vinculados al inmueble.",
+      status: leads > 0 ? "done" : "active",
+      detail: `${leads} leads`,
+    },
+    {
+      key: "visits",
+      title: "Visitas",
+      desc: "Citas solicitadas, programadas o realizadas.",
+      status: visits > 0 || scheduledClients > 0 ? "done" : leads > 0 ? "active" : "pending",
+      detail: scheduledClients > 0 ? `${scheduledClients} citas programadas` : `${visits} visitas`,
+    },
+    {
+      key: "offer",
+      title: "Oferta",
+      desc: "Propuesta económica o negociación con comprador.",
+      status: offers > 0 ? "active" : "pending",
+      detail: `${offers} ofertas`,
+    },
+    {
+      key: "reservation",
+      title: "Reserva",
+      desc: "Señal, condiciones y plazo de avance.",
+      status: milestoneDone("reserva") ? "done" : hasReservation || offers > 0 ? "active" : "pending",
+      detail: hasReservation ? "Hito creado" : "Pendiente",
+    },
+    {
+      key: "verification",
+      title: "Documentación",
+      desc: "Titularidad, cargas, certificados y documentación de venta.",
+      status: docApproved ? "done" : docs.length > 0 ? "active" : "pending",
+      detail: `${docs.length} documentos`,
+    },
+    {
+      key: "mortgage",
+      title: "Financiación comprador",
+      desc: "Hipoteca, tasación y aprobación bancaria si aplica.",
+      status: hasMortgage ? "active" : "pending",
+      detail: hasMortgage ? "En seguimiento" : "Si aplica",
+    },
+    {
+      key: "arras",
+      title: "Arras",
+      desc: "Contrato, importes, plazos y obligaciones.",
+      status: milestoneDone("arras") ? "done" : hasArras ? "active" : "pending",
+      detail: hasArras ? "Hito creado" : "Pendiente",
+    },
+    {
+      key: "notary",
+      title: "Notaría",
+      desc: "Minuta, cheques, fecha y firma de escritura.",
+      status: milestoneDone("notar") ? "done" : hasNotary ? "active" : "pending",
+      detail: hasNotary ? "En preparación" : "Pendiente",
+    },
+    {
+      key: "keys",
+      title: "Llaves y cierre",
+      desc: "Entrega, liquidación, suministros y cierre final.",
+      status: milestoneDone("llave") || hasKeys ? "active" : "pending",
+      detail: hasKeys ? "Hito creado" : "Pendiente",
+    },
+  ];
+}
+
 async function getSummary(listingId: string): Promise<ListingSummary | null> {
   try {
     const res = await leadHubFetch(
@@ -265,8 +364,8 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
   const clientLeads = tab === "resumen" || tab === "clientes" ? allLeads : [];
   const visits = tab === "visitas" ? await getLeads(listing.id, "visita") : [];
   const agenda = tab === "agenda" ? await getLeads(listing.id, "visita") : [];
-  const documents = tab === "docs" ? await getDocuments(listing.id) : [];
-  const milestones = tab === "hitos" ? await getMilestones(listing.id) : [];
+  const documents = tab === "resumen" || tab === "docs" ? await getDocuments(listing.id) : [];
+  const milestones = tab === "resumen" || tab === "hitos" ? await getMilestones(listing.id) : [];
   const signatures = tab === "firma" ? await getSignatures(listing.id) : [];
 
   const views = summary?.metrics?.views ?? 0;
@@ -420,6 +519,22 @@ export default async function OwnerListingPage({ params, searchParams }: PagePro
                 <SignalCard title="Leads" value={leadsTotal} desc={`${leadsInfo} consultas, ${leadsVisits} visitas y ${leadsOffers} ofertas.`} />
                 <SignalCard title="Clientes" value={activeClients} desc={`${doneClients} cerrados o finalizados. Mantén cada estado actualizado.`} />
                 <SignalCard title="Anuncio" value={listing.certified ? "Premium" : "Activo"} desc="Ficha pública disponible para revisar fotos, precio y descripción." />
+              </div>
+
+              <div className="mt-6">
+                <PurchaseItinerary
+                  title="Itinerario de compraventa"
+                  subtitle="Ruta operativa visible para el propietario: interesados, visitas, oferta, reserva, documentación, financiación, arras, notaría y cierre."
+                  steps={ownerPurchaseSteps({
+                    leads: leadsTotal,
+                    visits: leadsVisits,
+                    offers: leadsOffers,
+                    scheduledClients,
+                    docs: documents,
+                    milestones,
+                  })}
+                  nextAction={nextStep}
+                />
               </div>
 
               <div className="mt-6 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">

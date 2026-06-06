@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import ListingCover from "@/components/listings/ListingCover";
+import PurchaseItinerary, { type ItineraryStep } from "@/components/operations/PurchaseItinerary";
 import { fetchPortalListings } from "@/lib/crmPortal";
 import { getBuyerSession } from "@/lib/buyerSessionServer";
 import { leadHubFetch } from "@/lib/leadHub";
@@ -85,6 +86,85 @@ function nextActionForLead(lead: BuyerLead) {
   if (lead.intent === "oferta" || lead.outcome === "oferta") return "Esperar valoración de tu oferta y documentación de soporte.";
   if (lead.intent === "visita") return "Esperar confirmación de fecha u ofrecer nueva disponibilidad.";
   return "Solicitar documentación o pedir una visita si el inmueble encaja.";
+}
+
+function buyerPurchaseSteps(lead: BuyerLead): ItineraryStep[] {
+  const contacted = ["contacted", "scheduled", "done"].includes(lead.status);
+  const hasVisit = lead.intent === "visita" || lead.status === "scheduled" || Boolean(lead.scheduled_at);
+  const hasDocs = lead.intent === "info" || lead.intent === "documentacion" || contacted;
+  const hasOffer = lead.intent === "oferta" || lead.outcome === "oferta";
+  const reserved = /\b(reserva|reservado|señal|senal)\b/i.test(`${lead.note ?? ""} ${lead.outcome_note ?? ""}`);
+  const arras = /\b(arras)\b/i.test(`${lead.note ?? ""} ${lead.outcome_note ?? ""}`);
+  const mortgage = /\b(hipoteca|financiaci[oó]n|tasaci[oó]n)\b/i.test(`${lead.note ?? ""} ${lead.outcome_note ?? ""}`);
+  const notary = /\b(notar[ií]a|escritura)\b/i.test(`${lead.note ?? ""} ${lead.outcome_note ?? ""}`);
+  const finished = lead.status === "done";
+  const active = (condition: boolean, fallback: boolean) => condition ? "done" : fallback ? "active" : "pending";
+
+  return [
+    {
+      key: "interest",
+      title: "Interés registrado",
+      desc: "Solicitud vinculada a tu área comprador.",
+      status: "done",
+      detail: new Date(lead.created_at).toLocaleDateString("es-ES"),
+    },
+    {
+      key: "visit",
+      title: "Visita o contacto",
+      desc: "Confirmación de visita, llamada o información inicial.",
+      status: active(hasVisit || contacted, !hasVisit && !contacted),
+      detail: lead.scheduled_at ? new Date(lead.scheduled_at).toLocaleString("es-ES") : undefined,
+    },
+    {
+      key: "verification",
+      title: "Verificación documental",
+      desc: "Revisión de titularidad, cargas y documentación disponible.",
+      status: hasDocs ? "active" : hasVisit || contacted ? "pending" : "pending",
+      detail: hasDocs ? "Documentación solicitada o en revisión" : "Pendiente de solicitar",
+    },
+    {
+      key: "offer",
+      title: "Oferta",
+      desc: "Propuesta económica o intención formal de compra.",
+      status: hasOffer ? "active" : "pending",
+      detail: hasOffer ? "Oferta registrada" : "Pendiente",
+    },
+    {
+      key: "reservation",
+      title: "Reserva",
+      desc: "Señal, condiciones y plazo para avanzar.",
+      status: reserved ? "active" : "pending",
+      detail: reserved ? "Reserva detectada" : "Pendiente",
+    },
+    {
+      key: "mortgage",
+      title: "Financiación",
+      desc: "Hipoteca, tasación y aprobación bancaria si aplica.",
+      status: mortgage ? "active" : "pending",
+      detail: mortgage ? "En seguimiento" : "Si necesita hipoteca",
+    },
+    {
+      key: "arras",
+      title: "Arras",
+      desc: "Contrato, importes y fecha límite de firma.",
+      status: arras ? "active" : "pending",
+      detail: arras ? "Arras en curso" : "Pendiente",
+    },
+    {
+      key: "notary",
+      title: "Notaría",
+      desc: "Preparación de firma, cheques, minuta y escritura.",
+      status: notary ? "active" : "pending",
+      detail: notary ? "Firma en preparación" : "Pendiente",
+    },
+    {
+      key: "keys",
+      title: "Llaves y postventa",
+      desc: "Entrega, suministros y cierre final.",
+      status: finished ? "done" : "pending",
+      detail: finished ? "Solicitud finalizada" : "Pendiente de cierre",
+    },
+  ];
 }
 
 function buyerAlert(leads: BuyerLead[]) {
@@ -520,7 +600,15 @@ function LeadCard({ lead }: { lead: BuyerLead }) {
             <BuyerSignal label="Seguridad" value="Verificación documental" />
             <BuyerSignal label="Tu próximo paso" value={nextAction} />
           </div>
-          <BuyerTimeline lead={lead} />
+          <div className="mt-4">
+            <PurchaseItinerary
+              title="Itinerario de compraventa"
+              subtitle="Ruta completa si avanzas desde interés hasta reserva, arras, financiación y notaría."
+              steps={buyerPurchaseSteps(lead)}
+              nextAction={nextAction}
+              compact
+            />
+          </div>
         </div>
         <div className="flex shrink-0 flex-col gap-2 sm:w-[180px]">
           {lead.listing_id ? (
@@ -562,28 +650,6 @@ function BuyerSignal({ label, value }: { label: string; value: string }) {
     <div>
       <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">{label}</p>
       <p className="pt-1 text-sm font-medium leading-5 text-slate-800">{value}</p>
-    </div>
-  );
-}
-
-function BuyerTimeline({ lead }: { lead: BuyerLead }) {
-  const steps = [
-    { label: "Solicitado", active: true },
-    { label: "Contactado", active: ["contacted", "scheduled", "done"].includes(lead.status) },
-    { label: "Tu visita / docs", active: Boolean(lead.scheduled_at) || lead.intent === "visita" || lead.intent === "info" || lead.intent === "documentacion" },
-    { label: "Tu oferta", active: lead.intent === "oferta" || lead.outcome === "oferta" },
-    { label: "Finalizado", active: lead.status === "done" },
-  ];
-  return (
-    <div className="mt-4 flex flex-wrap gap-2">
-      {steps.map((step) => (
-        <span
-          key={step.label}
-          className={`rounded-full px-3 py-1 text-xs font-medium ${step.active ? "bg-[#0B1D33] text-white" : "bg-[color:var(--surface-2)] text-slate-500"}`}
-        >
-          {step.label}
-        </span>
-      ))}
     </div>
   );
 }
