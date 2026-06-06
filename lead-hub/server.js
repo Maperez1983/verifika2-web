@@ -14,6 +14,7 @@ const HUB_TOKEN = process.env.HUB_TOKEN || "";
 const SLACK_WEBHOOK_URL = (process.env.SLACK_WEBHOOK_URL || process.env.SLACK_WEBHOOK || "").trim();
 const CRM_LEADS_ENDPOINT = process.env.CRM_LEADS_ENDPOINT || "";
 const CRM_TOKEN = process.env.CRM_TOKEN || "";
+const CRM_AUTH_TOKEN = CRM_TOKEN || HUB_TOKEN;
 const OWNER_CODE_SALT = process.env.OWNER_CODE_SALT || "";
 const BUYER_CODE_SALT = process.env.BUYER_CODE_SALT || OWNER_CODE_SALT || "";
 
@@ -278,7 +279,7 @@ async function pushToCrm(leadRow) {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        ...(CRM_TOKEN ? { authorization: `Bearer ${CRM_TOKEN}` } : {}),
+        ...(CRM_AUTH_TOKEN ? { authorization: `Bearer ${CRM_AUTH_TOKEN}` } : {}),
       },
       body: JSON.stringify(payload),
     });
