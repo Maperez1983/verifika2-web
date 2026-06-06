@@ -21,6 +21,13 @@ function buildNote(parts: Array<string | null | undefined>) {
   return clean.length ? clean.join("\n") : undefined;
 }
 
+function paidServiceLabel(motivo: string) {
+  if (motivo === "dossier_basico") return "Servicio cobrable: verificación documental básica";
+  if (motivo === "dossier_completo") return "Servicio cobrable: dossier documental completo";
+  if (motivo === "nota_simple") return "Servicio cobrable: nota simple actualizada";
+  return "";
+}
+
 export async function POST(request: Request) {
   const origin = publicOrigin(request);
 
@@ -78,6 +85,7 @@ export async function POST(request: Request) {
     listing = null;
   }
   const note = buildNote([
+    paidServiceLabel(motivo),
     motivo ? `Motivo: ${motivo}` : null,
     urgencia ? `Prioridad: ${urgencia}` : null,
     horario ? `Horario preferido: ${horario}` : null,
@@ -140,6 +148,7 @@ export async function POST(request: Request) {
   const okUrl = new URL("/interes", origin);
   if (listingId) okUrl.searchParams.set("listing", listingId);
   okUrl.searchParams.set("tipo", tipo);
+  okUrl.searchParams.set("motivo", motivo);
   okUrl.searchParams.set("sent", "1");
   okUrl.searchParams.set("next", next);
   if (buyerCode) okUrl.searchParams.set("buyer_code", buyerCode);

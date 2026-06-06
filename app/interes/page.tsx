@@ -34,6 +34,7 @@ export default async function InterestPage({ searchParams }: PageProps) {
   const detail = normalize(params.detail);
   const buyerCode = normalize(params.buyer_code);
   const next = sanitizeNextPath(params.next, "/inmuebles");
+  const isDossierRequest = ["dossier_basico", "dossier_completo", "nota_simple"].includes(motivo);
   const listing = listingId
     ? await fetchPortalListing(listingId).catch(() => null)
     : undefined;
@@ -43,6 +44,12 @@ export default async function InterestPage({ searchParams }: PageProps) {
       ? "Pedir visita"
       : tipo === "contacto"
         ? "Contactar"
+        : motivo === "dossier_basico"
+          ? "Solicitar verificación básica"
+          : motivo === "dossier_completo"
+            ? "Solicitar dossier completo"
+            : motivo === "nota_simple"
+              ? "Solicitar nota simple actualizada"
         : motivo === "documentacion"
           ? "Pedir documentación"
           : motivo === "oferta"
@@ -96,8 +103,10 @@ export default async function InterestPage({ searchParams }: PageProps) {
                   con trazabilidad (fecha, canal y estado).
                 </li>
                 <li className="rounded-2xl bg-[color:var(--surface-2)] px-4 py-3">
-                  <span className="font-semibold">3.</span> Puedes seguir
-                  consultando la ficha del inmueble.
+                  <span className="font-semibold">3.</span>{" "}
+                  {isDossierRequest
+                    ? "El equipo confirma alcance, precio y forma de pago antes de preparar el dossier."
+                    : "Puedes seguir consultando la ficha del inmueble."}
                 </li>
               </ol>
 
@@ -174,6 +183,9 @@ export default async function InterestPage({ searchParams }: PageProps) {
                   >
                     <option value="info">Información</option>
                     <option value="documentacion">Documentación</option>
+                    <option value="dossier_basico">Verificación básica</option>
+                    <option value="dossier_completo">Dossier completo</option>
+                    <option value="nota_simple">Nota simple actualizada</option>
                     <option value="visita">Visita</option>
                     <option value="oferta">Oferta</option>
                     <option value="duda">Tengo una duda</option>

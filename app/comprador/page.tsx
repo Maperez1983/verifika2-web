@@ -452,6 +452,12 @@ function RecommendedListingCard({
           >
             Me interesa
           </Link>
+          <Link
+            href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=info&motivo=dossier_basico&next=${encodeURIComponent("/comprador")}`}
+            className="inline-flex h-10 items-center justify-center rounded-full bg-[#F2C14E] px-4 text-sm font-semibold text-[#0B1D33] hover:bg-[#ffd56f]"
+          >
+            Verificar antes de ofertar
+          </Link>
           <div className="grid grid-cols-2 gap-2">
             <Link
               href={`/interes?listing=${encodeURIComponent(listing.id)}&tipo=visita&next=${encodeURIComponent("/comprador")}`}
@@ -531,6 +537,14 @@ function LeadCard({ lead }: { lead: BuyerLead }) {
           >
             Documentación
           </Link>
+          {lead.listing_id ? (
+            <Link
+              href={`/interes?listing=${encodeURIComponent(lead.listing_id)}&tipo=info&motivo=dossier_basico&next=${encodeURIComponent("/comprador")}`}
+              className="inline-flex h-10 items-center justify-center rounded-full bg-[#F2C14E] px-4 text-sm font-semibold text-[#0B1D33] hover:bg-[#ffd56f]"
+            >
+              Verificar
+            </Link>
+          ) : null}
           <Link
             href={`/interes${lead.listing_id ? `?listing=${encodeURIComponent(lead.listing_id)}&tipo=visita` : ""}`}
             className="inline-flex h-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm font-medium hover:bg-[color:var(--surface-2)]"
